@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/button/icons">
+        <file alias="leftArrow">resources/1x/left.png</file>
+        <file alias="topArrow">resources/1x/top.png</file>
+        <file alias="rightArrow">resources/1x/right.png</file>
+        <file alias="bottomArrow">resources/1x/bottom.png</file>
+        <file alias="centerArrow">resources/1x/center.png</file>
+    </qresource>
+</RCC>

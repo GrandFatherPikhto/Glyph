@@ -11,18 +11,16 @@ MainWindow::MainWindow(QWidget *parent)
     addDockWidget(Qt::LeftDockWidgetArea, m_dockGlyph);
     // tabifiedDockWidgetActivated(m_dockGlyph);
 
-    QObject::connect(m_dockGlyph, &DockGlyph::characterChanged, this, [=](const QChar &character){
-        qDebug() << character;
-    });
-    QObject::connect(m_dockGlyph, &DockGlyph::fontChanged, this, [=](const QFont &newFont, const QString &fontPath){
-        qDebug() << newFont << fontPath;
-    });
-
     QObject::connect(m_dockGlyph, &DockGlyph::glyphParamsChanged, ui->glyphWidget, &GlyphWidget::setGlyphParams);
     QObject::connect(m_dockGlyph, &DockGlyph::characterChanged, ui->glyphWidget, &GlyphWidget::setCharacter);
     QObject::connect(m_dockGlyph, &DockGlyph::fontChanged, ui->glyphWidget, &GlyphWidget::setFont);
     QObject::connect(m_dockGlyph, &DockGlyph::glyphSizeChanged, ui->glyphWidget, &GlyphWidget::setGlyphSize);
     QObject::connect(m_dockGlyph, &DockGlyph::gridSizeChanged, ui->glyphWidget, &GlyphWidget::setGridSize);
+    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphLeft, ui->glyphWidget, &GlyphWidget::moveGlyphLeft);
+    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphTop, ui->glyphWidget, &GlyphWidget::moveGlyphTop);
+    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphRight, ui->glyphWidget, &GlyphWidget::moveGlyphRight);
+    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphDown, ui->glyphWidget, &GlyphWidget::moveGlyphDown);
+    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphCenter, ui->glyphWidget, &GlyphWidget::moveGlyphCenter);
 }
 
 MainWindow::~MainWindow()

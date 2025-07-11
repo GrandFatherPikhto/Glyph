@@ -8,6 +8,10 @@
 #include <QStringList>
 #include <QFile>
 
+#include <windows.h>
+#include <tchar.h>
+
+
 class FontManager {
 public:
     static FontManager& instance() {
@@ -21,7 +25,7 @@ public:
     // Запрещаем копирование и присваивание
     FontManager(const FontManager&) = delete;
     FontManager& operator=(const FontManager&) = delete;
-
+    bool GetSystemFontFilePath(const QString &fontName, QString &fontPath);
 private:
     FontManager() = default; // Приватный конструктор
     ~FontManager() = default;
@@ -29,5 +33,8 @@ private:
     QFontDatabase fontDb;
     QStringList customFontDirs;
     QMutex mutex; // Если нужна потокобезопасность
+
+    const QString m_defaultFontsPath = "C:/Windows/Fonts/";
+    const QString m_registerFontsPath = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts";
 };
 #endif // FONTMANAGER_H

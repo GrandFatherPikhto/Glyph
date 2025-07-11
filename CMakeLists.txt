@@ -43,6 +43,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
         glyphwidget.h glyphwidget.cpp
         dockglyph.h dockglyph.cpp dockglyph.ui
         fontmanager.h fontmanager.cpp
+        glyphkey.h
+        glyphkey.cpp
+        glyphentry.h
+        icons.qrc
 
     )
 # Define target properties for Android with Qt 6 as:

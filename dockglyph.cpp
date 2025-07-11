@@ -17,18 +17,13 @@ DockGlyph::DockGlyph(QWidget *parent)
     ui->glyphSize->setValue(m_glyphSize);
     auto &fontManager = FontManager::instance();
     m_fontPath = fontManager.findFontPath(m_font.family());
+    // qDebug() << __FILE__ << m_font.family() << m_fontPath;
 }
 
 DockGlyph::~DockGlyph()
 {
     delete ui;
 }
-
-// void DockGlyph::on_glyphSize_valueChanged(int newGlyphPixelSize)
-// {
-//     m_glyphPixelSize = newGlyphPixelSize;
-//     // emit glyphPixelSizeChanged(m_glyphPixelSize);
-// }
 
 
 void DockGlyph::on_fontComboBox_currentFontChanged(const QFont &f)
@@ -37,6 +32,8 @@ void DockGlyph::on_fontComboBox_currentFontChanged(const QFont &f)
     auto& fontManager = FontManager::instance();
     m_fontPath = fontManager.findFontPath(m_font.family());
     m_glyphSize = m_font.pointSize();
+    // qDebug() << __FILE__ << m_font.family() << m_fontPath;
+
     emit fontChanged(m_font, m_fontPath);
     emit glyphSizeChanged(m_glyphSize);
 }
@@ -74,5 +71,35 @@ void DockGlyph::on_glyphSize_valueChanged(int newGlyphSize)
     m_glyphSize = newGlyphSize;
     m_font.setPixelSize(m_glyphSize);
     emit glyphSizeChanged(m_glyphSize);
+}
+
+
+void DockGlyph::on_moveCenter_clicked()
+{
+    emit moveGlyphCenter();
+}
+
+
+void DockGlyph::on_moveLeft_clicked()
+{
+    emit moveGlyphLeft();
+}
+
+
+void DockGlyph::on_moveTop_clicked()
+{
+    emit moveGlyphTop();
+}
+
+
+void DockGlyph::on_moveDown_clicked()
+{
+    emit moveGlyphDown();
+}
+
+
+void DockGlyph::on_moveRight_clicked()
+{
+    emit moveGlyphRight ();
 }
 
