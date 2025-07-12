@@ -149,17 +149,6 @@ void GlyphWidget::resetGlyphPixels ()
 
 void GlyphWidget::calcGlyphRect ()
 {
-    // FT_Pos left = m_ftFace->glyph->metrics.horiBearingX;
-    // FT_Pos right = left + m_ftFace->glyph->metrics.width;
-    // FT_Pos top = m_ftFace->glyph->metrics.horiBearingY;
-    // FT_Pos bottom = top - m_ftFace->glyph->metrics.height;
-    // // calcGlyphMetrics (m_glyphSize);
-
-    // m_glyphRect = QRect(QPoint(TRUNC(left),
-    //                            -TRUNC(top) + 1),
-    //                     QSize(TRUNC(right - left) + 1,
-    //                           TRUNC(top - bottom) + 1));
-    // qDebug() << "Glyph Rect" << m_glyphRect;
     QRect glyphRect(QPoint(m_ftFace->glyph->bitmap_left, -m_ftFace->glyph->bitmap_top), QSize(m_ftFace->glyph->bitmap.width, m_ftFace->glyph->bitmap.rows));
     qDebug() << "Glyph Rect" << glyphRect;
 }
@@ -278,6 +267,7 @@ void GlyphWidget::updateGlyph () {
     qDebug() << __FILE__ << __FUNCTION__;
     if (m_glyphKey.isValid() && m_glyphEntry.isValid()) {
         m_gridCellSize = height() * 4 / (5 * m_glyphKey.gridSize());
+        qDebug() << __FILE__ << __LINE__ << "GlyphSize: " << m_glyphEntry.glyphSize();
         renderGlyphPixels();
         renderGlyphImage();
     }
@@ -293,6 +283,7 @@ void GlyphWidget::setCharacter(const QChar &newCharacter) {
 
 void GlyphWidget::setGlyphSize(int newGlyphSize) {
     m_glyphEntry.setGlyphSize(newGlyphSize);
+    qDebug() << __FUNCTION__ << newGlyphSize;
     if (m_glyphKey.isValid() && m_glyphEntry.isValid()) {
         updateGlyph();
         update();
@@ -347,7 +338,7 @@ void GlyphWidget::setGlyphParams(const QFont &newFont, const QString & newFontPa
     setGridSize(newGridSize);
     setGlyphSize(newGlyphSize);
     setCharacter(newCharacter);
-    setGlyphSize(newGridSize);
+    setGlyphSize(newGlyphSize);
     setGlyphFont(newFont, newFontPath);
 
     qDebug() << "Set Glyph Params: " << "Font Path: " << newFontPath;
@@ -360,8 +351,6 @@ void GlyphWidget::setGlyphParams(const QFont &newFont, const QString & newFontPa
 
 int GlyphWidget::glyphKeyEntry ()
 {
-    // if (m_character == QChar() || m_font == QFont() || m_gridSize <= 0 || m_fontPath.isEmpty()) return -1;
-    // m_glyphKey = GlyphKey(m_font, m_character, m_gridSize);
     auto it = m_glyphCache.find(m_glyphKey);
     if (it != m_glyphCache.end()) {
         // const GlyphEntry &entry = it.value();

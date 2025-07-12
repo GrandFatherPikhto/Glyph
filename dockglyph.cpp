@@ -7,7 +7,7 @@ DockGlyph::DockGlyph(QWidget *parent)
     , ui(new Ui::DockGlyph)
     , m_gridSize(8)
     , m_glyphSize(11)
-    , m_font(QFont("Arial", m_glyphSize))
+    , m_font(QFont("Arial"))
     , m_character(QChar('A'))
 {
     ui->setupUi(this);
@@ -17,7 +17,6 @@ DockGlyph::DockGlyph(QWidget *parent)
     ui->glyphSize->setValue(m_glyphSize);
     auto &fontManager = FontManager::instance();
     m_fontPath = fontManager.findFontPath(m_font.family());
-    // qDebug() << __FILE__ << m_font.family() << m_fontPath;
 }
 
 DockGlyph::~DockGlyph()
@@ -31,11 +30,7 @@ void DockGlyph::on_fontComboBox_currentFontChanged(const QFont &f)
     m_font = f;
     auto& fontManager = FontManager::instance();
     m_fontPath = fontManager.findFontPath(m_font.family());
-    m_glyphSize = m_font.pointSize();
-    // qDebug() << __FILE__ << m_font.family() << m_fontPath;
-
     emit fontChanged(m_font, m_fontPath);
-    emit glyphSizeChanged(m_glyphSize);
 }
 
 void DockGlyph::on_character_returnPressed()
