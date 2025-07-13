@@ -2,9 +2,10 @@
 #include "ui_dockglyph.h"
 #include "fontmanager.h"
 
-DockGlyph::DockGlyph(QWidget *parent)
+DockGlyph::DockGlyph(GlyphManager *glyphManager, QWidget *parent)
     : QDockWidget(parent)
     , ui(new Ui::DockGlyph)
+    , m_glyphManager(glyphManager)
     , m_gridSize(8)
     , m_glyphSize(11)
     , m_font(QFont("Arial"))
@@ -30,71 +31,103 @@ void DockGlyph::on_fontComboBox_currentFontChanged(const QFont &f)
     m_font = f;
     auto& fontManager = FontManager::instance();
     m_fontPath = fontManager.findFontPath(m_font.family());
-    emit fontChanged(m_font, m_fontPath);
+    updateGlyph ();
 }
 
 void DockGlyph::on_character_returnPressed()
 {
     m_character = ui->character->text().at(0);
-    emit characterChanged(m_character);
+    updateGlyph ();
 }
 
 
 void DockGlyph::on_character_editingFinished()
 {
     m_character = ui->character->text().at(0);
-    emit characterChanged(m_character);
+    qDebug() << m_font << m_character << m_gridSize;
+    updateGlyph ();
 }
 
 
 
 void DockGlyph::showEvent(QShowEvent *event)
 {
-    emit glyphParamsChanged(m_font, m_fontPath, m_glyphSize, m_character, m_gridSize);
+    updateGlyph ();
 }
 
 
 void DockGlyph::on_gridSize_valueChanged(int newSize)
 {
     m_gridSize = newSize;
-    emit gridSizeChanged(m_gridSize);
+    updateGlyph ();
 }
 
 
 void DockGlyph::on_glyphSize_valueChanged(int newGlyphSize)
 {
     m_glyphSize = newGlyphSize;
-    m_font.setPixelSize(m_glyphSize);
-    emit glyphSizeChanged(m_glyphSize);
+    m_glyph->setGlyphSize(newGlyphSize);
+    updateGlyph ();
 }
 
 
 void DockGlyph::on_moveCenter_clicked()
 {
-    emit moveGlyphCenter();
+    m_glyph->moveCenter();
+    updateGlyph ();
 }
 
 
 void DockGlyph::on_moveLeft_clicked()
 {
-    emit moveGlyphLeft();
+    m_glyph->moveLeft();
+    updateGlyph ();
 }
 
 
 void DockGlyph::on_moveTop_clicked()
 {
-    emit moveGlyphTop();
+    m_glyph->moveTop();
+    updateGlyph ();
 }
 
 
 void DockGlyph::on_moveDown_clicked()
 {
-    emit moveGlyphDown();
+    m_glyph->moveDown();
+    updateGlyph ();
 }
 
 
 void DockGlyph::on_moveRight_clicked()
 {
-    emit moveGlyphRight ();
+    m_glyph->moveRight();
+    updateGlyph();
 }
 
+void DockGlyph::updateGlyph ()
+{
+    m_glyph = m_glyphManager->findOrCreate(m_character, m_gridSize);
+    if (m_glyph->glyphSize() <= 0)
+    {
+        m_glyph->setGlyphSize(m_glyphSize);
+    } else
+    {
+
+    }
+
+    if (m_glyph->font() == QFont())
+    {
+        m_glyph->setFontPath(m_fontPath);
+        m_glyph->setFont(m_font);
+    }
+    
+    if (m_glyph->glyphSize() < 0)
+    {
+        m_glyph->setGlyphSize(m_glyphSize);
+    }
+
+    qDebug() << m_glyph->toString();
+
+    emit glyphChanged(m_glyph);
+}

@@ -5,5 +5,12 @@
         <file alias="rightArrow">resources/1x/right.png</file>
         <file alias="bottomArrow">resources/1x/bottom.png</file>
         <file alias="centerArrow">resources/1x/center.png</file>
+        <file alias="contour">resources/1x/contour.png</file>
+        <file alias="edit">resources/1x/edit.png</file>
+        <file>resources/1x/editDisable.png</file>
+        <file>resources/1x/editEnable.png</file>
+        <file alias="grid">resources/1x/grid.png</file>
+        <file alias="glyphgrid">resources/1x/glyphgrid.png</file>
     </qresource>
+    <qresource prefix="/glyphtoolbar/icons"/>
 </RCC>

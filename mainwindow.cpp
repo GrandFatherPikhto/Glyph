@@ -1,29 +1,114 @@
 #include <QSettings>
+#include <QSharedPointer>
+#include <QToolButton>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "glyphwidget.h"
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , m_dockGlyph(new DockGlyph(this))
+    , m_glyphToolBar(nullptr)
+    , m_glyphManager(nullptr)
+    , m_dockGlyph(nullptr)
     , m_fontLabel(nullptr)
     , m_glyphSizeLabel(nullptr)
     , m_gridSizeLabel(nullptr)
     , m_charLabel(nullptr)
-
+    , m_mainLayout(nullptr)
+    , m_glyphWidget(nullptr)
+    , m_gridEnable(nullptr)
+    , m_generatedGlyphEnable(nullptr)
+    , m_glyphGrid(nullptr)
+    , m_contourEnable(nullptr)
 {
     ui->setupUi(this);
+    m_glyphManager = new GlyphManager(this);
 
-    addDockWidget(Qt::LeftDockWidgetArea, m_dockGlyph);
-    // tabifiedDockWidgetActivated(m_dockGlyph);
-    connectGlyphDockEvents();
+    setupGlyphWidget();
+    setupGlyphDock();
+    setupGlyphToolBar();
     setupStatusBar();
+    setupSignals ();
 }
 
 MainWindow::~MainWindow()
 {
+    delete m_glyphManager;
     delete ui;
+}
+
+void MainWindow::setupSignals ()
+{
+    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyph);
+    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, this, [=](QSharedPointer<Glyph> glyph){
+        setStatusBarFontName(glyph->font());
+        setStatusBarCharacter(glyph->character());
+        setStatusBarGlyphSize(glyph->glyphSize());
+        setStatusBarGridSize(glyph->gridSize());
+    });
+    QObject::connect(m_dockGlyph, &DockGlyph::fontChanged, this, &MainWindow::setStatusBarFontName);
+    QObject::connect(m_dockGlyph, &DockGlyph::characterChanged, this, &MainWindow::setStatusBarCharacter);
+    QObject::connect(m_dockGlyph, &DockGlyph::glyphSizeChanged, this, &MainWindow::setStatusBarGlyphSize);
+    QObject::connect(m_dockGlyph, &DockGlyph::gridSizeChanged, this, &MainWindow::setStatusBarGridSize);
+    QObject::connect(this, &MainWindow::generatedGlyphEnabled, m_glyphWidget, &GlyphWidget::enableGeneratedGlyph);
+    QObject::connect(this, &MainWindow::contourEnabled, m_glyphWidget, &GlyphWidget::enableContour);
+    QObject::connect(this, &MainWindow::gridEnabled, m_glyphWidget, &GlyphWidget::enableGrid);
+    QObject::connect(this, &MainWindow::glyphGridEnabled, m_glyphWidget, &GlyphWidget::enableGlyphGrid);
+}
+
+void MainWindow::setupGlyphWidget ()
+{
+    m_mainLayout = new QGridLayout(this);
+    m_glyphWidget = new GlyphWidget(m_glyphManager, this);
+    m_mainLayout->addWidget(m_glyphWidget);
+    ui->centralwidget->setLayout(m_mainLayout);
+}
+
+void MainWindow::setupGlyphDock ()
+{
+    m_dockGlyph = new DockGlyph(m_glyphManager, this);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockGlyph);
+    // tabifiedDockWidgetActivated(m_dockGlyph);
+}
+
+void MainWindow::setupGlyphToolBar()
+{
+    m_glyphToolBar = new QToolBar("Glyph Toolbar", this);
+    m_glyphToolBar->setObjectName("GlyphToolbar");
+    // m_glyphToolBar->addAction(QIcon(":/glyphtoolbar/icons/editDisable"), "New");
+    m_generatedGlyphEnable = new QAction(QIcon(":/button/icons/edit"), "Generated Glyph", this);
+    m_generatedGlyphEnable->setCheckable(true);
+    connect(m_generatedGlyphEnable, &QAction::toggled, this, [=](bool checked) {
+        emit generatedGlyphEnabled(checked);
+    });
+    m_glyphToolBar->addAction(m_generatedGlyphEnable);
+
+    m_gridEnable = new QAction(QIcon(":/button/icons/grid"), "Grid Enable", this);
+    m_gridEnable->setCheckable(true);
+    connect(m_gridEnable, &QAction::toggled, this, [=](bool checked) {
+        emit gridEnabled(checked);
+    });
+    m_glyphToolBar->addAction(m_gridEnable);
+
+    m_glyphGrid = new QAction(QIcon(":/button/icons/glyphgrid"), "Glyph Grid Enable", this);
+    m_glyphGrid->setCheckable(true);
+    connect(m_glyphGrid, &QAction::toggled, this, [=](bool checked) {
+        emit glyphGridEnabled(checked);
+    });
+    m_glyphToolBar->addAction(m_glyphGrid);
+
+
+    m_contourEnable = new QAction(QIcon(":/button/icons/contour"), "Countour Enable", this);
+    m_contourEnable->setCheckable(true);
+    connect(m_contourEnable, &QAction::toggled, this, [=](bool checked) {
+        emit contourEnabled(checked);
+    });
+    m_glyphToolBar->addAction(m_contourEnable);
+
+    addToolBar(m_glyphToolBar);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -31,20 +116,6 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     saveGeometryAndState();
     emit saveCurrentState();
     QMainWindow::closeEvent(event);
-}
-
-void MainWindow::connectGlyphDockEvents()
-{
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphParamsChanged, ui->glyphWidget, &GlyphWidget::setGlyphParams);
-    QObject::connect(m_dockGlyph, &DockGlyph::characterChanged, ui->glyphWidget, &GlyphWidget::setCharacter);
-    QObject::connect(m_dockGlyph, &DockGlyph::fontChanged, ui->glyphWidget, &GlyphWidget::setFont);
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphSizeChanged, ui->glyphWidget, &GlyphWidget::setGlyphSize);
-    QObject::connect(m_dockGlyph, &DockGlyph::gridSizeChanged, ui->glyphWidget, &GlyphWidget::setGridSize);
-    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphLeft, ui->glyphWidget, &GlyphWidget::moveGlyphLeft);
-    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphTop, ui->glyphWidget, &GlyphWidget::moveGlyphTop);
-    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphRight, ui->glyphWidget, &GlyphWidget::moveGlyphRight);
-    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphDown, ui->glyphWidget, &GlyphWidget::moveGlyphDown);
-    QObject::connect(m_dockGlyph, &DockGlyph::moveGlyphCenter, ui->glyphWidget, &GlyphWidget::moveGlyphCenter);
 }
 
 void MainWindow::setupStatusBar () {
@@ -56,16 +127,6 @@ void MainWindow::setupStatusBar () {
     statusBar()->addPermanentWidget(m_charLabel);
     statusBar()->addPermanentWidget(m_glyphSizeLabel);
     statusBar()->addPermanentWidget(m_gridSizeLabel);
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphParamsChanged, this, [=](const QFont &newFont, const QString &newFontPath, int newGlyphSize, const QChar &newCharacter, int newGridSize){
-        setStatusBarFontName(newFont);
-        setStatusBarCharacter(newCharacter);
-        setStatusBarGlyphSize(newGlyphSize);
-        setStatusBarGridSize(newGridSize);
-    });
-    QObject::connect(m_dockGlyph, &DockGlyph::fontChanged, this, &MainWindow::setStatusBarFontName);
-    QObject::connect(m_dockGlyph, &DockGlyph::characterChanged, this, &MainWindow::setStatusBarCharacter);
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphSizeChanged, this, &MainWindow::setStatusBarGlyphSize);
-    QObject::connect(m_dockGlyph, &DockGlyph::gridSizeChanged, this, &MainWindow::setStatusBarGridSize);
 }
 
 void MainWindow::on_action_Quit_triggered()
@@ -109,15 +170,34 @@ void MainWindow::saveGeometryAndState() {
     QSettings settings("DAE", "Glyph");
     settings.setValue("mainWindowGeometry", saveGeometry());
     settings.setValue("mainWindowState", saveState());
+    settings.setValue("generatedGlyphEnabled", m_generatedGlyphEnable->isChecked());
+    settings.setValue("gridEnabled", m_gridEnable->isChecked());
+    settings.setValue("contourEnabled", m_contourEnable->isChecked());
+    settings.setValue("glyphGridEnabled", m_glyphGrid->isChecked());
 }
 
 void MainWindow::restoreGeometryAndState() {
     QSettings settings("DAE", "Glyph");
     restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
     restoreState(settings.value("mainWindowState").toByteArray());
+    bool setGlyphEditable = settings.value("generatedGlyphEnabled").toBool();
+    qDebug() << "Set Glyph Editable" << setGlyphEditable;
+    if (m_generatedGlyphEnable) {
+        m_generatedGlyphEnable->setChecked(setGlyphEditable);
+    }
+    bool gridEnabled = settings.value("gridEnabled").toBool();
+    if (m_gridEnable) {
+        m_gridEnable->setChecked(gridEnabled);
+    }
+    bool glyphGridEnabled = settings.value("glyphGridEnabled").toBool();
+    if (m_glyphGrid) {
+        m_glyphGrid->setChecked(glyphGridEnabled);
+    }
+    bool contourEnabled = settings.value("contourEnabled").toBool();
+    if (m_contourEnable) {
+        m_contourEnable->setChecked(contourEnabled);
+    }
 }
-
-
 
 void MainWindow::showEvent(QShowEvent *event)
 {

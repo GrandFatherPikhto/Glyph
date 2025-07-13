@@ -36,18 +36,20 @@ set(PROJECT_SOURCES
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
     qt_add_executable(Glyph
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        glyphwidget.h glyphwidget.cpp
+        # glyphwidget01.h glyphwidget01.cpp
         dockglyph.h dockglyph.cpp dockglyph.ui
         fontmanager.h fontmanager.cpp
         glyphkey.h
         glyphkey.cpp
-        glyphentry.h
+        glyph.h
         icons.qrc
-
+        glyphmanager.h glyphmanager.cpp
+        glyphwidget.h glyphwidget.cpp glyphwidget.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Glyph APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -82,6 +84,7 @@ target_link_libraries(Glyph PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(Glyph PRIVATE Qt6::Core Qt6::Widgets)
 target_link_libraries(Glyph PRIVATE ${FREETYPE_LIBRARIES})
 target_link_libraries(Glyph PRIVATE Qt6::Core Qt6::Widgets)
+target_link_libraries(Glyph PRIVATE Qt6::Core)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

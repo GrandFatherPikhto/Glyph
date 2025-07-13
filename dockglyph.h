@@ -2,8 +2,12 @@
 #define DOCKGLYPH_H
 
 #include <QDockWidget>
+#include <QSharedPointer>
 #include <QString>
 #include <QFont>
+
+#include "glyphmanager.h"
+#include "glyph.h"
 
 namespace Ui {
 class DockGlyph;
@@ -14,7 +18,7 @@ class DockGlyph : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit DockGlyph(QWidget *parent = nullptr);
+    explicit DockGlyph(GlyphManager *glyphManager, QWidget *parent = nullptr);
     ~DockGlyph();
 
 private slots:
@@ -42,6 +46,7 @@ private slots:
     void on_moveRight_clicked();
 
 signals:
+    void glyphChanged(QSharedPointer<Glyph> glyph);
     void gridSizeChanged(int newSize);
     void glyphSizeChanged(int newSize);
     void fontChanged(const QFont &newFont, const QString &newFontPath);
@@ -54,13 +59,18 @@ signals:
     void moveGlyphCenter ();
 
 private:
-    Ui::DockGlyph *ui;
+    void updateGlyph ();
 
+    Ui::DockGlyph *ui;
+    GlyphManager *m_glyphManager;
+
+    QSharedPointer<Glyph> m_glyph;
     int m_gridSize;
     int m_glyphSize;
     QFont m_font;
     QString m_fontPath;
     QChar m_character;
+
 
     // QWidget interface
 protected:

@@ -2,11 +2,15 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QToolBar>
+#include <QGridLayout>
 #include <QTabWidget>
 #include <QDebug>
 #include <QLabel>
 
 #include "dockglyph.h"
+#include "glyphmanager.h"
+#include "glyphwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -24,7 +28,11 @@ public:
 
 signals:
     void saveCurrentState ();
-    
+    void generatedGlyphEnabled(bool editable);
+    void contourEnabled(bool enable);
+    void gridEnabled(bool enable);
+    void glyphGridEnabled(bool enable);
+
 private slots:
     void on_action_Quit_triggered();
 
@@ -34,8 +42,11 @@ protected:
     void showEvent(QShowEvent *event);
 
 private:
-    void connectGlyphDockEvents();
+    void setupSignals ();
+    void setupGlyphWidget ();
+    void setupGlyphDock ();
     void setupStatusBar();
+    void setupGlyphToolBar();
     void setStatusBarFontName(const QFont &newFont);
     void setStatusBarCharacter(const QChar &newCharacter);
     void setStatusBarGlyphSize(int newGlyphSize);
@@ -46,10 +57,22 @@ private:
     Ui::MainWindow *ui;
 
     DockGlyph *m_dockGlyph;
+    GlyphWidget *m_glyphWidget;
+    QGridLayout *m_mainLayout;
+    QToolBar *m_glyphToolBar;
+
+    QAction *m_generatedGlyphEnable;
+    QAction *m_gridEnable;
+    QAction *m_contourEnable;
+    QAction *m_glyphGrid;
+
 
     QLabel *m_fontLabel;
     QLabel *m_glyphSizeLabel;
     QLabel *m_gridSizeLabel;
     QLabel *m_charLabel;
+
+    GlyphManager *m_glyphManager;
+
 };
 #endif // MAINWINDOW_H

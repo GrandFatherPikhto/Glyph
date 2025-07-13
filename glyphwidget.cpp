@@ -1,19 +1,24 @@
 #include "glyphwidget.h"
+#include "ui_glyphwidget.h"
 
-#define TRUNC(x) ((x) >> 6)
-
-GlyphWidget::GlyphWidget(QWidget *parent)
-    : QWidget{parent}
+GlyphWidget::GlyphWidget(GlyphManager *glyphManager, QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::GlyphWidget)
+    , m_glyphManager(glyphManager)
     , m_glyphImage(nullptr)
     , m_ftLib(0)
     , m_ftFace(0)
+    , m_glyph(nullptr)
 {
+    ui->setupUi(this);
     FT_Error ftErr = FT_Err_Ok;
     ftErr = FT_Init_FreeType(&m_ftLib);
 }
 
 GlyphWidget::~GlyphWidget()
 {
+    delete ui;
+
     if (m_ftFace) {
         FT_Done_Face(m_ftFace);
     }
@@ -40,7 +45,7 @@ int GlyphWidget::findOptimalGlyphSize ()
     while (low <= high) {
         int mid = (low + high) / 2;
         FT_Set_Pixel_Sizes(m_ftFace, 0, mid);
-        FT_Load_Char(m_ftFace, m_glyphKey.character().unicode(), FT_LOAD_DEFAULT);
+        FT_Load_Char(m_ftFace, m_glyph->character().unicode(), FT_LOAD_DEFAULT);
 
         // int glyphHeight = (m_ftFace->glyph->metrics.height >> 6);  // Переводим из 26.6 fixed-point в пиксели
         int glyphHeight = m_ftFace->glyph->bitmap.rows;
@@ -63,66 +68,89 @@ int GlyphWidget::findOptimalGlyphSize ()
     return bestSize;
 }
 
+void GlyphWidget::calcRenderRect ()
+{
+    if (m_glyph && m_glyph->isValid())
+    {
+        // m_m_renderRect.left() = (width() - m_glyph->gridSize() * m_gridCellSize) / 2;
+        // m_m_renderRect.top() = (height() - m_glyph->gridSize() * m_gridCellSize) / 2;
+        // m_left = m_renderRect.left() + m_glyph->glyphLeft() * m_gridCellSize;
+        // m_top = m_renderRect.top() + m_glyph->glyphTop() * m_gridCellSize;
+        m_renderRect.setLeft((width() - m_glyph->gridSize() * m_gridCellSize) / 2);
+        m_renderRect.setTop((height() - m_glyph->gridSize() * m_gridCellSize) / 2);
+        m_renderRect.setWidth(m_glyph->gridSize() * m_gridCellSize);
+        m_renderRect.setHeight(m_glyph->gridSize() * m_gridCellSize);
+
+        m_glyphRect.setLeft(m_renderRect.left() + (m_glyph->glyphRect().left()) * m_gridCellSize);
+        m_glyphRect.setTop(m_renderRect.top() + m_glyph->glyphRect().top() * m_gridCellSize);
+        m_glyphRect.setWidth(m_glyph->glyphRect().width() * m_gridCellSize);
+        m_glyphRect.setHeight(m_glyph->glyphRect().height() * m_gridCellSize);
+
+        qDebug() << m_glyphRect;
+    }
+}
+
 
 void GlyphWidget::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
 
-    if (!(m_glyphKey.isValid() && m_glyphEntry.isValid() && m_glyphEntry.glyphPixelsIsValid()))
+    if (!m_glyph || !m_glyph->isValid() || !m_glyph->glyphPixelsIsValid())
         return;
+
+    calcRenderRect();
 
     QPainter painter(this);
 
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.setRenderHint(QPainter::Antialiasing, false);
 
-    int startX = (width() - m_glyphKey.gridSize() * m_gridCellSize) / 2;
-    int startY = (height() - m_glyphKey.gridSize() * m_gridCellSize) / 2;
-    int left = startX + m_glyphEntry.glyphLeft() * m_gridCellSize;
-    int top = startY + m_glyphEntry.glyphTop() * m_gridCellSize;
-
-    // Горизонтальные линии
-    for (int y = 0; y <= m_glyphKey.gridSize(); ++y) {
-        painter.drawLine(
-            startX,
-            startY + y * m_gridCellSize,
-            startX + m_glyphKey.gridSize() * m_gridCellSize,
-            startY + y * m_gridCellSize
-            );
-    }
-
-    // Вертикальные линии
-    for (int x = 0; x <= m_glyphKey.gridSize(); ++x) {
-        painter.drawLine(
-            startX + x * m_gridCellSize,
-            startY,
-            startX + x * m_gridCellSize,
-            startY + m_glyphKey.gridSize() * m_gridCellSize
-            );
-    }
-
-    if (m_glyphImage != nullptr)
+    if (m_gridEnable)
     {
-        QImage glyphImage = m_glyphImage->scaled(m_gridCellSize * m_glyphEntry.glyphCols(), m_gridCellSize * m_glyphEntry.glyphRows(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        // Горизонтальные линии
+        for (int y = 0; y <= m_glyph->gridSize(); ++y) {
+            painter.drawLine(
+                m_renderRect.left(),
+                m_renderRect.top() + y * m_gridCellSize,
+                m_renderRect.left() + m_glyph->gridSize() * m_gridCellSize,
+                m_renderRect.top() + y * m_gridCellSize
+                );
+        }
+
+        // Вертикальные линии
+        for (int x = 0; x <= m_glyph->gridSize(); ++x) {
+            painter.drawLine(
+                m_renderRect.left() + x * m_gridCellSize,
+                m_renderRect.top(),
+                m_renderRect.left() + x * m_gridCellSize,
+                m_renderRect.top() + m_glyph->gridSize() * m_gridCellSize
+                );
+        }
+
+    }
+
+    if (m_countourEnable && m_glyphImage != nullptr)
+    {
+        QImage glyphImage = m_glyphImage->scaled(m_gridCellSize * m_glyph->glyphCols(), m_gridCellSize * m_glyph->glyphRows(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         painter.drawImage(
-            left,
-            top,
+            m_glyphRect.left(),
+            m_glyphRect.top(),
             glyphImage
             );
     }
 
     // qDebug()() << "Pixels Vector Size: " << m_glyphPixels.size() << ((m_glyphPixels.size() == m_glyphRows * m_glyphCols) ? "=" : "≠") << m_glyphRows * m_glyphCols;
-    if (m_glyphEntry.glyphPixelsIsValid()) {
-        for(qint32 y = 0; y < m_glyphEntry.glyphRows(); ++y) {
-            for(qint32 x = 0; x < m_glyphEntry.glyphCols(); ++x) {
+    if (m_generatedGlyphEnable && m_glyph->glyphPixelsIsValid()) {
+        for(qint32 y = 0; y < m_glyph->glyphRows(); ++y) {
+            for(qint32 x = 0; x < m_glyph->glyphCols(); ++x) {
                 // Получаем значение пикселя (true - закрашен, false - пустой)
                 // bool pixel = m_glyphPixels[y * m_glyphCols + x];
-                bool pixel = m_glyphEntry.getPixel(x, y);
+                bool pixel = m_glyph->getPixel(x, y);
 
                 // Рассчитываем координаты квадрата с учетом масштаба
                 QRect pixelRect(
-                    left + x * m_gridCellSize,
-                    top + y * m_gridCellSize,
+                    m_glyphRect.left() + x * m_gridCellSize,
+                    m_glyphRect.top() + y * m_gridCellSize,
                     m_gridCellSize,
                     m_gridCellSize
                     );
@@ -131,9 +159,12 @@ void GlyphWidget::paintEvent(QPaintEvent *event)
                 if(pixel) {
                     painter.fillRect(pixelRect, QColor(0x33, 0x33, 0xFF , 0xEF));
                 } else {
-                    painter.fillRect(pixelRect, QColor(0x33, 0, 0, 0x11));
-                    painter.setPen(Qt::black);
-                    painter.drawRect(pixelRect);
+                    if (m_glyphGridEnable)
+                    {
+                        painter.fillRect(pixelRect, QColor(0x33, 0, 0, 0x11));
+                        painter.setPen(Qt::black);
+                        painter.drawRect(pixelRect);
+                    }
                 }
             }
         }
@@ -147,41 +178,36 @@ void GlyphWidget::resetGlyphPixels ()
 
 }
 
-void GlyphWidget::calcGlyphRect ()
-{
-    QRect glyphRect(QPoint(m_ftFace->glyph->bitmap_left, -m_ftFace->glyph->bitmap_top), QSize(m_ftFace->glyph->bitmap.width, m_ftFace->glyph->bitmap.rows));
-    qDebug() << "Glyph Rect" << glyphRect;
-}
-
 void GlyphWidget::renderGlyphPixels ()
 {
     FT_Error ftError = FT_Err_Ok;
-    resetGlyphPixels();
+    // if (m_glyph->glyphPixelsIsValid())
+    //     return;
+    // resetGlyphPixels();
 
     if (m_ftFace == 0) {
         qDebug() << "Font Face Not inited";
         return;
     }
 
-    if (!m_glyphKey.isValid() || !m_glyphEntry.isValid())
+    if (!m_glyph || !m_glyph->isValid())
         return;
 
     FT_UInt glyph_index = 0;
-    ftError = FT_Set_Pixel_Sizes(m_ftFace, 0, m_glyphEntry.glyphSize());
+    ftError = FT_Set_Pixel_Sizes(m_ftFace, 0, m_glyph->glyphSize());
     if (!ftError) {
         // qDebug() << "Set pixel sizes to " << m_glyphSize;
     } else {
-        qDebug() << "Can't set pixel sizes to " << m_glyphKey.character();
+        qDebug() << "Can't set pixel sizes to " << m_glyph->character();
     }
 
-    glyph_index = FT_Get_Char_Index(m_ftFace, m_glyphKey.character().unicode());
+    glyph_index = FT_Get_Char_Index(m_ftFace, m_glyph->character().unicode());
 
     ftError = FT_Load_Glyph(m_ftFace, glyph_index, FT_LOAD_RENDER | FT_LOAD_TARGET_MONO);
 
-    calcGlyphRect ();
-    QRect glyphRect(QPoint(m_ftFace->glyph->bitmap_left, m_glyphKey.gridSize() - m_ftFace->glyph->bitmap_top), QSize(m_ftFace->glyph->bitmap.width, m_ftFace->glyph->bitmap.rows));
-    m_glyphEntry.setGlyphRect(glyphRect);
-    qDebug() << "Glyph Rect: " << glyphRect;
+    QRect glyphRect(QPoint(m_ftFace->glyph->bitmap_left, m_glyph->gridSize() - m_ftFace->glyph->bitmap_top), QSize(m_ftFace->glyph->bitmap.width, m_ftFace->glyph->bitmap.rows));
+    m_glyph->setGlyphRect(glyphRect);
+    // qDebug() << "Glyph Rect: " << glyphRect;
 
     if (!ftError)
     {
@@ -191,7 +217,7 @@ void GlyphWidget::renderGlyphPixels ()
 
         FT_Bitmap* bitmap = &m_ftFace->glyph->bitmap;
         // qDebug() << "Columns: " << bitmap->width << ", Rows: " << bitmap->rows;
-        m_glyphEntry.resetGlyphPixels();
+        m_glyph->resetGlyphPixels();
         if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO) {
             for (int y = 0; y < bitmap->rows; y++) {
                 for (int x = 0; x < bitmap->width; x++) {
@@ -201,7 +227,7 @@ void GlyphWidget::renderGlyphPixels ()
                     unsigned char bit = (byte >> (7 - (x % 8))) & 0x1;
                     // printf("%c", bit ? '#' : ' ');
                     // m_glyphPixels.append(bit ? true : false);
-                    m_glyphEntry.addPixel(bit ? true : false);
+                    m_glyph->addPixel(bit ? true : false);
                 }
             }
         }
@@ -221,25 +247,23 @@ void GlyphWidget::renderGlyphImage()
         m_glyphImage = nullptr;
     }
 
-    if (!m_glyphKey.isValid() || !m_glyphEntry.isValid())
+    if (!m_glyph || !m_glyph->isValid())
         return;
 
     // int glyphSize = findOptimalGlyphSize();
     // qDebug()() << "Optimal Font Size: " << glyphSize << m_glyphCols * m_gridCellSize << "x" << m_glyphRows * m_gridCellSize;
     // Устанавливаем размер и загружаем глиф
-    int glyphWidth = m_glyphEntry.glyphCols() * m_gridCellSize * 2;
-    int glyphHeight = m_glyphEntry.glyphRows() * m_gridCellSize * 2;
+    int glyphWidth = m_glyph->glyphCols() * m_gridCellSize * 2;
+    int glyphHeight = m_glyph->glyphRows() * m_gridCellSize * 2;
     FT_Set_Pixel_Sizes(m_ftFace, glyphWidth, glyphHeight);
 #if 1
-    FT_Load_Char(m_ftFace, m_glyphKey.character().unicode(), FT_LOAD_RENDER);
+    FT_Load_Char(m_ftFace, m_glyph->character().unicode(), FT_LOAD_RENDER);
 #else
     FT_Load_Char(m_ftFace, m_character.unicode(), FT_LOAD_RENDER | FT_LOAD_COLOR);
 #endif
 
     FT_GlyphSlot glyph = m_ftFace->glyph;
     FT_Bitmap bitmap = glyph->bitmap;
-
-    calcGlyphRect ();
 
     // Создаём QImage с форматом ARGB32 (для прозрачности)
     m_glyphImage = new QImage(bitmap.width, bitmap.rows, QImage::Format_ARGB32);
@@ -264,37 +288,43 @@ void GlyphWidget::renderGlyphImage()
 }
 
 void GlyphWidget::updateGlyph () {
-    qDebug() << __FILE__ << __FUNCTION__;
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid()) {
-        m_gridCellSize = height() * 4 / (5 * m_glyphKey.gridSize());
-        qDebug() << __FILE__ << __LINE__ << "GlyphSize: " << m_glyphEntry.glyphSize();
+    if (m_glyph && m_glyph->isValid()) {
+        qDebug() << __FILE__ << __LINE__ << m_glyph->toString();
+        m_gridCellSize = height() * 4 / (5 * m_glyph->gridSize());
         renderGlyphPixels();
         renderGlyphImage();
     }
 }
 
-void GlyphWidget::setCharacter(const QChar &newCharacter) {
-    m_glyphKey.setCharacter(newCharacter);
-    if(m_glyphKey.isValid()) {
-        updateGlyph();
-        update();
-    }
-}
+// void GlyphWidget::setGlyphSize(int newGlyphSize) {
+//     m_glyph->setGlyphSize(newGlyphSize);
+//     qDebug() << __FUNCTION__ << newGlyphSize;
+//     if (m_glyph && m_glyph->isValid()) {
+//         updateGlyph();
+//         update();
+//     }
+// }
 
-void GlyphWidget::setGlyphSize(int newGlyphSize) {
-    m_glyphEntry.setGlyphSize(newGlyphSize);
-    qDebug() << __FUNCTION__ << newGlyphSize;
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid()) {
-        updateGlyph();
-        update();
-    }
-}
-
-void GlyphWidget::setGlyphFont(const QFont &newFont, const QString &newFontPath)
+void GlyphWidget::resizeEvent(QResizeEvent *event)
 {
-    QString oldFontPath = m_glyphEntry.fontPath();
-    m_glyphKey.setFont(newFont);
-    m_glyphEntry.setFontPath(newFontPath);
+    if (m_glyph && m_glyph->isValid()) {
+        updateGlyph();
+        update();
+    }
+}
+
+void GlyphWidget::setGlyph(QSharedPointer<Glyph> newGliph)
+{
+    m_glyph = newGliph;
+    loadFontFace();
+    updateGlyph();
+    update();
+}
+
+void GlyphWidget::loadFontFace()
+{
+    if (!m_glyph || m_glyph->fontPath().isEmpty())
+        return;
 
     if (m_ftFace) {
         FT_Done_Face(m_ftFace);
@@ -302,107 +332,53 @@ void GlyphWidget::setGlyphFont(const QFont &newFont, const QString &newFontPath)
     }
 
     FT_Error ftErr = FT_Err_Ok;
-    ftErr = FT_New_Face(m_ftLib, m_glyphEntry.fontPath().toLatin1().constData(), 0, &m_ftFace);
+    ftErr = FT_New_Face(m_ftLib, m_glyph->fontPath().toLatin1().constData(), 0, &m_ftFace);
     if (!ftErr) {
         qDebug() << "Face Loaded";
     } else {
         qDebug() << "Error FT Face Load";
     }
 
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid()) {
-        updateGlyph();
-        update();
-    }
-}
-
-
-void GlyphWidget::resizeEvent(QResizeEvent *event)
-{
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid()) {
-        updateGlyph();
-        update();
-    }
-}
-
-void GlyphWidget::setGridSize(int newGridSize) {
-    m_glyphKey.setGridSize(newGridSize);
-    if (m_glyphKey.isValid())
+    if (!ftErr)
     {
         updateGlyph();
         update();
     }
 }
 
-void GlyphWidget::setGlyphParams(const QFont &newFont, const QString & newFontPath, int newGlyphSize, const QChar &newCharacter, int newGridSize)
+void GlyphWidget::enableGrid(bool enable)
 {
-    setGridSize(newGridSize);
-    setGlyphSize(newGlyphSize);
-    setCharacter(newCharacter);
-    setGlyphSize(newGlyphSize);
-    setGlyphFont(newFont, newFontPath);
-
-    qDebug() << "Set Glyph Params: " << "Font Path: " << newFontPath;
-
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid()) {
-        updateGlyph();
-        update();
-    }
+    m_gridEnable = enable;
+    updateGlyph();
+    update ();
 }
 
-int GlyphWidget::glyphKeyEntry ()
+void GlyphWidget::enableContour(bool enable)
 {
-    auto it = m_glyphCache.find(m_glyphKey);
-    if (it != m_glyphCache.end()) {
-        // const GlyphEntry &entry = it.value();
-        m_glyphEntry = it.value();
-        return 1;
-    }
-
-    m_glyphCache.insert(m_glyphKey, m_glyphEntry);
-    return 0;
+    m_countourEnable = enable;
+    updateGlyph();
+    update ();
 }
 
-void GlyphWidget::moveGlyphLeft()
+void GlyphWidget::enableGeneratedGlyph(bool enable)
 {
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid())
+    m_generatedGlyphEnable = enable;
+    updateGlyph();
+    update ();
+}
+
+void GlyphWidget::enableGlyphGrid(bool enable)
+{
+    m_glyphGridEnable = enable;
+    updateGlyph();
+    update ();
+}
+
+
+void GlyphWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (m_glyph && m_glyph->glyphPixelsIsValid())
     {
-        m_glyphEntry.moveLeft();
-        update();
-    }
-}
 
-void GlyphWidget::moveGlyphTop()
-{
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid())
-    {
-        m_glyphEntry.moveTop();
-        update();
-    }
-}
-
-void GlyphWidget::moveGlyphDown()
-{
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid())
-    {
-        m_glyphEntry.moveDown();
-        update();
-    }
-}
-
-void GlyphWidget::moveGlyphRight()
-{
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid())
-    {
-        m_glyphEntry.moveRight();
-        update();
-    }
-}
-
-void GlyphWidget::moveGlyphCenter()
-{
-    if (m_glyphKey.isValid() && m_glyphEntry.isValid())
-    {
-        m_glyphEntry.moveCenter();
-        update();
     }
 }
