@@ -7,7 +7,7 @@
 #include <QFont>
 
 #include "glyphmanager.h"
-#include "glyph.h"
+#include "glyphmeta.h"
 
 namespace Ui {
 class DockGlyph;
@@ -23,35 +23,22 @@ public:
 
 private slots:
 
-    // void on_gridSize_valueChanged(int arg1);
-
-    void on_fontComboBox_currentFontChanged(const QFont &f);
-
-    void on_character_returnPressed();
-
-    void on_character_editingFinished();
-
-    void on_gridSize_valueChanged(int arg1);
-
-    void on_glyphSize_valueChanged(int arg1);
-
-    void on_moveCenter_clicked();
-
-    void on_moveLeft_clicked();
-
-    void on_moveTop_clicked();
-
-    void on_moveDown_clicked();
-
-    void on_moveRight_clicked();
+    void slotFontChanged(const QFont &font);
+    void slotCharacterChanged();
+    void slotGridSizeChanged(int gridSize);
+    void slotGlyphSizeChanged(int glyphSize);
+    void slotMoveCenterClicked();
+    void slotMoveLeftClicked();
+    void slotMoveTopClicked();
+    void slotMoveDownClicked();
+    void slotMoveRightClicked();
 
 signals:
-    void glyphChanged(QSharedPointer<Glyph> glyph);
+    void glyphChanged(QSharedPointer<GlyphMeta> glyph);
     void gridSizeChanged(int newSize);
     void glyphSizeChanged(int newSize);
     void fontChanged(const QFont &newFont, const QString &newFontPath);
     void characterChanged(const QChar &newChar);
-    void glyphParamsChanged(const QFont &newFont, const QString &newFontPath, int newFontSize, const QChar &newCharacter, int newGridSize);
     void moveGlyphLeft ();
     void moveGlyphRight();
     void moveGlyphTop ();
@@ -59,12 +46,13 @@ signals:
     void moveGlyphCenter ();
 
 private:
+    void connectSygnals ();
     void updateGlyph ();
 
     Ui::DockGlyph *ui;
     GlyphManager *m_glyphManager;
 
-    QSharedPointer<Glyph> m_glyph;
+    QSharedPointer<GlyphMeta> m_glyphMeta;
     int m_gridSize;
     int m_glyphSize;
     QFont m_font;

@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_mainLayout(nullptr)
     , m_glyphWidget(nullptr)
     , m_gridEnable(nullptr)
-    , m_generatedGlyphEnable(nullptr)
+    , m_templateGlyphEnable(nullptr)
     , m_glyphGrid(nullptr)
     , m_contourEnable(nullptr)
 {
@@ -42,8 +42,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupSignals ()
 {
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyph);
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, this, [=](QSharedPointer<Glyph> glyph){
+    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
+    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyph){
         setStatusBarFontName(glyph->font());
         setStatusBarCharacter(glyph->character());
         setStatusBarGlyphSize(glyph->glyphSize());
@@ -53,7 +53,7 @@ void MainWindow::setupSignals ()
     QObject::connect(m_dockGlyph, &DockGlyph::characterChanged, this, &MainWindow::setStatusBarCharacter);
     QObject::connect(m_dockGlyph, &DockGlyph::glyphSizeChanged, this, &MainWindow::setStatusBarGlyphSize);
     QObject::connect(m_dockGlyph, &DockGlyph::gridSizeChanged, this, &MainWindow::setStatusBarGridSize);
-    QObject::connect(this, &MainWindow::generatedGlyphEnabled, m_glyphWidget, &GlyphWidget::enableGeneratedGlyph);
+    QObject::connect(this, &MainWindow::templateGlyphEnabled, m_glyphWidget, &GlyphWidget::enableTemplateGlyph);
     QObject::connect(this, &MainWindow::contourEnabled, m_glyphWidget, &GlyphWidget::enableContour);
     QObject::connect(this, &MainWindow::gridEnabled, m_glyphWidget, &GlyphWidget::enableGrid);
     QObject::connect(this, &MainWindow::glyphGridEnabled, m_glyphWidget, &GlyphWidget::enableGlyphGrid);
@@ -79,12 +79,12 @@ void MainWindow::setupGlyphToolBar()
     m_glyphToolBar = new QToolBar("Glyph Toolbar", this);
     m_glyphToolBar->setObjectName("GlyphToolbar");
     // m_glyphToolBar->addAction(QIcon(":/glyphtoolbar/icons/editDisable"), "New");
-    m_generatedGlyphEnable = new QAction(QIcon(":/button/icons/edit"), "Generated Glyph", this);
-    m_generatedGlyphEnable->setCheckable(true);
-    connect(m_generatedGlyphEnable, &QAction::toggled, this, [=](bool checked) {
-        emit generatedGlyphEnabled(checked);
+    m_templateGlyphEnable = new QAction(QIcon(":/button/icons/edit"), "Template Glyph", this);
+    m_templateGlyphEnable->setCheckable(true);
+    connect(m_templateGlyphEnable, &QAction::toggled, this, [=](bool checked) {
+        emit templateGlyphEnabled(checked);
     });
-    m_glyphToolBar->addAction(m_generatedGlyphEnable);
+    m_glyphToolBar->addAction(m_templateGlyphEnable);
 
     m_gridEnable = new QAction(QIcon(":/button/icons/grid"), "Grid Enable", this);
     m_gridEnable->setCheckable(true);
@@ -170,7 +170,7 @@ void MainWindow::saveGeometryAndState() {
     QSettings settings("DAE", "Glyph");
     settings.setValue("mainWindowGeometry", saveGeometry());
     settings.setValue("mainWindowState", saveState());
-    settings.setValue("generatedGlyphEnabled", m_generatedGlyphEnable->isChecked());
+    settings.setValue("templateGlyphEnabled", m_templateGlyphEnable->isChecked());
     settings.setValue("gridEnabled", m_gridEnable->isChecked());
     settings.setValue("contourEnabled", m_contourEnable->isChecked());
     settings.setValue("glyphGridEnabled", m_glyphGrid->isChecked());
@@ -180,10 +180,10 @@ void MainWindow::restoreGeometryAndState() {
     QSettings settings("DAE", "Glyph");
     restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
     restoreState(settings.value("mainWindowState").toByteArray());
-    bool setGlyphEditable = settings.value("generatedGlyphEnabled").toBool();
-    qDebug() << "Set Glyph Editable" << setGlyphEditable;
-    if (m_generatedGlyphEnable) {
-        m_generatedGlyphEnable->setChecked(setGlyphEditable);
+    bool setTemplateGlyphEnable = settings.value("templateGlyphEnabled").toBool();
+    qDebug() << "Set Glyph Editable" << setTemplateGlyphEnable;
+    if (m_templateGlyphEnable) {
+        m_templateGlyphEnable->setChecked(setTemplateGlyphEnable);
     }
     bool gridEnabled = settings.value("gridEnabled").toBool();
     if (m_gridEnable) {

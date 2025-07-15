@@ -46,9 +46,13 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         fontmanager.h fontmanager.cpp
         glyphkey.h
         glyphkey.cpp
-        glyph.h
+        glyphmeta.h
         icons.qrc
         glyphmanager.h glyphmanager.cpp
+        iglyphrender.h
+        freetyperender.h freetyperender.cpp
+        userglyphrender.h userglyphrender.cpp
+        userglyphrender.h userglyphrender.cpp
         glyphwidget.h glyphwidget.cpp glyphwidget.ui
     )
 # Define target properties for Android with Qt 6 as:

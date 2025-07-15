@@ -12,6 +12,7 @@ DockGlyph::DockGlyph(GlyphManager *glyphManager, QWidget *parent)
     , m_character(QChar('A'))
 {
     ui->setupUi(this);
+    connectSygnals();
     ui->gridSize->setValue(m_gridSize);
     ui->fontComboBox->setCurrentFont(m_font);
     ui->character->setText(QString("%1").arg(m_character));
@@ -25,29 +26,34 @@ DockGlyph::~DockGlyph()
     delete ui;
 }
 
-
-void DockGlyph::on_fontComboBox_currentFontChanged(const QFont &f)
+void DockGlyph::connectSygnals()
 {
-    m_font = f;
+    QObject::connect(ui->fontComboBox, &QFontComboBox::currentFontChanged, this, &DockGlyph::slotFontChanged);
+    QObject::connect(ui->character, &QLineEdit::returnPressed, this, &DockGlyph::slotCharacterChanged);
+    QObject::connect(ui->character, &QLineEdit::editingFinished, this, &DockGlyph::slotCharacterChanged);
+    QObject::connect(ui->gridSize, &QSpinBox::valueChanged, this, &DockGlyph::slotGridSizeChanged);
+    QObject::connect(ui->glyphSize, &QSpinBox::valueChanged, this, &DockGlyph::slotGlyphSizeChanged);
+    QObject::connect(ui->moveCenter, &QPushButton::clicked, this, &DockGlyph::slotMoveCenterClicked);
+    QObject::connect(ui->moveLeft, &QPushButton::clicked, this, &DockGlyph::slotMoveLeftClicked);
+    QObject::connect(ui->moveTop, &QPushButton::clicked, this, &DockGlyph::slotMoveTopClicked);
+    QObject::connect(ui->moveRight, &QPushButton::clicked, this, &DockGlyph::slotMoveRightClicked);
+    QObject::connect(ui->moveDown, &QPushButton::clicked, this, &DockGlyph::slotMoveDownClicked);
+}
+
+void DockGlyph::slotFontChanged(const QFont &font)
+{
+    m_font = font;
     auto& fontManager = FontManager::instance();
     m_fontPath = fontManager.findFontPath(m_font.family());
+
     updateGlyph ();
 }
 
-void DockGlyph::on_character_returnPressed()
+void DockGlyph::slotCharacterChanged()
 {
     m_character = ui->character->text().at(0);
     updateGlyph ();
 }
-
-
-void DockGlyph::on_character_editingFinished()
-{
-    m_character = ui->character->text().at(0);
-    qDebug() << m_font << m_character << m_gridSize;
-    updateGlyph ();
-}
-
 
 
 void DockGlyph::showEvent(QShowEvent *event)
@@ -56,78 +62,77 @@ void DockGlyph::showEvent(QShowEvent *event)
 }
 
 
-void DockGlyph::on_gridSize_valueChanged(int newSize)
+void DockGlyph::slotGridSizeChanged(int newSize)
 {
     m_gridSize = newSize;
     updateGlyph ();
 }
 
 
-void DockGlyph::on_glyphSize_valueChanged(int newGlyphSize)
+void DockGlyph::slotGlyphSizeChanged(int newGlyphSize)
 {
     m_glyphSize = newGlyphSize;
-    m_glyph->setGlyphSize(newGlyphSize);
+    m_glyphMeta->setGlyphSize(newGlyphSize);
     updateGlyph ();
 }
 
 
-void DockGlyph::on_moveCenter_clicked()
+void DockGlyph::slotMoveCenterClicked()
 {
-    m_glyph->moveCenter();
+    m_glyphMeta->moveCenter();
     updateGlyph ();
 }
 
 
-void DockGlyph::on_moveLeft_clicked()
+void DockGlyph::slotMoveLeftClicked()
 {
-    m_glyph->moveLeft();
+    m_glyphMeta->moveLeft();
     updateGlyph ();
 }
 
 
-void DockGlyph::on_moveTop_clicked()
+void DockGlyph::slotMoveTopClicked()
 {
-    m_glyph->moveTop();
+    m_glyphMeta->moveTop();
     updateGlyph ();
 }
 
 
-void DockGlyph::on_moveDown_clicked()
+void DockGlyph::slotMoveDownClicked()
 {
-    m_glyph->moveDown();
+    m_glyphMeta->moveDown();
     updateGlyph ();
 }
 
 
-void DockGlyph::on_moveRight_clicked()
+void DockGlyph::slotMoveRightClicked()
 {
-    m_glyph->moveRight();
+    m_glyphMeta->moveRight();
     updateGlyph();
 }
 
 void DockGlyph::updateGlyph ()
 {
-    m_glyph = m_glyphManager->findOrCreate(m_character, m_gridSize);
-    if (m_glyph->glyphSize() <= 0)
-    {
-        m_glyph->setGlyphSize(m_glyphSize);
-    } else
-    {
+    m_glyphMeta = m_glyphManager->findOrCreate(m_character, m_gridSize);
 
+    if (m_glyphMeta->glyphSize() <= 0)
+    {
+        m_glyphMeta->setGlyphSize(m_glyphSize);
     }
 
-    if (m_glyph->font() == QFont())
+    if (m_glyphMeta->font() == QFont())
     {
-        m_glyph->setFontPath(m_fontPath);
-        m_glyph->setFont(m_font);
+        m_glyphMeta->setFontPath(m_fontPath);
+        m_glyphMeta->setFont(m_font);
     }
     
-    if (m_glyph->glyphSize() < 0)
+    if (m_glyphMeta->glyphSize() < 0)
     {
-        m_glyph->setGlyphSize(m_glyphSize);
+        m_glyphMeta->setGlyphSize(m_glyphSize);
     }
 
-    qDebug() << m_glyph->toString();
+    m_glyphMeta->setDirty();
+    // qDebug() << m_glyph->toString();
 
-    emit glyphChanged(m_glyph);
+    emit glyphChanged(m_glyphMeta);
 }

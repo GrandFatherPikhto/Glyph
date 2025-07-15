@@ -11,14 +11,14 @@
 class GlyphKey {
 public:
     GlyphKey(int character /* = -1 */, int gridSize /* = -1 */)
-    : m_character(character)
+    : m_unicode(character)
     , m_gridSize(gridSize)
     {
 
     }
 
     GlyphKey(const QChar &character, int gridSize)
-        : m_character(character.unicode())
+        : m_unicode(character.unicode())
         , m_gridSize(gridSize)
     {
     
@@ -26,28 +26,37 @@ public:
 
     // Оператор < для QMap
     bool operator < (const GlyphKey &other) const {
-        if (m_character != other.m_character)
-            return m_character < other.m_character;
+        if (m_unicode != other.m_unicode)
+            return m_unicode < other.m_unicode;
         return m_gridSize < other.m_gridSize;
+    }
+
+    QString toString() const {
+        return QString("Char: %1, GridSize: %2").arg(QChar(m_unicode)).arg(m_gridSize);
     }
 
     // Оператор == для QHash
     bool operator==(const GlyphKey &other) const {
-        return m_character == other.m_character &&
+        return m_unicode == other.m_unicode &&
                m_gridSize == other.m_gridSize;
     }
 
     // Сеттеры
-    void setCharacter(int newCharacter) {m_character = newCharacter;}
+    void setCharacter(int newCharacter) {m_unicode = newCharacter;}
     void setGridSize(int newGridSize) { m_gridSize = newGridSize; }
 
     // Геттеры
-    int character() const { return m_character; }
+    int character() const { return m_unicode; }
     int gridSize() const { return m_gridSize; }
+
+    QChar getQChar ()
+    {
+        return QChar(m_unicode);
+    }
 
 
 private:
-    int m_character;
+    char16_t m_unicode;
     int m_gridSize;
 };
 

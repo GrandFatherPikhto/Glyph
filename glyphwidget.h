@@ -11,7 +11,7 @@
 #include <QHash>
 
 #include "glyphmanager.h"
-#include "glyph.h"
+#include "glyphmeta.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -34,8 +34,8 @@ public:
 
 public slots:
     // void setGlyphSize(int newFontPtSize);
-    void setGlyph (QSharedPointer<Glyph> newGlyph);
-    void enableGeneratedGlyph(bool editable);
+    void setGlyphMeta (QSharedPointer<GlyphMeta> newGlyph);
+    void enableTemplateGlyph(bool editable);
     void enableGrid(bool enable);
     void enableContour(bool enable);
     void enableGlyphGrid(bool enable);
@@ -46,28 +46,21 @@ signals:
 protected:
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
-    void loadFontFace();
     void mousePressEvent(QMouseEvent *event);
 
 private:
+    void paintGrid (QPainter &painter);
+    void calcCellSize ();
     void calcRenderRect ();
-    int glyphKeyEntry ();
-    void renderGlyphImage();
-    void renderGlyphPixels ();
-    int findOptimalGlyphSize ();
-    void resetGlyphPixels ();
-    void updateGlyph ();
+    void calcGlyphRect ();
 
     Ui::GlyphWidget *ui;
 
     GlyphManager *m_glyphManager;
 
-    FT_Library m_ftLib;
-    FT_Face m_ftFace;
-    QImage *m_glyphImage;
     int m_gridCellSize;
 
-    bool m_generatedGlyphEnable;
+    bool m_templateGlyphEnable;
     bool m_gridEnable;
     bool m_countourEnable;
     bool m_glyphGridEnable;
@@ -75,7 +68,7 @@ private:
     QRect m_glyphRect;
     QRect m_renderRect;
 
-    QSharedPointer<Glyph> m_glyph;
+    QSharedPointer<GlyphMeta> m_glyphMeta;
 };
 
 #endif // GLYPHWIDGET_H

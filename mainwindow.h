@@ -28,7 +28,7 @@ public:
 
 signals:
     void saveCurrentState ();
-    void generatedGlyphEnabled(bool editable);
+    void templateGlyphEnabled(bool editable);
     void contourEnabled(bool enable);
     void gridEnabled(bool enable);
     void glyphGridEnabled(bool enable);
@@ -61,7 +61,7 @@ private:
     QGridLayout *m_mainLayout;
     QToolBar *m_glyphToolBar;
 
-    QAction *m_generatedGlyphEnable;
+    QAction *m_templateGlyphEnable;
     QAction *m_gridEnable;
     QAction *m_contourEnable;
     QAction *m_glyphGrid;
