@@ -14,13 +14,14 @@ class GlyphManager : public QObject
     Q_OBJECT
 public:
     explicit GlyphManager(QObject *parent = nullptr);
+    ~GlyphManager();
 
-    QSharedPointer<GlyphMeta> findOrCreate(const QChar &character, int gridSize, const QFont font = QFont(), const QString &fontPath = QString());
+    QSharedPointer<GlyphMeta> findOrCreate(const QChar &character, int bitmapDimension, const QFont font = QFont(), const QString &fontPath = QString());
     QSharedPointer<GlyphMeta> findOrCreate(const GlyphKey &key, const QFont font = QFont(), const QString &fontPath = QString());
 
     QSharedPointer<QImage> getTemplateGlyph(const GlyphKey &key, QSharedPointer<IGlyphRender> renderer = nullptr);
     QSharedPointer<QImage> getUserGlyph(const GlyphKey &key, QSharedPointer<IGlyphRender> renderer = nullptr);
-    QSharedPointer<QImage> getPreviewGlyph(const GlyphKey &key, QSharedPointer<IGlyphRender> renderer = nullptr);
+    QSharedPointer<QImage> getPreviewGlyph(const GlyphKey &key, const QSize &previewSize, QSharedPointer<IGlyphRender> renderer = nullptr);
     
     void sortGlyphs();
 
@@ -34,5 +35,6 @@ private:
     QHash<GlyphKey, QSharedPointer<QImage>> m_previewGlyphs;
 
     QSharedPointer<IGlyphRender> m_ftRender;
+    QSharedPointer<IGlyphRender> m_userGlyphRender;
 };
 #endif // GLYPHMANAGER_H

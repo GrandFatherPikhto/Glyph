@@ -35,10 +35,14 @@ public:
 public slots:
     // void setGlyphSize(int newFontPtSize);
     void setGlyphMeta (QSharedPointer<GlyphMeta> newGlyph);
-    void enableTemplateGlyph(bool editable);
+    void setGridDimension(int gridDimension);
+    void enableTemplateLayer(bool editable);
     void enableGrid(bool enable);
-    void enableContour(bool enable);
-    void enableGlyphGrid(bool enable);
+    void enablePreviewLayer(bool enable);
+    void enableUserLayer(bool enable);
+    void enableGlyphRectLayer(bool enable);
+    void enableBitmapRectLayer(bool enable);
+    void enableBaselineLayer(bool enable);
 
 signals:
 
@@ -50,23 +54,35 @@ protected:
 
 private:
     void paintGrid (QPainter &painter);
-    void calcCellSize ();
-    void calcRenderRect ();
-    void calcGlyphRect ();
+    void paintBaseLine(QPainter &painter);
+    void paintBitmapRect(QPainter &painter);
+    void paintTemplateGlyph(QPainter &painter);
+    void paintPreviewGlyph(QPainter &painter);
+    void paintUserGlyph(QPainter &painter);
+
+    void calcRects ();
 
     Ui::GlyphWidget *ui;
 
     GlyphManager *m_glyphManager;
 
     int m_gridCellSize;
+    int m_bitmapDimension;
+    int m_gridDimension;
+    int m_padding;
 
-    bool m_templateGlyphEnable;
-    bool m_gridEnable;
-    bool m_countourEnable;
-    bool m_glyphGridEnable;
+    bool m_templateLayerEnable;
+    bool m_gridLayerEnable;
+    bool m_previewLayerEnable;
+    bool m_userLayerEnable;
+    bool m_glyphRectEnable;
+    bool m_baselineEnable;
+    bool m_bitmapRectEnable;
 
     QRect m_glyphRect;
     QRect m_renderRect;
+    QRect m_bitmapRect;
+    QRect m_userGlyphRect;
 
     QSharedPointer<GlyphMeta> m_glyphMeta;
 };

@@ -16,13 +16,17 @@ MainWindow::MainWindow(QWidget *parent)
     , m_fontLabel(nullptr)
     , m_glyphSizeLabel(nullptr)
     , m_gridSizeLabel(nullptr)
+    , m_glyphRectLabel(nullptr)
     , m_charLabel(nullptr)
     , m_mainLayout(nullptr)
     , m_glyphWidget(nullptr)
     , m_gridEnable(nullptr)
-    , m_templateGlyphEnable(nullptr)
-    , m_glyphGrid(nullptr)
-    , m_contourEnable(nullptr)
+    , m_templateLayerEnable(nullptr)
+    , m_userLayerEnable(nullptr)
+    , m_previewLayerEnable(nullptr)
+    , m_glyphRectLayerEnable(nullptr)
+    , m_baselineLayerEnable(nullptr)
+    , m_bitmapRectLayerEnable(nullptr)
 {
     ui->setupUi(this);
     m_glyphManager = new GlyphManager(this);
@@ -42,21 +46,26 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupSignals ()
 {
+    QObject::connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::slotActionQuitTriggered);
     QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyph){
-        setStatusBarFontName(glyph->font());
-        setStatusBarCharacter(glyph->character());
-        setStatusBarGlyphSize(glyph->glyphSize());
-        setStatusBarGridSize(glyph->gridSize());
+    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
+        setStatusBarFontName(glyphMeta->font());
+        setStatusBarCharacter(glyphMeta->character());
+        setStatusBarGlyphSize(glyphMeta->glyphSize());
+        setStatusBarBitmapDimension(glyphMeta->bitmapDimension());
     });
     QObject::connect(m_dockGlyph, &DockGlyph::fontChanged, this, &MainWindow::setStatusBarFontName);
     QObject::connect(m_dockGlyph, &DockGlyph::characterChanged, this, &MainWindow::setStatusBarCharacter);
     QObject::connect(m_dockGlyph, &DockGlyph::glyphSizeChanged, this, &MainWindow::setStatusBarGlyphSize);
-    QObject::connect(m_dockGlyph, &DockGlyph::gridSizeChanged, this, &MainWindow::setStatusBarGridSize);
-    QObject::connect(this, &MainWindow::templateGlyphEnabled, m_glyphWidget, &GlyphWidget::enableTemplateGlyph);
-    QObject::connect(this, &MainWindow::contourEnabled, m_glyphWidget, &GlyphWidget::enableContour);
-    QObject::connect(this, &MainWindow::gridEnabled, m_glyphWidget, &GlyphWidget::enableGrid);
-    QObject::connect(this, &MainWindow::glyphGridEnabled, m_glyphWidget, &GlyphWidget::enableGlyphGrid);
+    QObject::connect(m_dockGlyph, &DockGlyph::bitmapDimensionChanged, this, &MainWindow::setStatusBarBitmapDimension);
+    QObject::connect(m_dockGlyph, &DockGlyph::gridDimensionChanged, m_glyphWidget, &GlyphWidget::setGridDimension);
+    QObject::connect(this, &MainWindow::templateLayerEnable, m_glyphWidget, &GlyphWidget::enableTemplateLayer);
+    QObject::connect(this, &MainWindow::previewLayerEnable, m_glyphWidget, &GlyphWidget::enablePreviewLayer);
+    QObject::connect(this, &MainWindow::gridEnable, m_glyphWidget, &GlyphWidget::enableGrid);
+    QObject::connect(this, &MainWindow::userLayerEnable, m_glyphWidget, &GlyphWidget::enableUserLayer);
+    QObject::connect(this, &MainWindow::glyphRectLayerEnable, m_glyphWidget, &GlyphWidget::enableGlyphRectLayer);
+    QObject::connect(this, &MainWindow::baselineLayerEnable, m_glyphWidget, &GlyphWidget::enableBaselineLayer);
+    QObject::connect(this, &MainWindow::bitmapRectLayerEnable, m_glyphWidget, &GlyphWidget::enableBitmapRectLayer);
 }
 
 void MainWindow::setupGlyphWidget ()
@@ -78,35 +87,56 @@ void MainWindow::setupGlyphToolBar()
 {
     m_glyphToolBar = new QToolBar("Glyph Toolbar", this);
     m_glyphToolBar->setObjectName("GlyphToolbar");
-    // m_glyphToolBar->addAction(QIcon(":/glyphtoolbar/icons/editDisable"), "New");
-    m_templateGlyphEnable = new QAction(QIcon(":/button/icons/edit"), "Template Glyph", this);
-    m_templateGlyphEnable->setCheckable(true);
-    connect(m_templateGlyphEnable, &QAction::toggled, this, [=](bool checked) {
-        emit templateGlyphEnabled(checked);
+    m_templateLayerEnable = new QAction(QIcon(":/button/icons/template"), "Template Layer", this);
+    m_templateLayerEnable->setCheckable(true);
+    connect(m_templateLayerEnable, &QAction::toggled, this, [=](bool checked) {
+        emit templateLayerEnable(checked);
     });
-    m_glyphToolBar->addAction(m_templateGlyphEnable);
+    m_glyphToolBar->addAction(m_templateLayerEnable);
 
     m_gridEnable = new QAction(QIcon(":/button/icons/grid"), "Grid Enable", this);
     m_gridEnable->setCheckable(true);
     connect(m_gridEnable, &QAction::toggled, this, [=](bool checked) {
-        emit gridEnabled(checked);
+        emit gridEnable(checked);
     });
     m_glyphToolBar->addAction(m_gridEnable);
 
-    m_glyphGrid = new QAction(QIcon(":/button/icons/glyphgrid"), "Glyph Grid Enable", this);
-    m_glyphGrid->setCheckable(true);
-    connect(m_glyphGrid, &QAction::toggled, this, [=](bool checked) {
-        emit glyphGridEnabled(checked);
+    m_userLayerEnable = new QAction(QIcon(":/button/icons/user"), "User Layer Enable", this);
+    m_userLayerEnable->setCheckable(true);
+    connect(m_userLayerEnable, &QAction::toggled, this, [=](bool checked) {
+        emit userLayerEnable(checked);
     });
-    m_glyphToolBar->addAction(m_glyphGrid);
+    m_glyphToolBar->addAction(m_userLayerEnable);
 
 
-    m_contourEnable = new QAction(QIcon(":/button/icons/contour"), "Countour Enable", this);
-    m_contourEnable->setCheckable(true);
-    connect(m_contourEnable, &QAction::toggled, this, [=](bool checked) {
-        emit contourEnabled(checked);
+    m_previewLayerEnable = new QAction(QIcon(":/button/icons/preview"), "Preview Layer Enable", this);
+    m_previewLayerEnable->setCheckable(true);
+    connect(m_previewLayerEnable, &QAction::toggled, this, [=](bool checked) {
+        emit previewLayerEnable(checked);
     });
-    m_glyphToolBar->addAction(m_contourEnable);
+    m_glyphToolBar->addAction(m_previewLayerEnable);
+
+    m_glyphRectLayerEnable = new QAction(QIcon(":/button/icons/glyphrect"), "Glyph Rect Layer Enable", this);
+    m_glyphRectLayerEnable->setCheckable(true);
+    connect(m_glyphRectLayerEnable, &QAction::toggled, this, [=](bool checked) {
+        emit glyphRectLayerEnable(checked);
+    });
+    m_glyphToolBar->addAction(m_glyphRectLayerEnable);
+
+
+    m_bitmapRectLayerEnable = new QAction(QIcon(":/button/icons/bitmaprect"), "BaseLine Layer Enable", this);
+    m_bitmapRectLayerEnable->setCheckable(true);
+    connect(m_bitmapRectLayerEnable, &QAction::toggled, this, [=](bool checked) {
+        emit bitmapRectLayerEnable(checked);
+    });
+    m_glyphToolBar->addAction(m_bitmapRectLayerEnable);
+
+    m_baselineLayerEnable = new QAction(QIcon(":/button/icons/baseline"), "Bitmap Rect Layer Enable", this);
+    m_baselineLayerEnable->setCheckable(true);
+    connect(m_baselineLayerEnable, &QAction::toggled, this, [=](bool checked) {
+        emit baselineLayerEnable(checked);
+    });
+    m_glyphToolBar->addAction(m_baselineLayerEnable);
 
     addToolBar(m_glyphToolBar);
 }
@@ -129,7 +159,7 @@ void MainWindow::setupStatusBar () {
     statusBar()->addPermanentWidget(m_gridSizeLabel);
 }
 
-void MainWindow::on_action_Quit_triggered()
+void MainWindow::slotActionQuitTriggered()
 {
     qApp->quit();
 }
@@ -142,27 +172,27 @@ void MainWindow::setStatusBarFontName(const QFont &newFont)
     }
 }
 
-void MainWindow::setStatusBarCharacter(const QChar &newCharacter)
+void MainWindow::setStatusBarCharacter(const QChar &newValue)
 {
     if (m_charLabel != nullptr)
     {
-        m_charLabel->setText(QString("Character: '%1'").arg(newCharacter));
+        m_charLabel->setText(QString("Character: '%1'").arg(newValue));
     }
 }
 
-void MainWindow::setStatusBarGlyphSize(int newGlyphSize)
+void MainWindow::setStatusBarGlyphSize(int newValue)
 {
     if (m_glyphSizeLabel != nullptr)
     {
-        m_glyphSizeLabel->setText(QString("Glyph Size: %1x%1 px").arg(newGlyphSize));
+        m_glyphSizeLabel->setText(QString("Glyph Size: %1 px").arg(newValue));
     }
 }
 
-void MainWindow::setStatusBarGridSize (int newGridSize)
+void MainWindow::setStatusBarBitmapDimension (int newValue)
 {
     if (m_gridSizeLabel != nullptr)
     {
-        m_gridSizeLabel->setText(QString("Grid Size: %1x%1 px").arg(newGridSize));
+        m_gridSizeLabel->setText(QString("Bitmap Size: %1x%1 px").arg(newValue));
     }
 }
 
@@ -170,32 +200,47 @@ void MainWindow::saveGeometryAndState() {
     QSettings settings("DAE", "Glyph");
     settings.setValue("mainWindowGeometry", saveGeometry());
     settings.setValue("mainWindowState", saveState());
-    settings.setValue("templateGlyphEnabled", m_templateGlyphEnable->isChecked());
-    settings.setValue("gridEnabled", m_gridEnable->isChecked());
-    settings.setValue("contourEnabled", m_contourEnable->isChecked());
-    settings.setValue("glyphGridEnabled", m_glyphGrid->isChecked());
+    settings.setValue("templateLayerEnable", m_templateLayerEnable->isChecked());
+    settings.setValue("gridEnable", m_gridEnable->isChecked());
+    settings.setValue("previewLayerEnable", m_previewLayerEnable->isChecked());
+    settings.setValue("userLayerEnable", m_userLayerEnable->isChecked());
+    settings.setValue("glyphRectLayerEnable", m_glyphRectLayerEnable->isChecked());
+    settings.setValue("baseLineLayerEnable", m_baselineLayerEnable->isChecked());
+    settings.setValue("bitmapRectLayerEnable", m_bitmapRectLayerEnable->isChecked());
 }
 
 void MainWindow::restoreGeometryAndState() {
     QSettings settings("DAE", "Glyph");
     restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
     restoreState(settings.value("mainWindowState").toByteArray());
-    bool setTemplateGlyphEnable = settings.value("templateGlyphEnabled").toBool();
+    bool setTemplateGlyphEnable = settings.value("templateLayerEnable").toBool();
     qDebug() << "Set Glyph Editable" << setTemplateGlyphEnable;
-    if (m_templateGlyphEnable) {
-        m_templateGlyphEnable->setChecked(setTemplateGlyphEnable);
+    if (m_templateLayerEnable) {
+        m_templateLayerEnable->setChecked(setTemplateGlyphEnable);
     }
-    bool gridEnabled = settings.value("gridEnabled").toBool();
+    bool gridEnable = settings.value("gridEnable").toBool();
     if (m_gridEnable) {
-        m_gridEnable->setChecked(gridEnabled);
+        m_gridEnable->setChecked(gridEnable);
     }
-    bool glyphGridEnabled = settings.value("glyphGridEnabled").toBool();
-    if (m_glyphGrid) {
-        m_glyphGrid->setChecked(glyphGridEnabled);
+    bool userLayerEnable = settings.value("userLayerEnable").toBool();
+    if (m_userLayerEnable) {
+        m_userLayerEnable->setChecked(userLayerEnable);
     }
-    bool contourEnabled = settings.value("contourEnabled").toBool();
-    if (m_contourEnable) {
-        m_contourEnable->setChecked(contourEnabled);
+    bool previewLayerEnable = settings.value("previewLayerEnable").toBool();
+    if (m_previewLayerEnable) {
+        m_previewLayerEnable->setChecked(previewLayerEnable);
+    }
+    bool glyphRectLayerEnable = settings.value("glyphRectLayerEnable").toBool();
+    if (m_glyphRectLayerEnable) {
+        m_glyphRectLayerEnable->setChecked(glyphRectLayerEnable);
+    }
+    bool baselineLayerEnable = settings.value("baselineLayerEnable").toBool();
+    if (m_baselineLayerEnable) {
+        m_baselineLayerEnable->setChecked(baselineLayerEnable);
+    }
+    bool bitmapRectLayerEnable = settings.value("bitmapRectLayerEnable").toBool();
+    if (m_bitmapRectLayerEnable) {
+        m_bitmapRectLayerEnable->setChecked(bitmapRectLayerEnable);
     }
 }
 

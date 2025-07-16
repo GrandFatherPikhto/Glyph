@@ -28,13 +28,16 @@ public:
 
 signals:
     void saveCurrentState ();
-    void templateGlyphEnabled(bool editable);
-    void contourEnabled(bool enable);
-    void gridEnabled(bool enable);
-    void glyphGridEnabled(bool enable);
+    void gridEnable(bool enable);
+    void templateLayerEnable(bool editable);
+    void previewLayerEnable(bool enable);
+    void userLayerEnable(bool enable);
+    void glyphRectLayerEnable(bool enable);
+    void baselineLayerEnable(bool enable);
+    void bitmapRectLayerEnable(bool enable);
 
 private slots:
-    void on_action_Quit_triggered();
+    void slotActionQuitTriggered();
 
     // QWidget interface
 protected:
@@ -50,7 +53,7 @@ private:
     void setStatusBarFontName(const QFont &newFont);
     void setStatusBarCharacter(const QChar &newCharacter);
     void setStatusBarGlyphSize(int newGlyphSize);
-    void setStatusBarGridSize (int newGridSize);
+    void setStatusBarBitmapDimension (int newGridSize);
     void saveGeometryAndState();
     void restoreGeometryAndState();
 
@@ -61,15 +64,19 @@ private:
     QGridLayout *m_mainLayout;
     QToolBar *m_glyphToolBar;
 
-    QAction *m_templateGlyphEnable;
     QAction *m_gridEnable;
-    QAction *m_contourEnable;
-    QAction *m_glyphGrid;
+    QAction *m_templateLayerEnable;
+    QAction *m_previewLayerEnable;
+    QAction *m_userLayerEnable;
+    QAction *m_glyphRectLayerEnable;
+    QAction *m_bitmapRectLayerEnable;
+    QAction *m_baselineLayerEnable;
 
 
     QLabel *m_fontLabel;
     QLabel *m_glyphSizeLabel;
     QLabel *m_gridSizeLabel;
+    QLabel *m_glyphRectLabel;
     QLabel *m_charLabel;
 
     GlyphManager *m_glyphManager;

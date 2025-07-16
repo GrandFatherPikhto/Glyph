@@ -4,6 +4,8 @@ FreeTypeRender::FreeTypeRender()
     : m_ftError(FT_Err_Ok)
     , m_ftLibrary(0)
     , m_ftFace(0)
+    , m_slot(0)
+    , m_renderRect(QRect())
 {
     if (FT_Init_FreeType(&m_ftLibrary)) {
         throw std::runtime_error("Failed to initialize FreeType");
@@ -24,59 +26,42 @@ QString FreeTypeRender::rendererName() const
 
 QSharedPointer<QImage> FreeTypeRender::renderGlyph (
     QSharedPointer<GlyphMeta> glyphMeta,
-    const QSize& targetSize,
-    Qt::TransformationMode mode
+    const QSize &targetSize,
+    const QColor &glyphColor
 ) {
     m_glyphMeta = glyphMeta;
-    // qDebug() << __FILE__ << __LINE__ << m_glyphMeta->toString();
+    m_targetSize = targetSize;
     
-    if (!m_glyphMeta->fontPath().isEmpty()) {
-        loadFontFace();
+    if (m_glyphMeta->fontPath().isEmpty()) {
+        return nullptr;
     }
 
-    setTargetSize(targetSize);
+    loadFontFace();
+
+    setTargetSize();
     loadGlyph();
 
+    calcRenderRect();
 
-    // Get the glyph slot
-    FT_GlyphSlot slot = m_ftFace->glyph;
-    FT_Bitmap bitmap = slot->bitmap;
+    QImage image = QImage(QSize(m_bitmap.width, m_bitmap.rows), QImage::Format_ARGB32);
 
-    // qDebug() << __FILE__ << __LINE__ << bitmap.width << bitmap.rows;
-    // Create a QImage from the FreeType bitmap
-    QImage image;
+    QColor pixelColor(glyphColor);
 
-    if (targetSize == QSize()) {
-        image = QImage(bitmap.width, bitmap.rows, QImage::Format_ARGB32);
-    } else {
-        image = QImage(targetSize.width(), targetSize.height(), QImage::Format_ARGB32);
-    }
-
-    QRect glyphRect = QRect(
-        QPoint(slot->bitmap_left, slot->bitmap_top - m_glyphMeta->gridSize()),
-        QSize(bitmap.width, bitmap.rows));
-    // qDebug() << __FILE__ << __LINE__ << glyphRect;
-    glyphMeta->setGlyphRect(glyphRect);
-    // qDebug() << __FILE__ << __LINE__ << glyphMeta->toString();
-
-    for (int y = 0; y < bitmap.rows; ++y) {
-        for (int x = 0; x < bitmap.width; ++x) {
+    for (int y = 0; y < m_bitmap.rows; ++y) {
+        for (int x = 0; x < m_bitmap.width; ++x) {
             uint8_t pixel;
             // Обрабатываем монохромный (1 бит на пиксель) и grayscale (8 бит)
-            if (bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
-                pixel = (bitmap.buffer[y * bitmap.pitch + (x / 8)] >> (7 - (x % 8))) & 1 ? 0xEF : 0;
+            if (m_bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
+                pixel = (m_bitmap.buffer[y * m_bitmap.pitch + (x / 8)] >> (7 - (x % 8))) & 1 ? 0xEF : 0;
             } else { // FT_PIXEL_MODE_GRAY
-                pixel = bitmap.buffer[y * bitmap.pitch + x];
+                pixel = m_bitmap.buffer[y * m_bitmap.pitch + x];
             }
 
             // Устанавливаем пиксель в QImage (чёрный с альфа-каналом)
-            image.setPixel(x, y, qRgba(0xFF, 0x33, 0x33, pixel));
+            // image.setPixel(x, y, qRgba(0xFF, 0x33, 0x33, pixel));
+            pixelColor.setAlpha(pixel);
+            image.setPixelColor(x, y, pixelColor);
         }
-    }
-
-    // Scale the image if target size is specified and different from current size
-    if (!targetSize.isEmpty() && image.size() != targetSize) {
-        // image = image.scaled(targetSize, Qt::IgnoreAspectRatio, mode);
     }
 
     return QSharedPointer<QImage>::create(image);    
@@ -96,10 +81,15 @@ void FreeTypeRender::loadGlyph ()
 {
     FT_UInt glyphIndex = FT_Get_Char_Index(m_ftFace, m_glyphMeta->character().unicode());
     m_ftError = FT_Load_Glyph(m_ftFace, glyphIndex, FT_LOAD_RENDER | FT_LOAD_TARGET_MONO);
+
     if (m_ftError)
     {
         throw std::runtime_error("Failed to load glyph: " + QString(m_glyphMeta->character()).toStdString());
     }
+
+    // Get the glyph slot
+    m_slot = m_ftFace->glyph;
+    m_bitmap = m_slot->bitmap;
 }
 
 void FreeTypeRender::doneFace()
@@ -119,18 +109,19 @@ void FreeTypeRender::doneLibrary()
     }
 }
 
-void FreeTypeRender::setTargetSize(const QSize &targetSize)
+void FreeTypeRender::setTargetSize()
 {
-    if (targetSize != QSize())
-    {
-        m_ftError = FT_Set_Pixel_Sizes(m_ftFace, targetSize.width(), targetSize.height());
-    } else
-    {
-        m_ftError = FT_Set_Pixel_Sizes(m_ftFace, 0, m_glyphMeta->glyphSize());
-    }
+    m_ftError = FT_Set_Pixel_Sizes(m_ftFace, m_targetSize.width(), m_targetSize.height());
 
     if (m_ftError)
     {
         throw std::runtime_error(QString("Can't set %1 to size %2").arg(m_glyphMeta->character()).arg(m_glyphMeta->glyphSize()).toStdString());
     }
+}
+
+void FreeTypeRender::calcRenderRect ()
+{
+    m_renderRect = QRect(
+        QPoint(m_slot->bitmap_left, m_glyphMeta->bitmapDimension() - m_slot->bitmap_top),
+        QSize(m_bitmap.width, m_bitmap.rows));
 }

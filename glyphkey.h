@@ -10,16 +10,16 @@
 
 class GlyphKey {
 public:
-    GlyphKey(int character /* = -1 */, int gridSize /* = -1 */)
+    GlyphKey(int character /* = -1 */, int bitmapDimension /* = -1 */)
     : m_unicode(character)
-    , m_gridSize(gridSize)
+    , m_bitmapDimension(bitmapDimension)
     {
 
     }
 
-    GlyphKey(const QChar &character, int gridSize)
+    GlyphKey(const QChar &character, int bitmapDimension)
         : m_unicode(character.unicode())
-        , m_gridSize(gridSize)
+        , m_bitmapDimension(bitmapDimension)
     {
     
     }
@@ -28,26 +28,26 @@ public:
     bool operator < (const GlyphKey &other) const {
         if (m_unicode != other.m_unicode)
             return m_unicode < other.m_unicode;
-        return m_gridSize < other.m_gridSize;
+        return m_bitmapDimension < other.m_bitmapDimension;
     }
 
     QString toString() const {
-        return QString("Char: %1, GridSize: %2").arg(QChar(m_unicode)).arg(m_gridSize);
+        return QString("Char: %1, GridSize: %2").arg(QChar(m_unicode)).arg(m_bitmapDimension);
     }
 
     // Оператор == для QHash
     bool operator==(const GlyphKey &other) const {
         return m_unicode == other.m_unicode &&
-               m_gridSize == other.m_gridSize;
+               m_bitmapDimension == other.m_bitmapDimension;
     }
 
     // Сеттеры
     void setCharacter(int newCharacter) {m_unicode = newCharacter;}
-    void setGridSize(int newGridSize) { m_gridSize = newGridSize; }
+    void setBitmapDimension(int newGridSize) { m_bitmapDimension = newGridSize; }
 
     // Геттеры
     int character() const { return m_unicode; }
-    int gridSize() const { return m_gridSize; }
+    int bitmapDimension() const { return m_bitmapDimension; }
 
     QChar getQChar ()
     {
@@ -57,14 +57,14 @@ public:
 
 private:
     char16_t m_unicode;
-    int m_gridSize;
+    int m_bitmapDimension;
 };
 
 // inline uint qHash(const GlyphKey &key, uint seed = 0);
 inline uint qHash(const GlyphKey &key, uint seed) {
     QtPrivate::QHashCombine hash;
     seed = hash(seed, key.character());
-    seed = hash(seed, key.gridSize());
+    seed = hash(seed, key.bitmapDimension());
     return seed;
 }
 

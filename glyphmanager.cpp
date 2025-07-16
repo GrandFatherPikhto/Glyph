@@ -1,36 +1,46 @@
 #include "glyphmanager.h"
 #include "freetyperender.h"
+#include "userglyphrender.h"
 
 GlyphManager::GlyphManager(QObject *parent)
     : QObject{parent}
     , m_ftRender(nullptr)
 {
     m_ftRender = QSharedPointer<FreeTypeRender>::create();
+    m_userGlyphRender = QSharedPointer<UserGlyphRender>::create();
+
     m_index.clear();
     m_metaGlyphs.clear();
+}
+
+GlyphManager::~GlyphManager()
+{
 }
 
 QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const GlyphKey &key, const QFont font, const QString &fontPath)
 {
     QChar ch(key.character());
-    return findOrCreate(ch, key.gridSize(), font, fontPath);
+    return findOrCreate(ch, key.bitmapDimension(), font, fontPath);
 }
 
-QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int gridSize, const QFont font, const QString &fontPath)
+QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, const QFont font, const QString &fontPath)
 {
-    if (character == QChar() || gridSize < 6)
+    if (character == QChar() || bitmapDimension < 6)
+    {
+        qDebug() << __FILE__ << __LINE__ << character << bitmapDimension;
         return nullptr;
+    }
         
-    GlyphKey key(character, gridSize);
+    GlyphKey key(character, bitmapDimension);
     auto it = m_index.find(key);
     if (it != m_index.end()) {
         return m_metaGlyphs[it.value()];
     }
 
-    // Glyph glyph(font, character, gridSize);
+    // Glyph glyph(font, character, bitmapDimension);
     auto glyphMeta = QSharedPointer<GlyphMeta>::create(
         character,
-        gridSize
+        bitmapDimension
         );
 
     if (font != QFont())
@@ -54,7 +64,8 @@ QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int
 QSharedPointer<QImage> GlyphManager::getTemplateGlyph(const GlyphKey &key, QSharedPointer<IGlyphRender> userRenderer)
 {
     auto glyphMeta = findOrCreate(key);
-    if (glyphMeta->fontPath().isEmpty())
+
+    if (!glyphMeta || glyphMeta->fontPath().isEmpty())
         return nullptr;
 
     auto it = m_templateGlyphs.find(key);
@@ -64,7 +75,8 @@ QSharedPointer<QImage> GlyphManager::getTemplateGlyph(const GlyphKey &key, QShar
     }
 
     QSharedPointer<IGlyphRender> renderer = userRenderer ? userRenderer : m_ftRender;
-    QSharedPointer<QImage> img = renderer->renderGlyph(glyphMeta);
+    QSharedPointer<QImage> img = renderer->renderGlyph(glyphMeta, QSize(glyphMeta->glyphSize(), glyphMeta->glyphSize()), QColor(Qt::blue));
+    glyphMeta->setGlyphRect(renderer->renderRect());
     if (it != m_templateGlyphs.end())
     {
         m_templateGlyphs.erase(it);
@@ -75,14 +87,55 @@ QSharedPointer<QImage> GlyphManager::getTemplateGlyph(const GlyphKey &key, QShar
     return img;
 }
 
-QSharedPointer<QImage> GlyphManager::getUserGlyph(const GlyphKey &key, QSharedPointer<IGlyphRender> renderer)
+QSharedPointer<QImage> GlyphManager::getUserGlyph(const GlyphKey &key, QSharedPointer<IGlyphRender> userRenderer)
 {
-    return nullptr;
+    auto glyphMeta = findOrCreate(key);
+    if (!glyphMeta || glyphMeta->fontPath().isEmpty())
+        return nullptr;
+
+    auto it = m_userGlyphs.find(key);
+    if (!(glyphMeta->dirty() || it == m_userGlyphs.end() || glyphMeta->resized()))
+    {
+        return it.value();
+    }
+
+    QSharedPointer<IGlyphRender> renderer = userRenderer ? userRenderer : m_userGlyphRender;
+    QSharedPointer<QImage> img = renderer->renderGlyph(glyphMeta, QSize(glyphMeta->gridDimension(), glyphMeta->gridDimension()), QColor(Qt::black));
+
+    if (it != m_userGlyphs.end())
+    {
+        m_userGlyphs.erase(it);
+    }
+
+    m_userGlyphs.insert(key, img);
+
+    return img;
 }
 
-QSharedPointer<QImage> GlyphManager::getPreviewGlyph(const GlyphKey &key, QSharedPointer<IGlyphRender> renderer)
+QSharedPointer<QImage> GlyphManager::getPreviewGlyph(const GlyphKey &key, const QSize &previewSize, QSharedPointer<IGlyphRender> userRenderer)
 {
-    return nullptr;
+    auto glyphMeta = findOrCreate(key);
+    if (!glyphMeta || glyphMeta->fontPath().isEmpty())
+        return nullptr;
+
+    auto it = m_previewGlyphs.find(key);
+    if (!(glyphMeta->dirty() || it == m_previewGlyphs.end() || glyphMeta->resized()))
+    {
+        return it.value();
+    }
+
+    QSharedPointer<IGlyphRender> renderer = userRenderer ? userRenderer : m_ftRender;
+    QSharedPointer<QImage> img = renderer->renderGlyph(glyphMeta, previewSize, QColor(Qt::red));
+    glyphMeta->setPreviewRect(renderer->renderRect());
+
+    if (it != m_previewGlyphs.end())
+    {
+        m_previewGlyphs.erase(it);
+    }
+
+    m_previewGlyphs.insert(key, img);
+
+    return img;
 }
 
 void GlyphManager::sortGlyphs() {
