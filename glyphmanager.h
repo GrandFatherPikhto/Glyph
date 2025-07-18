@@ -17,7 +17,7 @@ public:
     ~GlyphManager();
 
     QSharedPointer<GlyphMeta> findOrCreate(const QChar &character, int bitmapDimension, int glyphSize = -1, const QFont &font = QFont(), const QString &fontPath = QString());
-    QSharedPointer<GlyphMeta> findOrCreate(const GlyphKey &key, int glyphSize = -1, const QFont &font = QFont(), const QString &fontPath = QString());
+    QSharedPointer<GlyphMeta> find(const GlyphKey &key);
 
     QSharedPointer<QImage> getTemplateGlyph(const GlyphKey &key, const QColor &color /* = QColor(0x00, 0x00, 0x55, 0x55) */, QSharedPointer<IGlyphRender> renderer = QSharedPointer<IGlyphRender>());
     QSharedPointer<QImage> getUserGlyph(const GlyphKey &key, const QColor &color /* = Qt::black */, QSharedPointer<IGlyphRender> renderer = QSharedPointer<IGlyphRender>());
@@ -42,7 +42,7 @@ public:
         return m_temporaryGlyphKey;
     }
 
-    QSharedPointer<GlyphMeta> getTemporaryGlyphMeta(const QChar &character, int bitmapDimension, int glyphSize = -1, const QFont font = QFont(), const QString &fontPath = QString());
+    QSharedPointer<GlyphMeta> getTemporaryGlyphMeta(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font, const QString &fontPath);
     QSharedPointer<QImage> getTemporaryTemplateLayer(const QColor &color, QSharedPointer<IGlyphRender> renderer = QSharedPointer<IGlyphRender>());
     QSharedPointer<QImage> getTemporaryPreviewLayer(const QSize &size, const QColor &color, QSharedPointer<IGlyphRender> renderer = QSharedPointer<IGlyphRender>());
     QSharedPointer<QImage> getTemporaryUserLayer(const QColor &color, QSharedPointer<IGlyphRender> renderer = QSharedPointer<IGlyphRender>());

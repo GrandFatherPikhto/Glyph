@@ -256,7 +256,7 @@ void MainWindow::restoreGeometryAndState() {
     restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
     restoreState(settings.value("mainWindowState").toByteArray());
     bool setTemplateGlyphEnable = settings.value("templateLayerEnable").toBool();
-    qDebug() << "Set Glyph Editable" << setTemplateGlyphEnable;
+// qDebug() << "Set Glyph Editable" << setTemplateGlyphEnable;
     if (m_templateLayerEnable) {
         m_templateLayerEnable->setChecked(setTemplateGlyphEnable);
     }

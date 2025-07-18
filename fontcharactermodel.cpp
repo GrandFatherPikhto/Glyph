@@ -169,7 +169,7 @@ Qt::ItemFlags FontCharacterModel::flags(const QModelIndex &index) const {
 
 void FontCharacterModel::filterCharList()
 {
-    qDebug() << __FUNCTION__ << m_fontCharacters.length();
+// qDebug() << __FUNCTION__ << m_fontCharacters.length();
     beginResetModel(); // Сообщаем представлению о начале изменений    
     m_characters.clear();
     for (const auto& charItem : std::as_const(m_fontCharacters)) {
@@ -181,12 +181,12 @@ void FontCharacterModel::filterCharList()
         }
     }
     endResetModel(); // Сообщаем представлению об окончании изменений    
-    qDebug() << m_fontCharacters.length() << "/" << m_characters.length();
+// qDebug() << m_fontCharacters.length() << "/" << m_characters.length();
 }
 
 void FontCharacterModel::fillCharList ()
 {
-    qDebug() << __FUNCTION__;
+// qDebug() << __FUNCTION__;
     m_fontCharacters.clear();
 
     QFontMetrics fm(m_font);
@@ -220,7 +220,7 @@ void FontCharacterModel::fillCharList ()
         }
     }
 
-    qDebug() << __FUNCTION__ << " Added " << m_fontCharacters.length() << " chars";
+// qDebug() << __FUNCTION__ << " Added " << m_fontCharacters.length() << " chars";
     // Дополнительно можно явно уведомить:
     // emit dataChanged(index(0, 0), index(rowCount()-1, columnCount()-1));
     emit categoriesChanged(m_categories);

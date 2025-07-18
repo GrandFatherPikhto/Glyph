@@ -32,8 +32,8 @@ QSharedPointer<QImage> FreeTypeRender::renderGlyph (
     m_glyphMeta = glyphMeta;
     m_targetSize = targetSize;
     
-    if (m_glyphMeta->fontPath().isEmpty()) {
-        return nullptr;
+    if (m_glyphMeta.isNull() || !m_glyphMeta->isValid() || m_glyphMeta->fontPath().isEmpty()) {
+        return QSharedPointer<QImage>();
     }
 
     loadFontFace();

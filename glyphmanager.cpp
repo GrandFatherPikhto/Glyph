@@ -22,58 +22,48 @@ GlyphManager::~GlyphManager()
 {
 }
 
-QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const GlyphKey &key, int glyphSize, const QFont &font, const QString &fontPath)
+QSharedPointer<GlyphMeta> GlyphManager::find(const GlyphKey &key)
 {
     QChar ch(key.character());
-    return findOrCreate(ch, key.bitmapDimension(), glyphSize, font, fontPath);
+    auto it = m_index.find(key);
+    if (it != m_index.end()) {
+        return m_metaGlyphs[it.value()];
+    }
+
+    return QSharedPointer<GlyphMeta>();
 }
 
 QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font, const QString &fontPath)
 {
-    if (character == QChar() || bitmapDimension < 6)
+    if (character == QChar() || bitmapDimension < 6 || glyphSize < 6)
     {
-        qDebug() << __FILE__ << __LINE__ << character << bitmapDimension;
+        // qDebug() << __FILE__ << __LINE__ << character << bitmapDimension;
         return QSharedPointer<GlyphMeta>();
     }
 
 
     GlyphKey key(character, bitmapDimension, font);
-    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << key.toString();
     if (!m_temporaryGlyphMeta.isNull() && m_temporaryGlyphMeta->glyphKey() == key)
     {
-        qDebug() << "Temporary: " << m_temporaryGlyphMeta->toString();
         m_temporaryGlyphMeta = getTemporaryGlyphMeta(character, bitmapDimension, 14, font, fontPath);
+        qDebug() << QString("%1:%2 %3 %4").arg(__FILE__, QString::number(__LINE__), __FUNCTION__, m_temporaryGlyphMeta->toString());
         return m_temporaryGlyphMeta;
     }
 
+    QSharedPointer<GlyphMeta> glyphMeta = find(key);
 
-    auto it = m_index.find(key);
-    if (it != m_index.end()) {
-        // qDebug() << __FILE__ << __LINE__ << "Finded: " << key.toString() << m_metaGlyphs.size();
-        return m_metaGlyphs[it.value()];
-    }
+    if(!glyphMeta.isNull())
+        return glyphMeta;
 
-    // Glyph glyph(font, character, bitmapDimension);
-    QSharedPointer<GlyphMeta> glyphMeta = QSharedPointer<GlyphMeta>::create(
+    glyphMeta = QSharedPointer<GlyphMeta>::create(
         character,
-        bitmapDimension
+        bitmapDimension,
+        glyphSize,
+        font,
+        fontPath
         );
 
-    if (font != QFont())
-    {
-        glyphMeta->setFont(font);
-    }
-
-    if (!fontPath.isEmpty())
-    {
-        glyphMeta->setFontPath(fontPath);
-    }
-
-    if (glyphSize > 0)
-    {
-        glyphMeta->setGlyphSize(glyphSize);
-    }
-
+    qDebug() << QString("%1:%2 %3 %4").arg(__FILE__, QString::number(__LINE__), __FUNCTION__, glyphMeta->toString());
     m_metaGlyphs.append(glyphMeta);
     m_index.insert(key, m_metaGlyphs.indexOf(glyphMeta));
 
@@ -87,12 +77,13 @@ QSharedPointer<QImage> GlyphManager::getTemplateGlyph(const GlyphKey &key, const
     if (!m_temporaryGlyphKey.isNull() && *m_temporaryGlyphKey.data() == key)
     {
         // qDebug() << "Temporary Glyph Template: " << m_temporaryGlyphMeta->toString();
+// qDebug() << QString("%1:%2 %3").arg(__FILE__).arg(__LINE__).arg(__FUNCTION__);
         return getTemporaryTemplateLayer(color, userRenderer);
     }
 
-    auto glyphMeta = findOrCreate(key);
+    auto glyphMeta = find(key);
 
-    qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << glyphMeta->toString();
+// qDebug() << QString("%1:%2 %3 %4").arg(__FILE__, QString::number(__LINE__), __FUNCTION__,glyphMeta->toString());
 
     if (!glyphMeta || glyphMeta->fontPath().isEmpty())
         return QSharedPointer<QImage>();
@@ -127,7 +118,7 @@ QSharedPointer<QImage> GlyphManager::getUserGlyph(const GlyphKey &key, const QCo
     }
 
     // qDebug() << "Request User Glyph";
-    auto glyphMeta = findOrCreate(key);
+    auto glyphMeta = find(key);
     if (!glyphMeta || glyphMeta->fontPath().isEmpty())
         return QSharedPointer<QImage>();
 
@@ -157,7 +148,7 @@ QSharedPointer<QImage> GlyphManager::getUserGlyph(const GlyphKey &key, const QCo
 
 QSharedPointer<QImage> GlyphManager::getPreviewGlyph(const GlyphKey &key, const QSize &previewSize, const QColor &color,  QSharedPointer<IGlyphRender> userRenderer)
 {
-    auto glyphMeta = findOrCreate(key);
+    auto glyphMeta = find(key);
     if (!glyphMeta || glyphMeta->fontPath().isEmpty())
         return QSharedPointer<QImage>();
 
@@ -208,7 +199,7 @@ void GlyphManager::updateData()
 }
 
 
-QSharedPointer<GlyphMeta> GlyphManager::getTemporaryGlyphMeta(const QChar &character, int bitmapDimension, int glyphSize, const QFont font, const QString &fontPath)
+QSharedPointer<GlyphMeta> GlyphManager::getTemporaryGlyphMeta(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font, const QString &fontPath)
 {
     if (!m_temporaryGlyphMeta.isNull())
     {
@@ -217,6 +208,9 @@ QSharedPointer<GlyphMeta> GlyphManager::getTemporaryGlyphMeta(const QChar &chara
 
     m_temporaryGlyphMeta = QSharedPointer<GlyphMeta>::create(character, bitmapDimension, glyphSize, font, fontPath);
     m_temporaryGlyphKey = QSharedPointer<GlyphKey>::create(m_temporaryGlyphMeta->glyphKey());
+    m_temporaryGlyphMeta->setDirty();
+
+    qDebug() << QString("%1:%2 %3 %4").arg(__FILE__, QString::number(__LINE__), __FUNCTION__,m_temporaryGlyphMeta->toString());
 
     return m_temporaryGlyphMeta;
 }
@@ -228,16 +222,24 @@ QSharedPointer<QImage> GlyphManager::getTemporaryTemplateLayer(const QColor &col
         return QSharedPointer<QImage>();
     }
 
-    if (m_temporaryTemplateLayer.isNull())
+    if (!m_temporaryTemplateLayer.isNull())
     {
-        QSharedPointer<IGlyphRender> renderer = userRenderer.isNull() ? m_ftRender : userRenderer;
-        m_temporaryTemplateLayer =
-            renderer->renderGlyph(m_temporaryGlyphMeta,
-                QSize(m_temporaryGlyphMeta->glyphSize(), m_temporaryGlyphMeta->glyphSize()),
-                color);
-        m_temporaryGlyphMeta->setGlyphRect(renderer->renderRect());
-        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_temporaryGlyphMeta->toString() << ", Width: " << m_temporaryTemplateLayer->width() << ", Height: " << m_temporaryTemplateLayer->height();
+        if (m_temporaryGlyphMeta->dirty())
+        {
+            m_temporaryTemplateLayer.clear();
+        } else
+        {
+            return m_temporaryTemplateLayer;
+        }
     }
+
+    QSharedPointer<IGlyphRender> renderer = userRenderer.isNull() ? m_ftRender : userRenderer;
+    m_temporaryTemplateLayer =
+        renderer->renderGlyph(m_temporaryGlyphMeta,
+            QSize(m_temporaryGlyphMeta->glyphSize(), m_temporaryGlyphMeta->glyphSize()),
+            color);
+    m_temporaryGlyphMeta->setGlyphRect(renderer->renderRect());
+// qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_temporaryGlyphMeta->toString() << ", Width: " << m_temporaryTemplateLayer->width() << ", Height: " << m_temporaryTemplateLayer->height();
 
     return m_temporaryTemplateLayer;
 }
@@ -251,7 +253,13 @@ QSharedPointer<QImage> GlyphManager::getTemporaryPreviewLayer(const QSize &previ
     {
         if (!m_temporaryPreviewLayer.isNull())
         {
-            m_temporaryPreviewLayer.clear();
+            if (m_temporaryGlyphMeta->resized() || m_temporaryGlyphMeta->dirty())
+            {
+                m_temporaryPreviewLayer.clear();
+            } else
+            {
+                return m_temporaryPreviewLayer;
+            }
         }
 
         QSharedPointer<IGlyphRender> renderer = userRenderer.isNull() ? m_ftRender : userRenderer;
@@ -267,14 +275,23 @@ QSharedPointer<QImage> GlyphManager::getTemporaryUserLayer(const QColor &color, 
     if (m_temporaryGlyphMeta.isNull())
         return QSharedPointer<QImage>();
 
-    if (m_temporaryUserLayer.isNull())
+    if (!m_temporaryUserLayer.isNull())
     {
-        QSharedPointer<IGlyphRender> renderer = userRenderer ? userRenderer : m_userGlyphRender;
-        m_temporaryUserLayer = 
-            renderer->renderGlyph(m_temporaryGlyphMeta, 
-                QSize(m_temporaryGlyphMeta->bitmapDimension(), 
-                m_temporaryGlyphMeta->bitmapDimension()), color);
+        if (m_temporaryGlyphMeta->dirty())
+        {
+            m_temporaryUserLayer.clear();
+        } else
+        {
+            return m_temporaryUserLayer;
+        }
     }
+
+    QSharedPointer<IGlyphRender> renderer = userRenderer ? userRenderer : m_userGlyphRender;
+    m_temporaryUserLayer =
+        renderer->renderGlyph(m_temporaryGlyphMeta,
+            QSize(m_temporaryGlyphMeta->bitmapDimension(),
+            m_temporaryGlyphMeta->bitmapDimension()), color);
+
 
     return m_temporaryUserLayer;
 }

@@ -14,7 +14,7 @@ DockGlyph::DockGlyph(GlyphManager *glyphManager, QWidget *parent)
     , m_bitmapDimension(-1)
     , m_glyphSize(-1)
     , m_font(QFont())
-    , m_character(QChar())
+    , m_character(QChar('A'))
     , m_mainSplitter(nullptr)
     , m_glyphsModel(nullptr)
 {
@@ -140,9 +140,9 @@ void DockGlyph::slotMoveRightClicked()
 
 void DockGlyph::updateGlyph ()
 {
-    if (m_character == QChar() || m_bitmapDimension < 6)
+    if (m_character == QChar() || m_bitmapDimension < 6 || m_glyphSize < 6 || m_font == QFont() || m_fontPath.isEmpty())
         return;
-        
+
     m_glyphMeta = m_glyphManager->findOrCreate(m_character, m_bitmapDimension, m_glyphSize, m_font, m_fontPath);
 
     if (!m_glyphMeta)
@@ -159,7 +159,7 @@ void DockGlyph::updateGlyph ()
     m_glyphMeta->setDirty();
 
     // qDebug() << __FILE__ << __LINE__ << m_character << m_bitmapDimension << m_glyphMeta->toString();
-    qDebug() << "Row Count: " << m_glyphsModel->rowCount();
+// qDebug() << "Row Count: " << m_glyphsModel->rowCount();
     // QModelIndex topLeft = m_glyphsModel->index(0, 0);
     // QModelIndex bottomRight = m_glyphsModel->index(m_glyphsModel->columnCount() - 1, m_glyphsModel->rowCount() -1, QModelIndex());
     // emit m_glyphsModel->dataChanged(topLeft, bottomRight, QList<int>(Qt::DisplayRole));
@@ -183,7 +183,7 @@ void DockGlyph::restoreGeometryAndState() {
     m_mainSplitter->restoreState(settings.value("dockGlyphSplitter").toByteArray());
     ui->bitmapDimension->setValue(settings.value("dockGlyphBitmapSize").toInt());
     int glyphSize = settings.value("dockGlyphGlyphSize").toInt();
-    qDebug() << glyphSize;
+// qDebug() << glyphSize;
     if (glyphSize > 0)
     {
         ui->glyphSize->setValue(glyphSize);

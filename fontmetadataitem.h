@@ -30,7 +30,7 @@ public:
     }
 
     friend QDebug operator<<(QDebug debug, const FontMetadataItem& item) {
-        QDebugStateSaver saver(debug);
+// qDebugStateSaver saver(debug);
         debug.nospace();
 
         if (item.id() == 0 && item.name().isEmpty()) {

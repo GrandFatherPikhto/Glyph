@@ -14,12 +14,12 @@
 class GlyphMeta {
 public:
     // Первые два параметры ДОЛЖНЫ БЫТЬ заполнены. Потому, что это параметры GlyphKey
-    GlyphMeta(const QChar &newCharacter, int bitmapDimension, int glyphSize = -1, const QFont &newFont = QFont(), const QString &newFontPath = QString(), int newGlyphSize = -1)
-        : m_font(newFont)
-        , m_fontPath(newFontPath)
+    GlyphMeta(const QChar &newCharacter, int bitmapDimension, int glyphSize = -1, const QFont &newFont = QFont(), const QString &newFontPath = QString())
+        : m_character(newCharacter)
         , m_glyphSize(glyphSize)
         , m_bitmapDimension(bitmapDimension)
-        , m_character(newCharacter)
+        , m_font(newFont)
+        , m_fontPath(newFontPath)
         , m_offset(QPoint(0,0))
         , m_glyphRect(QRect())
         , m_previewRect(QRect())
@@ -30,11 +30,11 @@ public:
     }
 
     GlyphMeta(const GlyphMeta & glyphMeta)
-        : m_font(glyphMeta.m_font)
-        , m_fontPath(glyphMeta.m_fontPath)
+        : m_character(glyphMeta.m_character)
         , m_glyphSize(glyphMeta.m_glyphSize)
         , m_bitmapDimension(glyphMeta.m_bitmapDimension)
-        , m_character(glyphMeta.m_character)
+        , m_font(glyphMeta.m_font)
+        , m_fontPath(glyphMeta.m_fontPath)
         , m_offset(glyphMeta.m_offset)
         , m_glyphRect(glyphMeta.m_glyphRect)
         , m_previewRect(glyphMeta.m_previewRect)
@@ -45,11 +45,11 @@ public:
     }
 
     GlyphMeta(QSharedPointer<GlyphMeta> glyphMeta)
-        : m_font(glyphMeta->m_font)
-        , m_fontPath(glyphMeta->m_fontPath)
+        : m_character(glyphMeta->m_character)
         , m_glyphSize(glyphMeta->m_glyphSize)
         , m_bitmapDimension(glyphMeta->m_bitmapDimension)
-        , m_character(glyphMeta->m_character)
+        , m_font(glyphMeta->m_font)
+        , m_fontPath(glyphMeta->m_fontPath)
         , m_offset(glyphMeta->m_offset)
         , m_glyphRect(glyphMeta->m_glyphRect)
         , m_previewRect(glyphMeta->m_previewRect)
@@ -217,15 +217,15 @@ public:
         QString validation((isValid() ? "Valid" : "No Valid"));
         QString glyphRect = QString("(%1, %2, (%3 x %4))").arg(m_glyphRect.left()).arg(m_glyphRect.top()).arg(m_glyphRect.width()).arg(m_glyphRect.height());
         QString glyphOffset = QString("(%1, %2)").arg(m_offset.x()).arg(m_offset.y());
-        return QString("GlyphEntry: %1, Font: %2, FontPath: %3, Character: %4, Glyph Size: %5, GlyphRect: %6, Base Line: %7, Grid Size: %8, Dirty: %9")
+        return QString("GlyphEntry: %1, Character: %2, Glyph Size: %3, Bitmap Dimension: %4, Font: %5, Font Path: %6, Glyph Rect: %7, Offset: %8, Dirty: %9")
             .arg(validation)
-            .arg(m_font.family())
-            .arg(m_fontPath)
             .arg(m_character)
             .arg(m_glyphSize)
+            .arg(m_bitmapDimension)
+            .arg(m_font.family())
+            .arg(m_fontPath)
             .arg(glyphRect)
             .arg(glyphOffset)
-            .arg(m_bitmapDimension)
             .arg(m_dirty);
     }
 
@@ -235,7 +235,7 @@ public:
     }
 
     friend QDataStream &operator<<(QDataStream &out, const GlyphMeta &glyph) {
-        qDebug() << "operator <<";
+// qDebug() << "operator <<";
         // out << entry.m_glyphSize << entry.m_glyphRect;
         out << glyph.m_font << glyph.m_fontPath << glyph.m_character << glyph.m_glyphSize << glyph.m_bitmapDimension << glyph.m_glyphRect << glyph.m_offset;
         return out;

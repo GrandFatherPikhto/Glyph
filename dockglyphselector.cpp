@@ -27,7 +27,7 @@ DockGlyphSelector::DockGlyphSelector(GlyphManager *glyphManager, QWidget *parent
 }
 
 void DockGlyphSelector::setupUI() {
-    qDebug() << __FILE__ << font().family() << font().pointSize();
+// qDebug() << __FILE__ << font().family() << font().pointSize();
     m_fontCharacterModel = new FontCharacterModel(this);
     m_decompositionsModel = new FontMetadataModel(this);
     m_categoriesModel = new FontMetadataModel(this);
@@ -86,7 +86,7 @@ void DockGlyphSelector::setupFontScriptList () {
                 m_fontCharacterModel->setScriptFilter(data.toUInt());
 
                 // Обработка выбора
-                qDebug() << "Select char script: " << text << ", data:" << data;
+// qDebug() << "Select char script: " << text << ", data:" << data;
             });
 #endif
     m_mainSplitter->addWidget(scriptGroup);
@@ -204,7 +204,7 @@ void DockGlyphSelector::restoreGlyphDockSelectorState()
     if (m_mainSplitter) {
         m_mainSplitter->restoreState(
             settings.value("splitter/state").toByteArray());
-        qDebug() << "Restore splitter state";
+// qDebug() << "Restore splitter state";
     }
 
     // Восстанавливаем QDockWidget
@@ -227,7 +227,7 @@ void DockGlyphSelector::restoreGlyphDockSelectorState()
     }
 
     QString strMSB = settings.value("DockGlyphSelector/MSB").toString();
-    qDebug() << __FILE__ << __LINE__ << strMSB;
+// qDebug() << __FILE__ << __LINE__ << strMSB;
     m_fontMSB->setText(strMSB);
 }
 
