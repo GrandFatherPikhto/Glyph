@@ -25,6 +25,22 @@ public:
     
     void sortGlyphs();
 
+    int size()
+    {
+        return m_metaGlyphs.size();
+    }
+
+    QSharedPointer<GlyphMeta> at(int index) {
+        if (index < m_metaGlyphs.size())
+        {
+            return m_metaGlyphs.at(index);
+        }
+
+        return nullptr;
+    }
+
+public slots:
+
     signals:
 
 private:

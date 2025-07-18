@@ -14,12 +14,11 @@
 class GlyphMeta {
 public:
     // Первые два параметры ДОЛЖНЫ БЫТЬ заполнены. Потому, что это параметры GlyphKey
-    GlyphMeta(const QChar &newCharacter, int bitmapDimension, int glyphSize = -1, int gridDimension = -1, const QFont &newFont = QFont(), const QString &newFontPath = QString(), int newGlyphSize = -1)
+    GlyphMeta(const QChar &newCharacter, int bitmapDimension, int glyphSize = -1, const QFont &newFont = QFont(), const QString &newFontPath = QString(), int newGlyphSize = -1)
         : m_font(newFont)
         , m_fontPath(newFontPath)
         , m_glyphSize(glyphSize)
         , m_bitmapDimension(bitmapDimension)
-        , m_gridDimension(gridDimension)
         , m_character(newCharacter)
         , m_offset(QPoint(0,0))
         , m_glyphRect(QRect())
@@ -35,7 +34,6 @@ public:
         , m_fontPath(glyphMeta.m_fontPath)
         , m_glyphSize(glyphMeta.m_glyphSize)
         , m_bitmapDimension(glyphMeta.m_bitmapDimension)
-        , m_gridDimension(glyphMeta.m_gridDimension)
         , m_character(glyphMeta.m_character)
         , m_offset(glyphMeta.m_offset)
         , m_glyphRect(glyphMeta.m_glyphRect)
@@ -50,7 +48,6 @@ public:
         , m_fontPath(glyphMeta->m_fontPath)
         , m_glyphSize(glyphMeta->m_glyphSize)
         , m_bitmapDimension(glyphMeta->m_bitmapDimension)
-        , m_gridDimension(glyphMeta->m_gridDimension)
         , m_character(glyphMeta->m_character)
         , m_offset(glyphMeta->m_offset)
         , m_glyphRect(glyphMeta->m_glyphRect)
@@ -67,7 +64,6 @@ public:
             && (m_fontPath == glyphMeta->m_fontPath)
             && (m_glyphSize == glyphMeta->m_glyphSize)
             && (m_bitmapDimension == glyphMeta->m_bitmapDimension)
-            && (m_gridDimension == glyphMeta->m_gridDimension)
             && (m_character == glyphMeta->m_character)
             && (m_offset == glyphMeta->m_offset)
             && (m_dirty == glyphMeta->m_dirty)
@@ -81,7 +77,6 @@ public:
             && (m_fontPath == glyphMeta.m_fontPath)
             && (m_glyphSize == glyphMeta.m_glyphSize)
             && (m_bitmapDimension == glyphMeta.m_bitmapDimension)
-            && (m_gridDimension == glyphMeta.m_gridDimension)
             && (m_character == glyphMeta.m_character)
             && (m_offset == glyphMeta.m_offset)
             && (m_dirty == glyphMeta.m_dirty)
@@ -95,7 +90,6 @@ public:
             || (m_fontPath != glyphMeta->m_fontPath)
             || (m_glyphSize != glyphMeta->m_glyphSize)
             || (m_bitmapDimension != glyphMeta->m_bitmapDimension)
-            || (m_gridDimension != glyphMeta->m_gridDimension)
             || (m_character != glyphMeta->m_character)
             || (m_offset != glyphMeta->m_offset)
             || (m_dirty != glyphMeta->m_dirty)
@@ -109,7 +103,6 @@ public:
             || (m_fontPath != glyphMeta.m_fontPath)
             || (m_glyphSize != glyphMeta.m_glyphSize)
             || (m_bitmapDimension != glyphMeta.m_bitmapDimension)
-            || (m_gridDimension != glyphMeta.m_gridDimension)
             || (m_character != glyphMeta.m_character)
             || (m_offset != glyphMeta.m_offset)
             || (m_dirty != glyphMeta.m_dirty)
@@ -127,29 +120,24 @@ public:
     void setBitmapDimension(int newGridSize) { m_bitmapDimension = newGridSize; }
     int bitmapDimension() const { return m_bitmapDimension; }
 
-    // Размер пользовательского битмапа
-    void setGridDimension (int newGridDimension) { m_gridDimension = newGridDimension; }
-    int gridDimension() const { return m_gridDimension; }
-
     // Путь к файлу шрифта. Нужен для FreeType
     void setFontPath (const QString &newFontPath) {
         m_fontPath = newFontPath;
-        qDebug() << __FUNCTION__ << m_fontPath;
     }
     const QString & fontPath() const {
         return m_fontPath;
     }
 
     // Смещение m_glyphRect для отрисовки (чтобы попадал в сетку m_bitmapDimensions x m_bitmapDimensions
-    void setOffset (const QPoint &newBaseLine)
+    void setOffset (const QPoint &newOffset)
     {
-        m_offset = newBaseLine;
+        m_offset = newOffset;
     }
 
     const QPoint & offset() { return m_offset; }
 
     void moveLeft() {
-        m_offset -= QPoint(1, 0);
+        m_offset += QPoint(1, 0);
     }
 
     void moveTop() {
@@ -161,7 +149,7 @@ public:
     }
 
     void moveRight() {
-        m_offset += QPoint(1, 0);
+        m_offset -= QPoint(1, 0);
     }
 
     void moveCenter() {
@@ -173,7 +161,8 @@ public:
     }
 
     QRect glyphRect() {
-        return m_glyphRect.translated(m_offset);
+        // return m_glyphRect.translated(m_offset);
+        return m_glyphRect;
     }
 
     void setPreviewRect(const QRect &newPreviewRect)
@@ -195,11 +184,13 @@ public:
     }
 
     int glyphLeft() {
-        return m_glyphRect.translated(m_offset).left();
+        // return m_glyphRect.translated(m_offset).left();
+        return m_glyphRect.left();
     }
 
     int glyphTop () {
-        return m_glyphRect.translated(m_offset).top();
+        // return m_glyphRect.translated(m_offset).top();
+        return m_glyphRect.top();
     }
 
     void setGlyphSize(int newGlyphSize) {
@@ -253,12 +244,24 @@ public:
         return GlyphKey(m_character.unicode(), m_bitmapDimension);
     }
 
+    QRect paintRect() {
+        QRect glyphRect(m_glyphRect);
+        if (glyphRect.top() < glyphRect.height())
+        {
+            glyphRect.translate(0, glyphRect.height() - glyphRect.top());
+        }
+
+        glyphRect.translate(QPoint(-glyphRect.left(), -glyphRect.top() + (m_bitmapDimension - glyphRect.top())));
+        //qDebug() << glyphRect;
+        return glyphRect;
+    }
+
 private:
     QFont m_font; //< Исходный шрифт для рендеринга глифа
     QString m_fontPath; //< Путь к файлу шрифта. Нужен для FreeType
     int m_glyphSize; //< Размер глифа в пикселях
     int m_bitmapDimension; //< Раземр сетки, в которой располагатеся глиф
-    int m_gridDimension; //< Размер пиксельной сетки, в которой размещён глиф. Может быть больше bitmapDimension
+    // int m_gridDimension; //< Размер пиксельной сетки, в которой размещён глиф. Может быть больше bitmapDimension
     QChar m_character; //< Символ
     QRect m_glyphRect; //< Пространство и положение (Left/Top), которое занимает глиф
     QRect m_previewRect; //< Пространство и положение, которое занимает preview

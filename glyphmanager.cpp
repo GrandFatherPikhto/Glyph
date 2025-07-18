@@ -30,10 +30,14 @@ QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int
         qDebug() << __FILE__ << __LINE__ << character << bitmapDimension;
         return nullptr;
     }
-        
+
+
     GlyphKey key(character, bitmapDimension);
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << key.toString();
+
     auto it = m_index.find(key);
     if (it != m_index.end()) {
+        // qDebug() << __FILE__ << __LINE__ << "Finded: " << key.toString() << m_metaGlyphs.size();
         return m_metaGlyphs[it.value()];
     }
 
@@ -53,6 +57,7 @@ QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int
         glyphMeta->setFontPath(fontPath);
     }
 
+    // qDebug() << "Append" << glyphMeta->toString();
     m_metaGlyphs.append(glyphMeta);
     m_index.insert(key, m_metaGlyphs.indexOf(glyphMeta));
 
@@ -75,7 +80,10 @@ QSharedPointer<QImage> GlyphManager::getTemplateGlyph(const GlyphKey &key, QShar
     }
 
     QSharedPointer<IGlyphRender> renderer = userRenderer ? userRenderer : m_ftRender;
-    QSharedPointer<QImage> img = renderer->renderGlyph(glyphMeta, QSize(glyphMeta->glyphSize(), glyphMeta->glyphSize()), QColor(Qt::blue));
+    QSharedPointer<QImage> img =
+        renderer->renderGlyph(glyphMeta,
+            QSize(glyphMeta->glyphSize(), glyphMeta->glyphSize()),
+            QColor(0x00, 0x00, 0x55, 0x55));
     glyphMeta->setGlyphRect(renderer->renderRect());
     if (it != m_templateGlyphs.end())
     {
@@ -89,18 +97,24 @@ QSharedPointer<QImage> GlyphManager::getTemplateGlyph(const GlyphKey &key, QShar
 
 QSharedPointer<QImage> GlyphManager::getUserGlyph(const GlyphKey &key, QSharedPointer<IGlyphRender> userRenderer)
 {
+    // qDebug() << "Request User Glyph";
     auto glyphMeta = findOrCreate(key);
     if (!glyphMeta || glyphMeta->fontPath().isEmpty())
         return nullptr;
 
+    // qDebug() << "Find user glyph in hash " << key.toString();
     auto it = m_userGlyphs.find(key);
-    if (!(glyphMeta->dirty() || it == m_userGlyphs.end() || glyphMeta->resized()))
+    if (it != m_userGlyphs.end())
     {
+        // qDebug() << "User glyph also rendered. Return";
         return it.value();
     }
 
     QSharedPointer<IGlyphRender> renderer = userRenderer ? userRenderer : m_userGlyphRender;
-    QSharedPointer<QImage> img = renderer->renderGlyph(glyphMeta, QSize(glyphMeta->gridDimension(), glyphMeta->gridDimension()), QColor(Qt::black));
+    QSharedPointer<QImage> img = 
+        renderer->renderGlyph(glyphMeta, 
+            QSize(glyphMeta->bitmapDimension(), 
+            glyphMeta->bitmapDimension()), QColor(Qt::black));
 
     if (it != m_userGlyphs.end())
     {
@@ -125,7 +139,7 @@ QSharedPointer<QImage> GlyphManager::getPreviewGlyph(const GlyphKey &key, const 
     }
 
     QSharedPointer<IGlyphRender> renderer = userRenderer ? userRenderer : m_ftRender;
-    QSharedPointer<QImage> img = renderer->renderGlyph(glyphMeta, previewSize, QColor(Qt::red));
+    QSharedPointer<QImage> img = renderer->renderGlyph(glyphMeta, previewSize, QColor(0x66, 0x22, 0x00, 0x33));
     glyphMeta->setPreviewRect(renderer->renderRect());
 
     if (it != m_previewGlyphs.end())
@@ -152,5 +166,3 @@ void GlyphManager::sortGlyphs() {
         m_index.insert(metaGlyph->glyphKey(), i);  // Используем -> вместо .
     }
 }
-
-

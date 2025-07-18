@@ -4,8 +4,7 @@ GlyphPreview::GlyphPreview(GlyphManager *glyphManager, QWidget *parent)
     : QWidget{parent}
     , m_glyphManager(glyphManager)
     , m_glyphMeta(nullptr)
-    , m_gridDimension(-1)
-    , m_padding(0)
+    , m_padding(10)
 {
     setMinimumHeight(20);
 }
@@ -23,7 +22,7 @@ void GlyphPreview::paintEvent(QPaintEvent *event)
     if (!m_glyphMeta)
         return;
 
-    calcRects();
+    initContext();
 
     QPainter painter(this);
 
@@ -48,28 +47,26 @@ void GlyphPreview::paintEvent(QPaintEvent *event)
     painter.end();
 }
 
-void GlyphPreview::calcRects ()
+void GlyphPreview::initContext ()
 {
-    if (!m_glyphMeta && m_gridDimension >= m_glyphMeta->bitmapDimension())
+    if (!m_glyphMeta && m_glyphMeta->bitmapDimension() > 6)
         return;
 
-    m_gridDimension = m_glyphMeta->gridDimension();
-
-    int minSize = width() < height() ? width() : height();
-    int rectSize = minSize * 4 / 5;
-
-    m_cellSize = rectSize / m_gridDimension;
-    m_padding = (m_gridDimension - m_glyphMeta->bitmapDimension()) / 2;
-
+    int renderSize = width() > height() ? height() - m_padding * 2 : width() - m_padding * 2;
+    
     m_renderRect = QRect(
-        QPoint((width() - rectSize) / 2, (height() - rectSize) / 2),
-        QSize(minSize, minSize)
-        );
-    // qDebug() << "Src Glyph Rect: " << m_glyphMeta->glyphRect() << m_glyphMeta->glyphRect().width();
+        QPoint(m_padding, m_padding),
+        QSize(renderSize, renderSize)
+    );
+
+    m_cellSize = renderSize / m_glyphMeta->bitmapDimension();
+
+    QRect glyphRect(m_glyphMeta->glyphRect());
+    glyphRect.translate(QPoint(0, m_glyphMeta->bitmapDimension() - glyphRect.top() * 2));
     m_glyphRect = QRect(
-        QPoint(m_renderRect.left() + (m_glyphMeta->glyphRect().left() + m_padding) * m_cellSize,
-               m_renderRect.top() + (m_glyphMeta->glyphRect().top() + m_padding) * m_cellSize),
-        QSize(m_glyphMeta->glyphRect().width() * m_cellSize, m_glyphMeta->glyphRect().height() * m_cellSize)
+        QPoint(m_renderRect.left() + (glyphRect.left()) * m_cellSize,
+               m_renderRect.top() + (glyphRect.top() * m_cellSize)),
+        QSize(glyphRect.width() * m_cellSize, glyphRect.height() * m_cellSize)
         );
 
     // qDebug() << "Preview Render: " << m_renderRect << ", Glyph: " << m_glyphRect << ", Cell: " << m_cellSize;
@@ -78,32 +75,27 @@ void GlyphPreview::calcRects ()
 void GlyphPreview::paintGrid (QPainter &painter)
 {
     painter.setPen(QColor(0x33, 0x33, 0x33, 0x33));
-    if (!m_glyphMeta || m_gridDimension <= 0)
+    if (!m_glyphMeta)
         return;
 
     // Горизонтальные линии
-    for (int y = 0; y <= m_gridDimension; ++y) {
+    for (int y = 0; y <= m_glyphMeta->bitmapDimension(); ++y) {
         painter.drawLine(
             m_renderRect.left(),
             m_renderRect.top() + y * m_cellSize,
-            m_renderRect.left() + m_gridDimension * m_cellSize,
+            m_renderRect.left() + m_glyphMeta->bitmapDimension() * m_cellSize,
             m_renderRect.top() + y * m_cellSize
             );
     }
 
     // Вертикальные линии
-    for (int x = 0; x <= m_gridDimension; ++x) {
+    for (int x = 0; x <= m_glyphMeta->bitmapDimension(); ++x) {
         painter.drawLine(
             m_renderRect.left() + x * m_cellSize,
             m_renderRect.top(),
             m_renderRect.left() + x * m_cellSize,
-            m_renderRect.top() + m_gridDimension * m_cellSize
+            m_renderRect.top() + m_glyphMeta->bitmapDimension() * m_cellSize
             );
     }
 }
 
-
-void GlyphPreview::slotSetGridDimension(int newValue)
-{
-    m_gridDimension = newValue;
-}

@@ -7,6 +7,7 @@
 #include <QTabWidget>
 #include <QDebug>
 #include <QLabel>
+#include <QSpinBox>
 
 #include "dockglyph.h"
 #include "glyphmanager.h"
@@ -35,6 +36,10 @@ signals:
     void glyphRectLayerEnable(bool enable);
     void baselineLayerEnable(bool enable);
     void bitmapRectLayerEnable(bool enable);
+    void leftGridCells(int value);
+    void bottomGridCells(int value);
+    void pasteGlyphToUserLayer();
+    void clearUserLayer();
 
 private slots:
     void slotActionQuitTriggered();
@@ -71,6 +76,11 @@ private:
     QAction *m_glyphRectLayerEnable;
     QAction *m_bitmapRectLayerEnable;
     QAction *m_baselineLayerEnable;
+    QAction *m_pasteGlyphToUserLayer;
+    QAction *m_clearUserLayer;
+
+    QSpinBox *m_addLeftCells;
+    QSpinBox *m_addBottomCells;
 
 
     QLabel *m_fontLabel;

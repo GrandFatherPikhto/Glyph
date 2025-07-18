@@ -27,6 +27,10 @@ MainWindow::MainWindow(QWidget *parent)
     , m_glyphRectLayerEnable(nullptr)
     , m_baselineLayerEnable(nullptr)
     , m_bitmapRectLayerEnable(nullptr)
+    , m_addBottomCells(nullptr)
+    , m_addLeftCells(nullptr)
+    , m_pasteGlyphToUserLayer(nullptr)
+    , m_clearUserLayer(nullptr)
 {
     ui->setupUi(this);
     m_glyphManager = new GlyphManager(this);
@@ -58,7 +62,6 @@ void MainWindow::setupSignals ()
     QObject::connect(m_dockGlyph, &DockGlyph::characterChanged, this, &MainWindow::setStatusBarCharacter);
     QObject::connect(m_dockGlyph, &DockGlyph::glyphSizeChanged, this, &MainWindow::setStatusBarGlyphSize);
     QObject::connect(m_dockGlyph, &DockGlyph::bitmapDimensionChanged, this, &MainWindow::setStatusBarBitmapDimension);
-    QObject::connect(m_dockGlyph, &DockGlyph::gridDimensionChanged, m_glyphWidget, &GlyphWidget::setGridDimension);
     QObject::connect(this, &MainWindow::templateLayerEnable, m_glyphWidget, &GlyphWidget::enableTemplateLayer);
     QObject::connect(this, &MainWindow::previewLayerEnable, m_glyphWidget, &GlyphWidget::enablePreviewLayer);
     QObject::connect(this, &MainWindow::gridEnable, m_glyphWidget, &GlyphWidget::enableGrid);
@@ -66,6 +69,10 @@ void MainWindow::setupSignals ()
     QObject::connect(this, &MainWindow::glyphRectLayerEnable, m_glyphWidget, &GlyphWidget::enableGlyphRectLayer);
     QObject::connect(this, &MainWindow::baselineLayerEnable, m_glyphWidget, &GlyphWidget::enableBaselineLayer);
     QObject::connect(this, &MainWindow::bitmapRectLayerEnable, m_glyphWidget, &GlyphWidget::enableBitmapRectLayer);
+    QObject::connect(this, &MainWindow::leftGridCells, m_glyphWidget, &GlyphWidget::setLeftGridCells);
+    QObject::connect(this, &MainWindow::bottomGridCells, m_glyphWidget, &GlyphWidget::setBottomGridCells);
+    QObject::connect(this, &MainWindow::pasteGlyphToUserLayer, m_glyphWidget, &GlyphWidget::pasteGlyphToUserLayer);
+    QObject::connect(this, &MainWindow::clearUserLayer, m_glyphWidget, &GlyphWidget::clearUserLayer);
 }
 
 void MainWindow::setupGlyphWidget ()
@@ -89,21 +96,21 @@ void MainWindow::setupGlyphToolBar()
     m_glyphToolBar->setObjectName("GlyphToolbar");
     m_templateLayerEnable = new QAction(QIcon(":/button/icons/template"), "Template Layer", this);
     m_templateLayerEnable->setCheckable(true);
-    connect(m_templateLayerEnable, &QAction::toggled, this, [=](bool checked) {
+    QObject::connect(m_templateLayerEnable, &QAction::toggled, this, [=](bool checked) {
         emit templateLayerEnable(checked);
     });
     m_glyphToolBar->addAction(m_templateLayerEnable);
 
     m_gridEnable = new QAction(QIcon(":/button/icons/grid"), "Grid Enable", this);
     m_gridEnable->setCheckable(true);
-    connect(m_gridEnable, &QAction::toggled, this, [=](bool checked) {
+    QObject::connect(m_gridEnable, &QAction::toggled, this, [=](bool checked) {
         emit gridEnable(checked);
     });
     m_glyphToolBar->addAction(m_gridEnable);
 
     m_userLayerEnable = new QAction(QIcon(":/button/icons/user"), "User Layer Enable", this);
     m_userLayerEnable->setCheckable(true);
-    connect(m_userLayerEnable, &QAction::toggled, this, [=](bool checked) {
+    QObject::connect(m_userLayerEnable, &QAction::toggled, this, [=](bool checked) {
         emit userLayerEnable(checked);
     });
     m_glyphToolBar->addAction(m_userLayerEnable);
@@ -111,14 +118,14 @@ void MainWindow::setupGlyphToolBar()
 
     m_previewLayerEnable = new QAction(QIcon(":/button/icons/preview"), "Preview Layer Enable", this);
     m_previewLayerEnable->setCheckable(true);
-    connect(m_previewLayerEnable, &QAction::toggled, this, [=](bool checked) {
+    QObject::connect(m_previewLayerEnable, &QAction::toggled, this, [=](bool checked) {
         emit previewLayerEnable(checked);
     });
     m_glyphToolBar->addAction(m_previewLayerEnable);
 
     m_glyphRectLayerEnable = new QAction(QIcon(":/button/icons/glyphrect"), "Glyph Rect Layer Enable", this);
     m_glyphRectLayerEnable->setCheckable(true);
-    connect(m_glyphRectLayerEnable, &QAction::toggled, this, [=](bool checked) {
+    QObject::connect(m_glyphRectLayerEnable, &QAction::toggled, this, [=](bool checked) {
         emit glyphRectLayerEnable(checked);
     });
     m_glyphToolBar->addAction(m_glyphRectLayerEnable);
@@ -126,17 +133,46 @@ void MainWindow::setupGlyphToolBar()
 
     m_bitmapRectLayerEnable = new QAction(QIcon(":/button/icons/bitmaprect"), "BaseLine Layer Enable", this);
     m_bitmapRectLayerEnable->setCheckable(true);
-    connect(m_bitmapRectLayerEnable, &QAction::toggled, this, [=](bool checked) {
+    QObject::connect(m_bitmapRectLayerEnable, &QAction::toggled, this, [=](bool checked) {
         emit bitmapRectLayerEnable(checked);
     });
     m_glyphToolBar->addAction(m_bitmapRectLayerEnable);
 
     m_baselineLayerEnable = new QAction(QIcon(":/button/icons/baseline"), "Bitmap Rect Layer Enable", this);
     m_baselineLayerEnable->setCheckable(true);
-    connect(m_baselineLayerEnable, &QAction::toggled, this, [=](bool checked) {
+    QObject::connect(m_baselineLayerEnable, &QAction::toggled, this, [=](bool checked) {
         emit baselineLayerEnable(checked);
     });
     m_glyphToolBar->addAction(m_baselineLayerEnable);
+
+    m_pasteGlyphToUserLayer = new QAction(QIcon(":/button/icons/paste"), "Paste Glyph to User Layer", this);
+    QObject::connect(m_pasteGlyphToUserLayer, &QAction::triggered, this, [=](){
+        emit pasteGlyphToUserLayer();
+    });
+    m_glyphToolBar->addAction(m_pasteGlyphToUserLayer);
+
+    m_clearUserLayer = new QAction(QIcon(":/button/icons/clear"), "Clear User Layer");
+    QObject::connect(m_clearUserLayer, &QAction::triggered, this, [=](){
+        emit clearUserLayer();
+    });
+    m_glyphToolBar->addAction(m_clearUserLayer);
+
+
+    m_addBottomCells = new QSpinBox(this);
+    m_addBottomCells->setMinimum(0);
+    m_addBottomCells->setMaximum(1240);
+    QObject::connect(m_addBottomCells, &QSpinBox::valueChanged, this, [=](int value){
+        emit leftGridCells(value);
+    });
+    m_glyphToolBar->addWidget(m_addBottomCells);
+
+    m_addLeftCells = new QSpinBox(this);
+    m_addLeftCells->setMinimum(0);
+    m_addLeftCells->setMaximum(1240);
+    QObject::connect(m_addLeftCells, &QSpinBox::valueChanged, this, [=](int value){
+        emit bottomGridCells(value);
+    });
+    m_glyphToolBar->addWidget(m_addLeftCells);
 
     addToolBar(m_glyphToolBar);
 }

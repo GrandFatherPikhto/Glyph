@@ -11,6 +11,7 @@
 #include "glyphmanager.h"
 #include "glyphmeta.h"
 #include "glyphpreview.h"
+#include "glyphsmodel.h"
 
 namespace Ui {
 class DockGlyph;
@@ -29,7 +30,6 @@ private slots:
     void slotFontChanged(const QFont &font);
     void slotCharacterChanged();
     void slotBitmapDimensionChanged(int newValue);
-    void slotGridDimensionChanged(int newValue);
     void slotGlyphSizeChanged(int newValue);
     void slotMoveCenterClicked();
     void slotMoveLeftClicked();
@@ -76,6 +76,8 @@ private:
     QChar m_character;
 
     QSplitter *m_mainSplitter;
+
+    GlyphsModel *m_glyphsModel;
 };
 
 #endif // DOCKGLYPH_H

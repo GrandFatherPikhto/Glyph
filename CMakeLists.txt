@@ -56,6 +56,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
         glyphwidget.h glyphwidget.cpp glyphwidget.ui
         glyphpreview.h glyphpreview.cpp
         userglyphrender.h userglyphrender.cpp
+        glyphsmodel.h glyphsmodel.cpp
+        unicodemetadatamanager.h unicodemetadatamanager.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Glyph APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

@@ -12,5 +12,7 @@
         <file alias="glyphrect">resources/1x/rect.png</file>
         <file alias="baseline">resources/1x/baseline.png</file>
         <file alias="bitmaprect">resources/1x/bitmaprect.png</file>
+        <file alias="paste">resources/1x/paste.png</file>
+        <file alias="clear">resources/1x/clear.png</file>
     </qresource>
 </RCC>

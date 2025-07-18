@@ -17,7 +17,6 @@ public:
 
 public slots:
     void slotSetGlyphMeta (QSharedPointer<GlyphMeta> glyphMeta);
-    void slotSetGridDimension(int value);
 
 signals:
 
@@ -27,7 +26,7 @@ protected:
     void paintEvent(QPaintEvent *event);
 
 private:
-    void calcRects ();
+    void initContext ();
     void paintGrid (QPainter &painter);
 
     GlyphManager *m_glyphManager;
@@ -36,8 +35,6 @@ private:
     QRect m_glyphRect;
     QRect m_renderRect;
 
-    int m_bitmapDimesion;
-    int m_gridDimension;
     int m_padding;
 
     int m_cellSize;

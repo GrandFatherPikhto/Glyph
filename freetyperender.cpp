@@ -59,7 +59,7 @@ QSharedPointer<QImage> FreeTypeRender::renderGlyph (
 
             // Устанавливаем пиксель в QImage (чёрный с альфа-каналом)
             // image.setPixel(x, y, qRgba(0xFF, 0x33, 0x33, pixel));
-            pixelColor.setAlpha(pixel);
+            pixelColor.setAlpha(pixel ? glyphColor.alpha() : 0);
             image.setPixelColor(x, y, pixelColor);
         }
     }
@@ -122,6 +122,7 @@ void FreeTypeRender::setTargetSize()
 void FreeTypeRender::calcRenderRect ()
 {
     m_renderRect = QRect(
-        QPoint(m_slot->bitmap_left, m_glyphMeta->bitmapDimension() - m_slot->bitmap_top),
+        // QPoint(m_slot->bitmap_left, m_glyphMeta->bitmapDimension() - m_slot->bitmap_top),
+        QPoint(m_slot->bitmap_left, m_slot->bitmap_top),
         QSize(m_bitmap.width, m_bitmap.rows));
 }
