@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_glyphToolBar(nullptr)
     , m_glyphManager(nullptr)
     , m_dockGlyph(nullptr)
+    , m_dockGlyphSelector(nullptr)
     , m_fontLabel(nullptr)
     , m_glyphSizeLabel(nullptr)
     , m_gridSizeLabel(nullptr)
@@ -36,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_glyphManager = new GlyphManager(this);
 
     setupGlyphWidget();
-    setupGlyphDock();
+    setupDockPanels();
     setupGlyphToolBar();
     setupStatusBar();
     setupSignals ();
@@ -73,6 +74,7 @@ void MainWindow::setupSignals ()
     QObject::connect(this, &MainWindow::bottomGridCells, m_glyphWidget, &GlyphWidget::setBottomGridCells);
     QObject::connect(this, &MainWindow::pasteGlyphToUserLayer, m_glyphWidget, &GlyphWidget::pasteGlyphToUserLayer);
     QObject::connect(this, &MainWindow::clearUserLayer, m_glyphWidget, &GlyphWidget::clearUserLayer);
+    QObject::connect(m_dockGlyphSelector, &DockGlyphSelector::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
 }
 
 void MainWindow::setupGlyphWidget ()
@@ -83,11 +85,13 @@ void MainWindow::setupGlyphWidget ()
     ui->centralwidget->setLayout(m_mainLayout);
 }
 
-void MainWindow::setupGlyphDock ()
+void MainWindow::setupDockPanels ()
 {
     m_dockGlyph = new DockGlyph(m_glyphManager, this);
     addDockWidget(Qt::LeftDockWidgetArea, m_dockGlyph);
-    // tabifiedDockWidgetActivated(m_dockGlyph);
+    m_dockGlyphSelector = new DockGlyphSelector(m_glyphManager, this);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockGlyphSelector);
+    // tabifiedDockWidgetActivated(m_dockGlyph, m_dockGlyphSelector);
 }
 
 void MainWindow::setupGlyphToolBar()
@@ -236,13 +240,15 @@ void MainWindow::saveGeometryAndState() {
     QSettings settings("DAE", "Glyph");
     settings.setValue("mainWindowGeometry", saveGeometry());
     settings.setValue("mainWindowState", saveState());
-    settings.setValue("templateLayerEnable", m_templateLayerEnable->isChecked());
-    settings.setValue("gridEnable", m_gridEnable->isChecked());
-    settings.setValue("previewLayerEnable", m_previewLayerEnable->isChecked());
-    settings.setValue("userLayerEnable", m_userLayerEnable->isChecked());
-    settings.setValue("glyphRectLayerEnable", m_glyphRectLayerEnable->isChecked());
-    settings.setValue("baseLineLayerEnable", m_baselineLayerEnable->isChecked());
-    settings.setValue("bitmapRectLayerEnable", m_bitmapRectLayerEnable->isChecked());
+    settings.setValue("MainWindow/templateLayerEnable", m_templateLayerEnable->isChecked());
+    settings.setValue("MainWindow/gridEnable", m_gridEnable->isChecked());
+    settings.setValue("MainWindow/previewLayerEnable", m_previewLayerEnable->isChecked());
+    settings.setValue("MainWindow/userLayerEnable", m_userLayerEnable->isChecked());
+    settings.setValue("MainWindow/glyphRectLayerEnable", m_glyphRectLayerEnable->isChecked());
+    settings.setValue("MainWindow/baseLineLayerEnable", m_baselineLayerEnable->isChecked());
+    settings.setValue("MainWindow/bitmapRectLayerEnable", m_bitmapRectLayerEnable->isChecked());
+    settings.setValue("MainWindow/addLeftCells", m_addLeftCells->value());
+    settings.setValue("MainWindow/addBottomCells", m_addBottomCells->value());
 }
 
 void MainWindow::restoreGeometryAndState() {
@@ -254,30 +260,34 @@ void MainWindow::restoreGeometryAndState() {
     if (m_templateLayerEnable) {
         m_templateLayerEnable->setChecked(setTemplateGlyphEnable);
     }
-    bool gridEnable = settings.value("gridEnable").toBool();
+    bool gridEnable = settings.value("MainWindow/gridEnable").toBool();
     if (m_gridEnable) {
         m_gridEnable->setChecked(gridEnable);
     }
-    bool userLayerEnable = settings.value("userLayerEnable").toBool();
+    bool userLayerEnable = settings.value("MainWindow/userLayerEnable").toBool();
     if (m_userLayerEnable) {
         m_userLayerEnable->setChecked(userLayerEnable);
     }
-    bool previewLayerEnable = settings.value("previewLayerEnable").toBool();
+    bool previewLayerEnable = settings.value("MainWindow/previewLayerEnable").toBool();
     if (m_previewLayerEnable) {
         m_previewLayerEnable->setChecked(previewLayerEnable);
     }
-    bool glyphRectLayerEnable = settings.value("glyphRectLayerEnable").toBool();
+    bool glyphRectLayerEnable = settings.value("MainWindow/glyphRectLayerEnable").toBool();
     if (m_glyphRectLayerEnable) {
         m_glyphRectLayerEnable->setChecked(glyphRectLayerEnable);
     }
-    bool baselineLayerEnable = settings.value("baselineLayerEnable").toBool();
+    bool baselineLayerEnable = settings.value("MainWindow/baselineLayerEnable").toBool();
     if (m_baselineLayerEnable) {
         m_baselineLayerEnable->setChecked(baselineLayerEnable);
     }
-    bool bitmapRectLayerEnable = settings.value("bitmapRectLayerEnable").toBool();
+    bool bitmapRectLayerEnable = settings.value("MainWindow/bitmapRectLayerEnable").toBool();
     if (m_bitmapRectLayerEnable) {
         m_bitmapRectLayerEnable->setChecked(bitmapRectLayerEnable);
     }
+    int addLeftCells = settings.value("MainWindow/addLeftCells").toInt();
+    m_addLeftCells->setValue(addLeftCells);
+    int addBottomCells = settings.value("MainWindow/addBottomCells").toInt();
+    m_addBottomCells->setValue(addBottomCells);
 }
 
 void MainWindow::showEvent(QShowEvent *event)

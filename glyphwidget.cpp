@@ -157,6 +157,9 @@ void GlyphWidget::paintGrid (QPainter &painter)
 
 void GlyphWidget::paintBaseLines(QPainter &painter)
 {
+    if (!m_glyphMeta)
+        return;
+
     QPen penHorz(QColor(0xEE, 0x55, 0x55, 0xEE));
     penHorz.setWidth(2);
     painter.setPen(penHorz);
@@ -188,11 +191,11 @@ void GlyphWidget::paintBaseLines(QPainter &painter)
 
 void GlyphWidget::paintTemplateGlyph(QPainter &painter)
 {
-    if (!m_templateGlyph)
-    {
-        m_templateGlyph =
-            m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey());
-    }
+    if (!m_glyphMeta)
+        return;
+
+    m_templateGlyph =
+        m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey(), QColor(0x00, 0x00, 0x55, 0x55));
 
     if (m_templateGlyph) {
         // qDebug() << "Paint Template Glyph" << m_glyphMeta->character() << "Size: " << m_glyphMeta->glyphSize() << ", Rect: " << glyphRect;
@@ -212,8 +215,11 @@ void GlyphWidget::paintTemplateGlyph(QPainter &painter)
 
 void GlyphWidget::paintPreviewGlyph(QPainter &painter)
 {
+    if (!m_glyphMeta)
+        return;
+
     m_previewGlyph =
-        m_glyphManager->getPreviewGlyph(m_glyphMeta->glyphKey(), QSize(width(), height()));
+        m_glyphManager->getPreviewGlyph(m_glyphMeta->glyphKey(), QSize(width(), height()), QColor(0x66, 0x22, 0x00, 0x33));
 
     if (m_previewGlyph)
     {
@@ -231,8 +237,11 @@ void GlyphWidget::paintPreviewGlyph(QPainter &painter)
 
 void GlyphWidget::paintUserGlyph(QPainter &painter)
 {
+    if (!m_glyphMeta)
+        return;
+
     m_userGlyph =
-        m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey());
+        m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey(), Qt::black);
 
     if (m_userGlyph)
     {
@@ -252,27 +261,28 @@ void GlyphWidget::paintUserGlyph(QPainter &painter)
 void GlyphWidget::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event)
-    if (m_glyphMeta)
-    {
-        m_glyphMeta->setResized();
-        initContext();
-    }
+    if (!m_glyphMeta)
+        return;
+
+    m_glyphMeta->setResized();
+    initContext();
 }
 
 void GlyphWidget::setGlyphMeta(QSharedPointer<GlyphMeta> newGlyphMeta)
 {
+    // qDebug() << __FILE__ << __LINE__ << __FUNCION__ << "Temporary Glyph Meta" << newGlyphMeta->toString();
     if (!m_glyphMeta || m_glyphMeta != newGlyphMeta)
     {
         m_glyphMeta = newGlyphMeta;
     }
 
-    m_userGlyph =
-        m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey());
     m_templateGlyph =
-        m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey());
+        m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey(), QColor(0x00, 0x00, 0x55, 0x55));
+    m_userGlyph =
+        m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey(), Qt::black);
     m_previewGlyph =
         m_glyphManager->getPreviewGlyph(m_glyphMeta->glyphKey(),
-            QSize(width(), height()));
+            QSize(width(), height()), QColor(0x66, 0x22, 0x00, 0x33));
 
     initContext();
     update();
@@ -282,20 +292,20 @@ void GlyphWidget::setGlyphMeta(QSharedPointer<GlyphMeta> newGlyphMeta)
 void GlyphWidget::enableGrid(bool enable)
 {
     m_gridLayerEnable = enable;
-    if (m_glyphMeta)
-    {
-        m_glyphMeta->setDirty();
-    }
+
+    if (!m_glyphMeta)
+        return;
+
+    m_glyphMeta->setDirty();
 
     update();
 }
 
 void GlyphWidget::enablePreviewLayer(bool enable)
 {
-    if (m_glyphMeta)
-    {
-        m_glyphMeta->setDirty();
-    }
+    if (!m_glyphMeta)
+        return;
+    m_glyphMeta->setDirty();
     // qDebug() << "Preview Layer" << enable;
     m_previewLayerEnable = enable;
     update ();
@@ -303,10 +313,9 @@ void GlyphWidget::enablePreviewLayer(bool enable)
 
 void GlyphWidget::enableTemplateLayer(bool enable)
 {
-    if (m_glyphMeta)
-    {
-        m_glyphMeta->setDirty();
-    }
+    if (!m_glyphMeta)
+        return;
+    m_glyphMeta->setDirty();
     // qDebug() << "Template Layer" << enable;
     m_templateLayerEnable = enable;
     update ();
@@ -314,10 +323,9 @@ void GlyphWidget::enableTemplateLayer(bool enable)
 
 void GlyphWidget::enableUserLayer(bool enable)
 {
-    if (m_glyphMeta)
-    {
-        m_glyphMeta->setDirty();
-    }
+    if (!m_glyphMeta)
+        return;
+    m_glyphMeta->setDirty();
     qDebug() << "User Layer" << enable;
     m_userLayerEnable = enable;
     update ();
@@ -325,10 +333,10 @@ void GlyphWidget::enableUserLayer(bool enable)
 
 void GlyphWidget::enableGlyphRectLayer(bool enable)
 {
-    if (m_glyphMeta)
-    {
-        m_glyphMeta->setDirty();
-    }
+    if (!m_glyphMeta)
+        return;
+
+    m_glyphMeta->setDirty();
     // qDebug() << "Glyph Rect Layer" << enable;
     m_glyphRectEnable = enable;
     update ();
@@ -350,6 +358,8 @@ void GlyphWidget::enableBaselineLayer(bool enable)
 
 void GlyphWidget::setLeftGridCells(int value)
 {
+    if (!m_glyphMeta)
+        return;
     m_leftCells = value;
     m_xGridCells = m_glyphMeta->bitmapDimension() + value;
     initContext();
@@ -358,6 +368,8 @@ void GlyphWidget::setLeftGridCells(int value)
 
 void GlyphWidget::setBottomGridCells(int value)
 {
+    if (!m_glyphMeta)
+        return;
     m_bottomCells = value;
     m_yGridCells = m_glyphMeta->bitmapDimension() + value;
     initContext();
@@ -366,6 +378,9 @@ void GlyphWidget::setBottomGridCells(int value)
 
 void GlyphWidget::mousePressEvent(QMouseEvent *event)
 {
+    if (!m_glyphMeta)
+        return;
+
     QPoint clickPoint = event->pos();
 
     if (!m_userGlyph || !m_glyphMeta || !m_renderRect.contains(clickPoint))
@@ -405,7 +420,10 @@ void GlyphWidget::mousePressEvent(QMouseEvent *event)
 
 void GlyphWidget::clearUserLayer()
 {
-    QSharedPointer<QImage> userImage = m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey());
+    if (!m_glyphMeta)
+        return;
+
+    QSharedPointer<QImage> userImage = m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey(), Qt::black);
     if (userImage)
     {
         userImage->fill(Qt::white);
@@ -415,8 +433,11 @@ void GlyphWidget::clearUserLayer()
 
 void GlyphWidget::pasteGlyphToUserLayer()
 {
-    QSharedPointer<QImage> glyphImage = m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey());
-    QSharedPointer<QImage> userImage = m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey());
+    if (!m_glyphMeta)
+        return;
+
+    QSharedPointer<QImage> glyphImage = m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey(), Qt::black);
+    QSharedPointer<QImage> userImage = m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey(), Qt::black);
     QImage srcImg = QImage(*glyphImage.data());
     if (glyphImage && userImage)
     {

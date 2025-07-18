@@ -10,11 +10,11 @@ DockGlyph::DockGlyph(GlyphManager *glyphManager, QWidget *parent)
     , m_glyphManager(glyphManager)
     , m_glyphPreview(nullptr)
     , m_glyphTable(nullptr)
-    , m_gridDimension(8)
-    , m_bitmapDimension(8)
-    , m_glyphSize(11)
-    , m_font(QFont("Arial"))
-    , m_character(QChar('A'))
+    , m_gridDimension(-1)
+    , m_bitmapDimension(-1)
+    , m_glyphSize(-1)
+    , m_font(QFont())
+    , m_character(QChar())
     , m_mainSplitter(nullptr)
     , m_glyphsModel(nullptr)
 {
@@ -85,35 +85,49 @@ void DockGlyph::slotBitmapDimensionChanged(int newSize)
 void DockGlyph::slotGlyphSizeChanged(int newGlyphSize)
 {
     m_glyphSize = newGlyphSize;
-    m_glyphMeta->setGlyphSize(newGlyphSize);
+    if (m_glyphMeta){
+        m_glyphMeta->setGlyphSize(newGlyphSize);
+    }
     updateGlyph ();
 }
 
 
 void DockGlyph::slotMoveCenterClicked()
 {
-    m_glyphMeta->moveCenter();
+    if (m_glyphMeta)
+    {
+        m_glyphMeta->moveCenter();
+    }
     updateGlyph ();
 }
 
 
 void DockGlyph::slotMoveLeftClicked()
 {
-    m_glyphMeta->moveLeft();
+    if (m_glyphMeta)
+    {
+        m_glyphMeta->moveLeft();
+    }
     updateGlyph ();
 }
 
 
 void DockGlyph::slotMoveTopClicked()
 {
-    m_glyphMeta->moveTop();
+    if (m_glyphMeta)
+    {
+        m_glyphMeta->moveTop();
+    }
     updateGlyph ();
 }
 
 
 void DockGlyph::slotMoveDownClicked()
 {
-    m_glyphMeta->moveDown();
+    if (m_glyphMeta)
+    {
+        m_glyphMeta->moveDown();
+    }
     updateGlyph ();
 }
 
@@ -126,7 +140,13 @@ void DockGlyph::slotMoveRightClicked()
 
 void DockGlyph::updateGlyph ()
 {
-    m_glyphMeta = m_glyphManager->findOrCreate(m_character, m_bitmapDimension);
+    if (m_character == QChar() || m_bitmapDimension < 6)
+        return;
+        
+    m_glyphMeta = m_glyphManager->findOrCreate(m_character, m_bitmapDimension, m_glyphSize, m_font, m_fontPath);
+
+    if (!m_glyphMeta)
+        return;
 
     m_glyphMeta->setGlyphSize(m_glyphSize);
 
@@ -162,7 +182,12 @@ void DockGlyph::restoreGeometryAndState() {
     restoreGeometry(settings.value("dockGlyphGeometry").toByteArray());
     m_mainSplitter->restoreState(settings.value("dockGlyphSplitter").toByteArray());
     ui->bitmapDimension->setValue(settings.value("dockGlyphBitmapSize").toInt());
-    ui->glyphSize->setValue(settings.value("dockGlyphGlyphSize").toInt());
+    int glyphSize = settings.value("dockGlyphGlyphSize").toInt();
+    qDebug() << glyphSize;
+    if (glyphSize > 0)
+    {
+        ui->glyphSize->setValue(glyphSize);
+    }
     QFont font(settings.value("dockGlyphFont").value<QFont>());
     ui->fontComboBox->setCurrentFont(font);
 }

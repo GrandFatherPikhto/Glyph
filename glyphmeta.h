@@ -39,6 +39,7 @@ public:
         , m_glyphRect(glyphMeta.m_glyphRect)
         , m_previewRect(glyphMeta.m_previewRect)
         , m_dirty(false)
+        , m_resized(glyphMeta.m_resized)
     {
         
     }
@@ -53,6 +54,7 @@ public:
         , m_glyphRect(glyphMeta->m_glyphRect)
         , m_previewRect(glyphMeta->m_previewRect)
         , m_dirty(glyphMeta->m_dirty)
+        , m_resized(glyphMeta->m_resized)
     {
 
     }
@@ -67,6 +69,7 @@ public:
             && (m_character == glyphMeta->m_character)
             && (m_offset == glyphMeta->m_offset)
             && (m_dirty == glyphMeta->m_dirty)
+            && (m_resized == glyphMeta->m_resized)
         );
     }
 
@@ -80,6 +83,7 @@ public:
             && (m_character == glyphMeta.m_character)
             && (m_offset == glyphMeta.m_offset)
             && (m_dirty == glyphMeta.m_dirty)
+            && (m_resized == glyphMeta.m_resized)
         );
     }
 
@@ -93,6 +97,7 @@ public:
             || (m_character != glyphMeta->m_character)
             || (m_offset != glyphMeta->m_offset)
             || (m_dirty != glyphMeta->m_dirty)
+            || (m_resized == glyphMeta->m_resized)
         );
     }
 
@@ -106,6 +111,7 @@ public:
             || (m_character != glyphMeta.m_character)
             || (m_offset != glyphMeta.m_offset)
             || (m_dirty != glyphMeta.m_dirty)
+            || (m_resized == glyphMeta.m_resized)
         );
     }
     // Фонт
@@ -241,7 +247,7 @@ public:
     }
 
     GlyphKey glyphKey() {
-        return GlyphKey(m_character.unicode(), m_bitmapDimension);
+        return GlyphKey(m_character.unicode(), m_bitmapDimension, m_font.family());
     }
 
     QRect paintRect() {

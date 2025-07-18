@@ -30,7 +30,7 @@ void GlyphPreview::paintEvent(QPaintEvent *event)
     painter.setRenderHint(QPainter::Antialiasing, false);
 
     QSharedPointer<QImage> templateGlyph =
-        m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey());
+        m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey(), Qt::black);
     // qDebug() << "Glyph: " << templateGlyph->size();
     if(templateGlyph) {
         painter.drawImage(

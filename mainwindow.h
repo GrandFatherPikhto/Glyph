@@ -10,6 +10,7 @@
 #include <QSpinBox>
 
 #include "dockglyph.h"
+#include "dockglyphselector.h"
 #include "glyphmanager.h"
 #include "glyphwidget.h"
 
@@ -52,7 +53,7 @@ protected:
 private:
     void setupSignals ();
     void setupGlyphWidget ();
-    void setupGlyphDock ();
+    void setupDockPanels ();
     void setupStatusBar();
     void setupGlyphToolBar();
     void setStatusBarFontName(const QFont &newFont);
@@ -65,6 +66,8 @@ private:
     Ui::MainWindow *ui;
 
     DockGlyph *m_dockGlyph;
+    DockGlyphSelector *m_dockGlyphSelector;
+
     GlyphWidget *m_glyphWidget;
     QGridLayout *m_mainLayout;
     QToolBar *m_glyphToolBar;
