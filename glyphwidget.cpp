@@ -4,10 +4,10 @@
 #include "ui_glyphwidget.h"
 
 
-GlyphWidget::GlyphWidget(GlyphManager *glyphManager, QWidget *parent)
+GlyphWidget::GlyphWidget(AppContext *appContext, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::GlyphWidget)
-    , m_glyphManager(glyphManager)
+    , m_appContext(appContext)
     , m_glyphMeta(nullptr)
     , m_glyphRectEnable(false)
     , m_templateLayerEnable(false)
@@ -168,7 +168,7 @@ void GlyphWidget::paintBaseLines(QPainter &painter)
     penHorz.setWidth(2);
     painter.setPen(penHorz);
     // Горизонтальная линия (baseline)
-    QRect glyphRect(m_glyphMeta->glyphRect());
+    QRect glyphRect(m_glyphMeta->templateRect());
     int disp = glyphRect.top() - glyphRect.height();
     glyphRect.translate(QPoint(0, m_glyphMeta->bitmapDimension() - glyphRect.top()));
     if (disp < 0)
@@ -202,28 +202,21 @@ void GlyphWidget::paintTemplateGlyph(QPainter &painter)
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid())
         return;
 
-    m_templateGlyph =
-        m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey(), QColor(0x00, 0x00, 0x55, 0x55));
-
-    if (m_templateGlyph.isNull())
+    if (m_glyphMeta->layerTemplate().isNull())
         return;
 
-// qDebug() << QString("%1:%2 %3").arg(__FILE__).arg(__LINE__).arg(__FUNCTION__) << m_templateGlyph->width() << m_templateGlyph->height();
+    // qDebug() << QString("%1:%2 %3").arg(__FILE__).arg(__LINE__).arg(__FUNCTION__) << m_templateGlyph->width() << m_templateGlyph->height();
 
-    if (m_templateGlyph) {
-        // qDebug() << "Paint Template Glyph" << m_glyphMeta->character() << "Size: " << m_glyphMeta->glyphSize() << ", Rect: " << glyphRect;
-        QImage scaled = m_templateGlyph->scaled(
-            m_glyphRect.width(),
-            m_glyphRect.height(),
-            Qt::IgnoreAspectRatio,
-            Qt::FastTransformation);
-        painter.drawImage(
-            m_glyphRect.left(),
-            m_glyphRect.top(),
-            scaled);
-    }
+    QImage scaled = m_glyphMeta->layerTemplate()->scaled(
+        m_glyphRect.width(),
+        m_glyphRect.height(),
+        Qt::IgnoreAspectRatio,
+        Qt::FastTransformation);
 
-    // qDebug() << m_glyphMeta->toString();
+    painter.drawImage(
+        m_glyphRect.left(),
+        m_glyphRect.top(),
+        scaled);
 }
 
 void GlyphWidget::paintPreviewGlyph(QPainter &painter)
@@ -231,17 +224,14 @@ void GlyphWidget::paintPreviewGlyph(QPainter &painter)
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid())
         return;
 
-    m_previewGlyph =
-        m_glyphManager->getPreviewGlyph(m_glyphMeta->glyphKey(), QSize(width(), height()), QColor(0x66, 0x22, 0x00, 0x33));
-
-    if (m_previewGlyph.isNull())
+    if (m_glyphMeta->layerPreview().isNull())
         return;
 
     float scaleX = static_cast<float>(m_previewGlyph->width()) / static_cast<float>(m_glyphMeta->previewRect().width());
     float scaleY = static_cast<float>(m_previewGlyph->height()) / static_cast<float>(m_glyphMeta->previewRect().height());
-    QImage scaled = m_previewGlyph->scaled(
-        m_gridCellSize * m_glyphMeta->glyphRect().width() * scaleX,
-        m_gridCellSize * m_glyphMeta->glyphRect().height() * scaleY,
+    QImage scaled = m_glyphMeta->layerPreview()->scaled(
+        m_gridCellSize * m_glyphMeta->templateRect().width() * scaleX,
+        m_gridCellSize * m_glyphMeta->templateRect().height() * scaleY,
         Qt::IgnoreAspectRatio,
         Qt::SmoothTransformation);
 
@@ -253,13 +243,10 @@ void GlyphWidget::paintUserGlyph(QPainter &painter)
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid())
         return;
 
-    m_userGlyph =
-        m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey(), Qt::black);
-
-    if (m_userGlyph.isNull())
+    if (m_glyphMeta->layerDraw().isNull())
         return;
     // qDebug() << "Draw User Glyph";
-    QImage scaled = m_userGlyph->scaled(
+    QImage scaled = m_glyphMeta->layerDraw()->scaled(
         m_renderRect.size(),
         Qt::IgnoreAspectRatio,
         Qt::FastTransformation);
@@ -282,19 +269,17 @@ void GlyphWidget::resizeEvent(QResizeEvent *event)
 
 void GlyphWidget::setGlyphMeta(QSharedPointer<GlyphMeta> newGlyphMeta)
 {
+    if (newGlyphMeta.isNull())
+        return;
     // qDebug() << __FILE__ << __LINE__ << __FUNCION__ << "Temporary Glyph Meta" << newGlyphMeta->toString();
     if (m_glyphMeta.isNull() || m_glyphMeta != newGlyphMeta)
     {
         m_glyphMeta = newGlyphMeta;
     }
 
-    m_templateGlyph =
-        m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey(), QColor(0x00, 0x00, 0x55, 0x55));
-    m_userGlyph =
-        m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey(), Qt::black);
-    m_previewGlyph =
-        m_glyphManager->getPreviewGlyph(m_glyphMeta->glyphKey(),
-            QSize(width(), height()), QColor(0x66, 0x22, 0x00, 0x33));
+    m_glyphMeta->setDirty();
+    m_glyphMeta->setResized();
+    m_appContext->renderGlyphLayers(m_glyphMeta, QSize(width(), height()));
 
     // qDebug() << QString("%1:%2 %3 %4 Template Glyph Is Null %5 %6x%7").arg(__FILE__).arg(__LINE__).arg(__FUNCTION__).arg(m_glyphMeta->toString()).arg(m_templateGlyph.isNull()).arg(m_templateGlyph->width()).arg(m_templateGlyph->width());
     initContext();
@@ -436,38 +421,29 @@ void GlyphWidget::clearUserLayer()
     if (m_glyphMeta.isNull())
         return;
 
-    QSharedPointer<QImage> userImage = m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey(), Qt::black);
-    if (userImage)
-    {
-        userImage->fill(Qt::white);
-        update();
-    }
+    m_appContext->clearDrawImage(m_glyphMeta);
+    update();
 }
 
 void GlyphWidget::pasteGlyphToUserLayer()
 {
-    if (m_glyphMeta.isNull())
+    if (m_glyphMeta.isNull() || m_glyphMeta->layerTemplate().isNull() || m_glyphMeta->layerDraw().isNull())
         return;
 
-    QSharedPointer<QImage> glyphImage = m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey(), Qt::black);
-    QSharedPointer<QImage> userImage = m_glyphManager->getUserGlyph(m_glyphMeta->glyphKey(), Qt::black);
-    QImage srcImg = QImage(*glyphImage.data());
-    if (glyphImage && userImage)
+    QImage srcImg = QImage(*(m_glyphMeta->layerTemplate().data()));
+    QRect glyphRect = m_glyphMeta->paintRect();
+    for (int x = 0; x < m_glyphMeta->layerTemplate()->width(); x++)
     {
-        QRect glyphRect = m_glyphMeta->paintRect();
-        for (int x = 0; x < glyphImage->width(); x++)
+        for (int y = 0; y < m_glyphMeta->layerTemplate()->height(); y++)
         {
-            for (int y = 0; y < glyphImage->height(); y++)
+            if (srcImg.pixelColor(x, y).alpha())
             {
-                if (srcImg.pixelColor(x, y).alpha())
-                {
-                    srcImg.setPixelColor(x, y, QColor(0x0, 0x0, 0x0, 0xFF));
-                }
+                srcImg.setPixelColor(x, y, QColor(0x0, 0x0, 0x0, 0xFF));
             }
         }
-        QPainter painter(userImage.data());
-        painter.drawImage(glyphRect, srcImg);
-        painter.end();
-        update ();
     }
+    QPainter painter(m_glyphMeta->layerDraw().data());
+    painter.drawImage(glyphRect, srcImg);
+    painter.end();
+    update ();
 }

@@ -5,13 +5,14 @@
 #include <QStringList>
 
 #include "glyphmanager.h"
+#include "appcontext.h"
 
 class GlyphsModel : public QAbstractItemModel
 {
     Q_OBJECT
 
 public:
-    explicit GlyphsModel(GlyphManager *glyphManager, QObject *parent = nullptr);
+    explicit GlyphsModel(AppContext *appContext, QObject *parent = nullptr);
 
     // Header:
     QVariant headerData(int section,
@@ -28,7 +29,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
 private:
-    GlyphManager *m_glyphManager;
+    AppContext *m_appContext;
     QStringList m_headers;
 };
 

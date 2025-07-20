@@ -11,6 +11,7 @@
 #include <QHash>
 
 #include "glyphmanager.h"
+#include "appcontext.h"
 #include "glyphmeta.h"
 
 #include <ft2build.h>
@@ -29,7 +30,7 @@ class GlyphWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit GlyphWidget(GlyphManager *glyphManager, QWidget *parent = nullptr);
+    explicit GlyphWidget(AppContext *appContext, QWidget *parent = nullptr);
     ~GlyphWidget();
 
 public slots:
@@ -67,7 +68,7 @@ private:
 
     Ui::GlyphWidget *ui;
 
-    GlyphManager *m_glyphManager;
+    AppContext *m_appContext;
     QSharedPointer<QImage> m_userGlyph;
     QSharedPointer<QImage> m_templateGlyph;
     QSharedPointer<QImage> m_previewGlyph;

@@ -11,7 +11,7 @@ public:
     // virtual ~IGlyphRender() = default;
     
     // Основной метод рендеринга
-    virtual QSharedPointer<QImage> renderGlyph(QSharedPointer<GlyphMeta> glyphMeta, const QSize &targetSize, const QColor &glyphColor) = 0;
+    virtual QSharedPointer<QImage> renderGlyph(QSharedPointer<GlyphMeta> glyphMeta, const QColor &glyphColor, const QColor &bgColor, const QSize &targetSize) = 0;
     virtual QRect renderRect () const = 0;
 
     // Дополнительные возможности

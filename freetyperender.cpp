@@ -26,9 +26,11 @@ QString FreeTypeRender::rendererName() const
 
 QSharedPointer<QImage> FreeTypeRender::renderGlyph (
     QSharedPointer<GlyphMeta> glyphMeta,
-    const QSize &targetSize,
-    const QColor &glyphColor
-) {
+    const QColor &glyphColor,
+    const QColor &bgColor,
+    const QSize &targetSize
+    ) 
+{
     m_glyphMeta = glyphMeta;
     m_targetSize = targetSize;
     
@@ -44,6 +46,7 @@ QSharedPointer<QImage> FreeTypeRender::renderGlyph (
     calcRenderRect();
 
     QImage image = QImage(QSize(m_bitmap.width, m_bitmap.rows), QImage::Format_ARGB32);
+    image.fill(bgColor);
 
     QColor pixelColor(glyphColor);
 

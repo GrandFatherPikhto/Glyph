@@ -43,9 +43,24 @@ public:
     }
 
     // Оператор == для QHash
-    bool operator==(const GlyphKey &other) const {
-        return m_unicode == other.m_unicode &&
-               m_bitmapDimension == other.m_bitmapDimension;
+    bool operator == (QSharedPointer<GlyphKey> glyphKey) const {
+        return m_unicode == glyphKey->m_unicode
+               && m_bitmapDimension == glyphKey->m_bitmapDimension;
+    }
+
+    bool operator == (const GlyphKey &glyphKey) const {
+        return m_unicode == glyphKey.m_unicode
+               && m_bitmapDimension == glyphKey.m_bitmapDimension;
+    }
+
+    bool operator != (QSharedPointer<GlyphKey> glyphKey) const {
+        return m_unicode != glyphKey->m_unicode 
+               || m_bitmapDimension != glyphKey->m_bitmapDimension;
+    }
+
+    bool operator != (const GlyphKey &glyphKey) const {
+        return m_unicode != glyphKey.m_unicode
+               || m_bitmapDimension != glyphKey.m_bitmapDimension;
     }
 
     // Сеттеры

@@ -38,6 +38,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
     qt_add_executable(Glyph
         MANUAL_FINALIZATION
@@ -51,11 +56,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
         glyphmanager.h glyphmanager.cpp
         iglyphrender.h
         freetyperender.h freetyperender.cpp
-        userglyphrender.h userglyphrender.cpp
-        userglyphrender.h userglyphrender.cpp
         glyphwidget.h glyphwidget.cpp glyphwidget.ui
         glyphpreview.h glyphpreview.cpp
-        userglyphrender.h userglyphrender.cpp
+        drawglyphrender.h drawglyphrender.cpp
         glyphsmodel.h glyphsmodel.cpp
         unicodemetadatamanager.h unicodemetadatamanager.cpp
         createproject.h createproject.cpp createproject.ui
@@ -63,6 +66,11 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
         fontmetadataitem.h
         fontmetadatamodel.h fontmetadatamodel.cpp
         dockglyphselector.h dockglyphselector.cpp
+        maintoolbar.h maintoolbar.cpp
+        mainstatusbar.h mainstatusbar.cpp
+        appcontext.h appcontext.cpp
+        settingsmanager.h settingsmanager.cpp
+        appsettings.h appsettings.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Glyph APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -99,6 +107,11 @@ target_link_libraries(Glyph PRIVATE ${FREETYPE_LIBRARIES})
 target_link_libraries(Glyph PRIVATE Qt6::Core Qt6::Widgets)
 target_link_libraries(Glyph PRIVATE Qt6::Core)
 target_link_libraries(Glyph PRIVATE Qt6::Core Qt6::Widgets)
+target_link_libraries(Glyph PRIVATE Qt6::Core Qt6::Widgets)
+target_link_libraries(Glyph PRIVATE Qt6::Core Qt6::Widgets)
+target_link_libraries(Glyph PRIVATE Qt6::Core)
+target_link_libraries(Glyph PRIVATE Qt6::Core)
+target_link_libraries(Glyph PRIVATE Qt6::Core)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

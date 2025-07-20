@@ -5,9 +5,9 @@
 
 #include "unicodemetadatamanager.h"
 
-DockGlyphSelector::DockGlyphSelector(GlyphManager *glyphManager, QWidget *parent) :
+DockGlyphSelector::DockGlyphSelector(AppContext *appContext, QWidget *parent) :
     QDockWidget("Glyph Selector", parent)
-    , m_glyphManager(glyphManager)
+    , m_appContext(appContext)
     , m_mainWidget(nullptr)
     , m_mainLayout(nullptr)
     , m_mainSplitter(nullptr)
@@ -26,8 +26,14 @@ DockGlyphSelector::DockGlyphSelector(GlyphManager *glyphManager, QWidget *parent
     setupUI();
 }
 
+DockGlyphSelector::~DockGlyphSelector()
+{
+    
+}
+
 void DockGlyphSelector::setupUI() {
-// qDebug() << __FILE__ << font().family() << font().pointSize();
+    // qDebug() << __FILE__ << font().family() << font().pointSize();
+
     m_fontCharacterModel = new FontCharacterModel(this);
     m_decompositionsModel = new FontMetadataModel(this);
     m_categoriesModel = new FontMetadataModel(this);
@@ -134,10 +140,7 @@ void DockGlyphSelector::setupGlyphTable () {
 }
 
 void DockGlyphSelector::selectFont(const QFont &font) {
-    auto &fontManager = FontManager::instance();
-    m_fontPath = fontManager.findFontPath(font.family());
-
-    // display->setFont(font);
+    m_appContext->setFont(font);
 
     m_fontCharacterModel->setFont(font);
 
@@ -151,11 +154,10 @@ void DockGlyphSelector::selectFont(const QFont &font) {
 
     // В классе MainWindow
     connect(m_fontCharsTable, &QTableView::clicked, this, [=](const QModelIndex &index) {
-        QChar ch = m_fontCharacterModel->characterAt(index);
-        QSharedPointer<GlyphMeta> glyphMeta = m_glyphManager->getTemporaryGlyphMeta(ch, 12, 12, m_fontComboBox->currentFont(), m_fontPath);
-        // TODO: Добавить перехват glyphSize и bitmapDimensions из docglyph
+        QChar character = m_fontCharacterModel->characterAt(index);
+        emit m_appContext->characterChanged(character);
+        QSharedPointer<GlyphMeta> glyphMeta = m_appContext->findOrCreateCurrentGlyph(true);
         emit glyphChanged(glyphMeta);
-        // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Temporary Glyph Meta" << glyphMeta->toString();
     });
 }
 
@@ -173,7 +175,7 @@ void DockGlyphSelector::setupFontComboBox ()
 
 void DockGlyphSelector::saveGlyphDockSelectorState()
 {
-    QSettings settings("DAE", "Glyph");
+    QSettings settings;
     // qDebug() << __FILE__ << __LINE__ << __FUNCTION__;
 
     // Сохраняем состояние QSplitter
@@ -198,7 +200,7 @@ void DockGlyphSelector::saveGlyphDockSelectorState()
 
 void DockGlyphSelector::restoreGlyphDockSelectorState()
 {
-    QSettings settings("DAE", "Glyph");
+    QSettings settings;
 
     // Восстанавливаем QSplitter
     if (m_mainSplitter) {

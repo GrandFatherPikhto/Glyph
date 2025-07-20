@@ -1,7 +1,7 @@
 #ifndef GLYPHPREVIEW_H
 #define GLYPHPREVIEW_H
 
-#include "glyphmanager.h"
+#include "appcontext.h"
 #include "glyphmeta.h"
 
 #include <QObject>
@@ -13,7 +13,7 @@ class GlyphPreview : public QWidget
 {
     Q_OBJECT
 public:
-    explicit GlyphPreview(GlyphManager *glyphManager, QWidget *parent = nullptr);
+    explicit GlyphPreview(AppContext *appContext, QWidget *parent = nullptr);
 
 public slots:
     void slotSetGlyphMeta (QSharedPointer<GlyphMeta> glyphMeta);
@@ -29,7 +29,7 @@ private:
     void initContext ();
     void paintGrid (QPainter &painter);
 
-    GlyphManager *m_glyphManager;
+    AppContext *m_appContext;
     QSharedPointer<GlyphMeta> m_glyphMeta;
 
     QRect m_glyphRect;

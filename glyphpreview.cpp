@@ -1,8 +1,8 @@
 #include "glyphpreview.h"
 
-GlyphPreview::GlyphPreview(GlyphManager *glyphManager, QWidget *parent)
+GlyphPreview::GlyphPreview(AppContext *appContext, QWidget *parent)
     : QWidget{parent}
-    , m_glyphManager(glyphManager)
+    , m_appContext(appContext)
     , m_glyphMeta(nullptr)
     , m_padding(10)
 {
@@ -28,15 +28,13 @@ void GlyphPreview::paintEvent(QPaintEvent *event)
 
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.setRenderHint(QPainter::Antialiasing, false);
-
-    QSharedPointer<QImage> templateGlyph =
-        m_glyphManager->getTemplateGlyph(m_glyphMeta->glyphKey(), Qt::black);
     // qDebug() << "Glyph: " << templateGlyph->size();
-    if(templateGlyph) {
+    if(m_glyphMeta->layerTemplate().isNull()) 
+    {
         painter.drawImage(
             m_glyphRect.left(),
             m_glyphRect.top(),
-            templateGlyph->scaled(
+            m_glyphMeta->layerTemplate()->scaled(
                 m_glyphRect.width(),
                 m_glyphRect.height(),
                 Qt::IgnoreAspectRatio,
@@ -61,7 +59,7 @@ void GlyphPreview::initContext ()
 
     m_cellSize = renderSize / m_glyphMeta->bitmapDimension();
 
-    QRect glyphRect(m_glyphMeta->glyphRect());
+    QRect glyphRect(m_glyphMeta->templateRect());
     glyphRect.translate(QPoint(0, m_glyphMeta->bitmapDimension() - glyphRect.top() * 2));
     m_glyphRect = QRect(
         QPoint(m_renderRect.left() + (glyphRect.left()) * m_cellSize,

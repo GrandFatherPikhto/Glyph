@@ -8,14 +8,15 @@
 #include "glyphmeta.h"
 #include "iglyphrender.h"
 
-class UserGlyphRender : public IGlyphRender
+class DrawGlyphRender : public IGlyphRender
 {
 public:
-    UserGlyphRender();
+    DrawGlyphRender();
     QSharedPointer<QImage> renderGlyph(
         QSharedPointer<GlyphMeta> glyphMeta,
-        const QSize &targetSize,
-        const QColor &glyphColor
+        const QColor &glyphColor,
+        const QColor &bgColor,
+        const QSize &targetSize
         ) override;
 
     // В freetyperender.h добавьте объявление:

@@ -3,9 +3,9 @@
 #include "glyphsmodel.h"
 #include "unicodemetadatamanager.h"
 
-GlyphsModel::GlyphsModel(GlyphManager *glyphManager, QObject *parent)
+GlyphsModel::GlyphsModel(AppContext *appContext, QObject *parent)
     : QAbstractItemModel(parent)
-    , m_glyphManager(glyphManager)
+    , m_appContext(appContext)
 {
     m_headers.append("Unicode");
     m_headers.append("Character");
@@ -48,7 +48,7 @@ int GlyphsModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    return m_glyphManager->size();
+    return m_appContext->size();
 }
 
 int GlyphsModel::columnCount(const QModelIndex &parent) const
@@ -66,7 +66,7 @@ QVariant GlyphsModel::data(const QModelIndex &index, int role) const
 
     int idx = index.row();
 
-    QSharedPointer<GlyphMeta> glyphMeta = m_glyphManager->at(idx);
+    QSharedPointer<GlyphMeta> glyphMeta =  m_appContext->glyphAt(idx);
     if (!glyphMeta)
         return QVariant();
 

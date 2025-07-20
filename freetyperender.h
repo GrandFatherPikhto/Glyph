@@ -25,8 +25,9 @@ public:
 
     QSharedPointer<QImage> renderGlyph(
         QSharedPointer<GlyphMeta> glyphMeta,
-        const QSize &targetSize,
-        const QColor &glyphColor
+        const QColor &glyphColor,
+        const QColor &bgColor,
+        const QSize &targetSize
     ) override;
 
     // В freetyperender.h добавьте объявление:

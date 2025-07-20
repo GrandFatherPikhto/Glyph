@@ -12,6 +12,7 @@
 #include "glyphmeta.h"
 #include "glyphpreview.h"
 #include "glyphsmodel.h"
+#include "appcontext.h"
 
 namespace Ui {
 class DockGlyph;
@@ -22,7 +23,7 @@ class DockGlyph : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit DockGlyph(GlyphManager *glyphManager, QWidget *parent = nullptr);
+    explicit DockGlyph(AppContext *appContext, QWidget *parent = nullptr);
     ~DockGlyph();
 
 private slots:
@@ -63,18 +64,12 @@ private:
     void updateGlyph ();
 
     Ui::DockGlyph *ui;
-    GlyphManager *m_glyphManager;
+    AppContext *m_appContext;
     GlyphPreview *m_glyphPreview;
     QTableView *m_glyphTable;
 
     QSharedPointer<GlyphMeta> m_glyphMeta;
-    int m_gridDimension;
-    int m_bitmapDimension;
-    int m_glyphSize;
-    QFont m_font;
-    QString m_fontPath;
-    QChar m_character;
-
+    
     QSplitter *m_mainSplitter;
 
     GlyphsModel *m_glyphsModel;

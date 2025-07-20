@@ -25,23 +25,19 @@
 #include <QSettings>
 #include <QShowEvent>
 
-// #include "categoriesmodel.h"
 #include "fontcharactermodel.h"
 #include "fontmetadatamodel.h"
-//#include "unicodemetadatamanager.h"
 #include "glyphmanager.h"
-
+#include "appcontext.h"
 
 class DockGlyphSelector : public QDockWidget {
     Q_OBJECT
 public:
-    explicit DockGlyphSelector(GlyphManager *glyphManager, QWidget *parent = nullptr);
+    explicit DockGlyphSelector(AppContext *glyphManager, QWidget *parent = nullptr);
+    ~DockGlyphSelector();
     
-    // void setFont(const Font& font); // Установка текущего шрифта
     
 signals:
-    // void glyphSelected(uint glyphIndex); // Сигнал о выборе символа
-    // void filterChanged(const QString& filter); // Сигнал об изменении фильтра
     void glyphChanged (QSharedPointer<GlyphMeta> glyphMeta);
 
 public slots:
@@ -73,7 +69,7 @@ private:
     void fillCategories (const QVector<quint32> &categories);
     void fillScripts(const QVector<quint32> &scripts);
     
-    GlyphManager *m_glyphManager;
+    AppContext *m_appContext;
 
     QWidget     *m_mainWidget;
     QVBoxLayout *m_mainLayout;

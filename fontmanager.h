@@ -7,34 +7,46 @@
 #include <QString>
 #include <QStringList>
 #include <QFile>
+#include <QtGlobal>
 
 #include <windows.h>
 #include <tchar.h>
 
 
-class FontManager {
+class FontManager : public QObject {
+    Q_OBJECT
 public:
-    static FontManager& instance() {
-        static FontManager instance;
-        return instance;
-    }
+    FontManager(QObject *parent = nullptr);
+    ~FontManager();
 
+    QString findFontPath(const QFont &font);
     QString findFontPath(const QString& family, const QString& style = "");
     void addFontDir(const QString& path); // Добавить кастомный путь для поиска
 
-    // Запрещаем копирование и присваивание
-    FontManager(const FontManager&) = delete;
-    FontManager& operator=(const FontManager&) = delete;
-    bool GetSystemFontFilePath(const QString &fontName, QString &fontPath);
+    void addFontPath(const QString &fontPath)
+    {
+        m_fontDirectory.append(fontPath);
+    }
+
+    void addRegisterFontPath(const QString &registerFontPath)
+    {
+        m_registerFontPath.append(registerFontPath);
+    }
+
 private:
-    FontManager() = default; // Приватный конструктор
-    ~FontManager() = default;
+#if defined(Q_OS_WIN)
+    QString getRegisterFontFilePath();
+    QString getFontPathOverRegisterKey (HKEY &hKey);
+#endif // Q_OS_WIN
 
-    QFontDatabase fontDb;
+    void initDefault ();
+
     QStringList customFontDirs;
-    QMutex mutex; // Если нужна потокобезопасность
 
-    const QString m_defaultFontsPath = "C:/Windows/Fonts/";
-    const QString m_registerFontsPath = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts";
+    QStringList m_fontDirectory;
+    QStringList m_registerFontPath;
+
+    QString m_fontFamily;
+    QString m_fontStyle;
 };
 #endif // FONTMANAGER_H

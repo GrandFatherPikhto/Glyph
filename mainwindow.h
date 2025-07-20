@@ -11,7 +11,7 @@
 
 #include "dockglyph.h"
 #include "dockglyphselector.h"
-#include "glyphmanager.h"
+#include "appcontext.h"
 #include "glyphwidget.h"
 
 QT_BEGIN_NAMESPACE
@@ -55,11 +55,6 @@ private:
     void setupGlyphWidget ();
     void setupDockPanels ();
     void setupStatusBar();
-    void setupGlyphToolBar();
-    void setStatusBarFontName(const QFont &newFont);
-    void setStatusBarCharacter(const QChar &newCharacter);
-    void setStatusBarGlyphSize(int newGlyphSize);
-    void setStatusBarBitmapDimension (int newGridSize);
     void saveGeometryAndState();
     void restoreGeometryAndState();
 
@@ -70,29 +65,8 @@ private:
 
     GlyphWidget *m_glyphWidget;
     QGridLayout *m_mainLayout;
-    QToolBar *m_glyphToolBar;
 
-    QAction *m_gridEnable;
-    QAction *m_templateLayerEnable;
-    QAction *m_previewLayerEnable;
-    QAction *m_userLayerEnable;
-    QAction *m_glyphRectLayerEnable;
-    QAction *m_bitmapRectLayerEnable;
-    QAction *m_baselineLayerEnable;
-    QAction *m_pasteGlyphToUserLayer;
-    QAction *m_clearUserLayer;
-
-    QSpinBox *m_addLeftCells;
-    QSpinBox *m_addBottomCells;
-
-
-    QLabel *m_fontLabel;
-    QLabel *m_glyphSizeLabel;
-    QLabel *m_gridSizeLabel;
-    QLabel *m_glyphRectLabel;
-    QLabel *m_charLabel;
-
-    GlyphManager *m_glyphManager;
+    AppContext *m_appContext;
 
 };
 #endif // MAINWINDOW_H
