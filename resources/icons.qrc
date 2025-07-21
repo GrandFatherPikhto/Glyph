@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/app/icons">
+        <file alias="app_icon">1x/app_icon.png</file>
+    </qresource>
+    <qresource prefix="/button/icons">
+        <file alias="left">1x/left.png</file>
+        <file alias="up">1x/up.png</file>
+        <file alias="right">1x/right.png</file>
+        <file alias="down">1x/down.png</file>
+        <file alias="center">1x/center.png</file>
+        <file alias="grid">1x/grid.png</file>
+        <file alias="template">1x/template.png</file>
+        <file alias="user">1x/user.png</file>
+        <file alias="preview">1x/preview.png</file>
+        <file alias="glyphrect">1x/rect.png</file>
+        <file alias="baseline">1x/baseline.png</file>
+        <file alias="bitmaprect">1x/bitmaprect.png</file>
+        <file alias="paste">1x/paste.png</file>
+        <file alias="clear">1x/clear.png</file>
+    </qresource>
+</RCC>

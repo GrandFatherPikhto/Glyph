@@ -23,17 +23,14 @@ else()
     message(FATAL_ERROR "FreeType не найден!")
 endif()
 
-set(TS_FILES translate/Glyph_ru_RU.ts)
+set(TS_FILES Glyph_ru_RU.ts)
 
-# Подключаем core
-add_subdirectory(core)
-add_subdirectory(models)
-add_subdirectory(resources)
-add_subdirectory(ui)
-
-set(PROJECT_SOURCES 
-    main/main.cpp
-    ${TS_FILES}
+set(PROJECT_SOURCES
+        main.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
+        ${TS_FILES}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -50,6 +47,30 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
     qt_add_executable(Glyph
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        dockglyph.h dockglyph.cpp dockglyph.ui
+        fontmanager.h fontmanager.cpp
+        glyphkey.h
+        glyphkey.cpp
+        glyphmeta.h
+        icons.qrc
+        glyphmanager.h glyphmanager.cpp
+        iglyphrender.h
+        freetyperender.h freetyperender.cpp
+        glyphwidget.h glyphwidget.cpp glyphwidget.ui
+        glyphpreview.h glyphpreview.cpp
+        drawglyphrender.h drawglyphrender.cpp
+        glyphsmodel.h glyphsmodel.cpp
+        unicodemetadatamanager.h unicodemetadatamanager.cpp
+        createproject.h createproject.cpp createproject.ui
+        fontcharactermodel.h fontcharactermodel.cpp
+        fontmetadataitem.h
+        fontmetadatamodel.h fontmetadatamodel.cpp
+        dockglyphselector.h dockglyphselector.cpp
+        maintoolbar.h maintoolbar.cpp
+        mainstatusbar.h mainstatusbar.cpp
+        appcontext.h appcontext.cpp
+        settingsmanager.h settingsmanager.cpp
+        appsettings.h appsettings.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Glyph APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -91,13 +112,6 @@ target_link_libraries(Glyph PRIVATE Qt6::Core Qt6::Widgets)
 target_link_libraries(Glyph PRIVATE Qt6::Core)
 target_link_libraries(Glyph PRIVATE Qt6::Core)
 target_link_libraries(Glyph PRIVATE Qt6::Core)
-
-target_link_libraries(Glyph PRIVATE
-    GlyphCore
-    GlyphUI
-    GlyphModels
-    GlyphResources
-)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
