@@ -17,15 +17,15 @@ void FontManager::initDefault ()
 {
 #if defined(Q_OS_WIN)
     // Windows-специфичный код
-    qDebug() << "Running on Windows";
+    // qDebug() << "Running on Windows";
     m_fontDirectory.append("C:/Windows/Fonts/");
     m_registerFontPath.append("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 #elif defined(Q_OS_LINUX)
     // Linux-специфичный код
-    qDebug() << "Running on Linux";
+    // qDebug() << "Running on Linux";
 #elif defined(Q_OS_MACOS)
     // macOS-специфичный код
-    qDebug() << "Running on macOS";
+    // qDebug() << "Running on macOS";
 #endif    
 }
 
@@ -52,7 +52,7 @@ QString FontManager::getRegisterFontFilePath()
 {
     HKEY hKey;
     for (const QString &registerPath : m_registerFontPath) {
-        qDebug() << registerPath;
+        // qDebug() << registerPath;
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, registerPath.toStdWString().c_str(), 0, KEY_READ, &hKey) != ERROR_SUCCESS) {
             continue;
         }

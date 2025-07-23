@@ -42,7 +42,7 @@ private:
     void loadGlyph ();
     void doneFace ();
     void doneLibrary ();
-    void setTargetSize ();
+    void setTargetSize (const QSize &targetSize);
 
     QSharedPointer<GlyphMeta> m_glyphMeta;
     QRect m_renderRect;

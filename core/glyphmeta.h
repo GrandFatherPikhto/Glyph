@@ -187,7 +187,7 @@ public:
         m_offset -= QPoint(1, 0);
     }
 
-    void moveCenter() {
+    void resetOffset() {
 
     }
 
@@ -198,6 +198,10 @@ public:
     QRect templateRect() {
         // return m_templateRect.translated(m_offset);
         return m_templateRect;
+    }
+
+    QSize templateSize(int factor = 1) {
+        return m_templateRect.size() * factor;
     }
 
     void setPreviewRect(const QRect &newPreviewRect)

@@ -2,7 +2,7 @@
 set(LIB_NAME GlyphModels)
 
 # Создаём статическую библиотеку для GlyphKey и GlyphMeta
-add_library(${LIB_NAME} STATIC
+qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
     fontcharitem.h
     fontcharactermodel.h fontcharactermodel.cpp
     fontmetadataitem.h
@@ -27,3 +27,5 @@ target_link_libraries(${LIB_NAME} PRIVATE
 #     CXX_VISIBILITY_PRESET hidden
 #     VISIBILITY_INLINES_HIDDEN ON
 # )
+
+qt_finalize_target(${LIB_NAME})

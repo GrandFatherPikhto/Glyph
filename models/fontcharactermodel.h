@@ -9,6 +9,7 @@
 #include <QChar>
 #include <QString>
 #include <QPair>
+#include <QLoggingCategory>
 
 #include "fontcharitem.h"
 #include "appcontext.h"

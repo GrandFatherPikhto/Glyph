@@ -30,13 +30,13 @@ private slots:
 
     void slotFontChanged(const QFont &font);
     void slotCharacterChanged();
-    void slotBitmapDimensionChanged(int newValue);
-    void slotGlyphSizeChanged(int newValue);
-    void slotMoveCenterClicked();
-    void slotMoveLeftClicked();
-    void slotMoveTopClicked();
-    void slotMoveDownClicked();
-    void slotMoveRightClicked();
+    // void slotBitmapDimensionChanged(int newValue);
+    // void slotGlyphSizeChanged(int newValue);
+    // void slotMoveCenterClicked();
+    // void slotMoveLeftClicked();
+    // void slotMoveTopClicked();
+    // void slotMoveDownClicked();
+    // void slotMoveRightClicked();
 
 signals:
     void glyphChanged(QSharedPointer<GlyphMeta> glyph);
@@ -58,6 +58,7 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
+    void restoreData();
     void saveGeometryAndState();
     void restoreGeometryAndState();
     void connectSygnals ();
@@ -68,7 +69,7 @@ private:
     GlyphPreview *m_glyphPreview;
     QTableView *m_glyphTable;
 
-    QSharedPointer<GlyphMeta> m_glyphMeta;
+    // QSharedPointer<GlyphMeta> m_glyphMeta;
     
     QSplitter *m_mainSplitter;
 

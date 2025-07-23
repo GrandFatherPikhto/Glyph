@@ -191,7 +191,11 @@ void FontCharacterModel::fillCharList ()
     m_fontCharacters.clear();
 
     QFontMetrics fm(m_font);
-    for (uint32_t code = 32; code < 65535; ++code) { // Пропускаем управляющие символы
+
+    // QLoggingCategory category("qt.text.font.db");
+    // category.setEnabled(QtMsgType::QtInfoMsg, false);
+
+    for (uint16_t code = 32; code < 65535; ++code) { // Пропускаем управляющие символы
         QChar ch(code);
         if (fm.inFont(ch) && ch.category() != QChar::Other_NotAssigned)
         {
@@ -214,13 +218,8 @@ void FontCharacterModel::fillCharList ()
                 m_fontCharacters.append({ch, false});
             }
         }
-        // QChar::Other_NotAssigned
-        if (fm.inFont(ch)) {
-            // qDebug() << ch;
-
-        }
+        QLoggingCategory::setFilterRules("qt.text.font.db=true");
     }
-
 // qDebug() << __FUNCTION__ << " Added " << m_fontCharacters.length() << " chars";
     // Дополнительно можно явно уведомить:
     // emit dataChanged(index(0, 0), index(rowCount()-1, columnCount()-1));

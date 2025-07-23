@@ -48,7 +48,7 @@ int GlyphModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    return m_appContext->size();
+    return m_appContext->glyphTableSize();
 }
 
 int GlyphModel::columnCount(const QModelIndex &parent) const

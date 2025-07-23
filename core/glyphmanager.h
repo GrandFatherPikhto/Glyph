@@ -8,7 +8,6 @@
 #include "glyphmeta.h"
 #include "glyphkey.h"
 #include "iglyphrenderer.h"
-#include "appsettings.h"
 #include "freetypeglyphrenderer.h"
 #include "drawglyphrenderer.h"
 
@@ -25,7 +24,7 @@ enum ImageType {
         ImagePreview
     };
 
-    explicit GlyphManager(AppSettings *appSettings, QObject *parent = nullptr);
+    explicit GlyphManager(QObject *parent = nullptr);
     ~GlyphManager();
 
     QSharedPointer<GlyphMeta> findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font = QFont(), const QString &fontPath = QString(), bool temporary = false);
@@ -48,14 +47,16 @@ enum ImageType {
         return nullptr;
     }
 
-    void renderGlyphLayers(QSharedPointer<GlyphMeta> glyphMeta, const QSize &previewSize);
-
     QSharedPointer<GlyphKey> getTemporaryGlyphKey ()
     {
         return m_glyphKey;
     }
 
     QSharedPointer<IGlyphRenderer> getRenderer (GlyphManager::ImageType type);
+
+    void renderTemplateImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size = QSize(), QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
+    void renderPreviewImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
+    void renderDrawImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size = QSize(), QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
 
 public slots:
 
@@ -64,12 +65,6 @@ public slots:
 private:
     void updateSelected();
     void updateData();
-
-    void renderTemplateImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size = QSize(), QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
-    void renderPreviewImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
-    void renderDrawImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size = QSize(), QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
-
-    AppSettings *m_appSettings;
 
     QVector<QSharedPointer<GlyphMeta>> m_metaGlyphs;
     QHash<GlyphKey, int> m_index;

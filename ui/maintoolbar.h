@@ -11,14 +11,15 @@
 #include <QShowEvent>
 #include <QHideEvent>
 #include <QCloseEvent>
+#include <QLabel>
 
-#include "glyphmanager.h"
+#include "appcontext.h"
 
 class MainToolbar : public QToolBar
 {
     Q_OBJECT
 public:
-    MainToolbar (GlyphManager *glyphManager, QWidget *parent = nullptr);
+    MainToolbar (AppContext *appContext, QWidget *parent = nullptr);
     ~MainToolbar ();
 
 signals:    
@@ -29,8 +30,8 @@ signals:
     void glyphRectLayerEnable(bool enable);
     void baselineLayerEnable(bool enable);
     void bitmapRectLayerEnable(bool enable);
-    void leftGridCells(int value);
-    void bottomGridCells(int value);
+    void leftGridCellsChanged(int value);
+    void bottomGridCellsChanged(int value);
     void pasteGlyphToUserLayer();
     void clearUserLayer();
 
@@ -41,10 +42,12 @@ protected:
 
 private:
     void setupUI();
+    void setupSignals();
+    void initState ();
     void saveToolbarState();
     void restoreToolbarState();
 
-    GlyphManager *m_glyphManager;
+    AppContext *m_appContext;
 
     QAction *m_gridEnable;
     QAction *m_templateLayerEnable;
@@ -55,6 +58,9 @@ private:
     QAction *m_baselineLayerEnable;
     QAction *m_pasteGlyphToUserLayer;
     QAction *m_clearUserLayer;
+
+    QLabel *m_leftCellsLabel;
+    QLabel *m_bottomCellsLabel;
 
     QSpinBox *m_addLeftCells;
     QSpinBox *m_addBottomCells;

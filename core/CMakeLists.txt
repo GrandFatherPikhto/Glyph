@@ -11,12 +11,9 @@ else()
 endif()
 
 # Создаем библиотеку для компонентов главного окна
-add_library(${LIB_NAME} STATIC
+qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
     appcontext.h
     appcontext.cpp
-
-    appsettings.h
-    appsettings.cpp
 
     fontmanager.h
     fontmanager.cpp
@@ -57,3 +54,6 @@ target_include_directories(${LIB_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
 )
+
+qt_finalize_target(${LIB_NAME})
+

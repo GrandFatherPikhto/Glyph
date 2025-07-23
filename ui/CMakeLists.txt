@@ -1,7 +1,8 @@
 set(LIB_NAME GlyphUI)
 
+
 # Создаем библиотеку для компонентов главного окна
-add_library(${LIB_NAME} STATIC
+qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
@@ -45,3 +46,5 @@ target_include_directories(${LIB_NAME} PUBLIC
 #     resources/icons.qrc  # Пример пути к ресурсам
 # )
 # target_sources(${LIB_NAME} PRIVATE ${MainWindowResources})
+
+qt_finalize_target(${LIB_NAME})

@@ -32,17 +32,14 @@ QSharedPointer<QImage> FreeTypeGlyphRenderer::renderGlyph (
     ) 
 {
     m_glyphMeta = glyphMeta;
-    m_targetSize = targetSize;
-    
+
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid() || m_glyphMeta->fontPath().isEmpty()) {
         return QSharedPointer<QImage>();
     }
 
     loadFontFace();
-
-    setTargetSize();
+    setTargetSize(targetSize);
     loadGlyph();
-
     calcRenderRect();
 
     QImage image = QImage(QSize(m_bitmap.width, m_bitmap.rows), QImage::Format_ARGB32);
@@ -50,6 +47,7 @@ QSharedPointer<QImage> FreeTypeGlyphRenderer::renderGlyph (
 
     QColor pixelColor(glyphColor);
 
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_bitmap.width << m_bitmap.rows;
     for (int y = 0; y < m_bitmap.rows; ++y) {
         for (int x = 0; x < m_bitmap.width; ++x) {
             uint8_t pixel;
@@ -112,8 +110,18 @@ void FreeTypeGlyphRenderer::doneLibrary()
     }
 }
 
-void FreeTypeGlyphRenderer::setTargetSize()
+void FreeTypeGlyphRenderer::setTargetSize(const QSize &targetSize)
 {
+    if (targetSize == QSize())
+    {
+        m_targetSize = QSize(m_glyphMeta->glyphSize(), m_glyphMeta->glyphSize());
+    } else
+    {
+        m_targetSize = targetSize;
+    }
+
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_targetSize;
+
     m_ftError = FT_Set_Pixel_Sizes(m_ftFace, m_targetSize.width(), m_targetSize.height());
 
     if (m_ftError)
@@ -128,4 +136,5 @@ void FreeTypeGlyphRenderer::calcRenderRect ()
         // QPoint(m_slot->bitmap_left, m_glyphMeta->bitmapDimension() - m_slot->bitmap_top),
         QPoint(m_slot->bitmap_left, m_slot->bitmap_top),
         QSize(m_bitmap.width, m_bitmap.rows));
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_renderRect;
 }

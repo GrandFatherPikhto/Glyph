@@ -157,7 +157,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="icons.qrc">
+             <iconset resource="../resources/icons.qrc">
               <normaloff>:/button/icons/down</normaloff>:/button/icons/down</iconset>
             </property>
             <property name="iconSize">
@@ -174,7 +174,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="icons.qrc">
+             <iconset resource="../resources/icons.qrc">
               <normaloff>:/button/icons/left</normaloff>:/button/icons/left</iconset>
             </property>
             <property name="iconSize">
@@ -191,7 +191,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="icons.qrc">
+             <iconset resource="../resources/icons.qrc">
               <normaloff>:/button/icons/up</normaloff>:/button/icons/up</iconset>
             </property>
             <property name="iconSize">
@@ -203,12 +203,12 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QPushButton" name="moveCenter">
+           <widget class="QPushButton" name="resetOffset">
             <property name="text">
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="icons.qrc">
+             <iconset resource="../resources/icons.qrc">
               <normaloff>:/button/icons/center</normaloff>:/button/icons/center</iconset>
             </property>
             <property name="iconSize">
@@ -225,7 +225,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="icons.qrc">
+             <iconset resource="../resources/icons.qrc">
               <normaloff>:/button/icons/right</normaloff>:/button/icons/right</iconset>
             </property>
             <property name="iconSize">
@@ -259,7 +259,7 @@
   </widget>
  </widget>
  <resources>
-  <include location="icons.qrc"/>
+  <include location="../resources/icons.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -26,13 +26,13 @@ endif()
 set(TS_FILES translate/Glyph_ru_RU.ts)
 
 # Подключаем core
+add_subdirectory(resources)
 add_subdirectory(core)
 add_subdirectory(models)
-add_subdirectory(resources)
 add_subdirectory(ui)
+add_subdirectory(main)
 
 set(PROJECT_SOURCES 
-    main/main.cpp
     ${TS_FILES}
 )
 
@@ -47,10 +47,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 
-    qt_add_executable(Glyph
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-    )
+qt_add_executable(Glyph
+    MANUAL_FINALIZATION
+    ${PROJECT_SOURCES}
+)
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Glyph APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
@@ -92,7 +92,10 @@ target_link_libraries(Glyph PRIVATE Qt6::Core)
 target_link_libraries(Glyph PRIVATE Qt6::Core)
 target_link_libraries(Glyph PRIVATE Qt6::Core)
 
+message(STATUS "Add User Libraries")
+
 target_link_libraries(Glyph PRIVATE
+    GlyphMain
     GlyphCore
     GlyphUI
     GlyphModels

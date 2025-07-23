@@ -13,6 +13,8 @@
 #include "dockglyphselector.h"
 #include "appcontext.h"
 #include "glyphwidget.h"
+#include "maintoolbar.h"
+#include "mainstatusbar.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -51,6 +53,7 @@ protected:
     void showEvent(QShowEvent *event);
 
 private:
+    void setupMainToolbar ();
     void setupSignals ();
     void setupGlyphWidget ();
     void setupDockPanels ();
@@ -61,12 +64,14 @@ private:
     Ui::MainWindow *ui;
 
     DockGlyph *m_dockGlyph;
+    MainToolbar *m_mainToolbar;
+    MainStatusbar *m_mainStatubar;
+
     DockGlyphSelector *m_dockGlyphSelector;
 
     GlyphWidget *m_glyphWidget;
-    QGridLayout *m_mainLayout;
+    QGridLayout *m_centralLayout;
 
     AppContext *m_appContext;
-
 };
 #endif // MAINWINDOW_H

@@ -1,25 +1,30 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(LIB_NAME GlyphResources)
+project(GlyphResources LANGUAGES CXX)
 
-# Создаём статическую библиотеку для ресурсов
-add_library(${LIB_NAME} STATIC)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
-# Добавляем .qrc-файлы (имя переменной без привязки к LIB_NAME)
-qt_add_resources(ResourceFiles
+# Только если ресурсы используют Q_OBJECT
+find_package(Qt6 REQUIRED COMPONENTS Core)
+
+qt_add_library(GlyphResources STATIC MANUAL_FINALIZATION)
+qt_add_resources(GlyphResources_RCC
     icons.qrc
     # styles.qrc
 )
 
-message(STATUS "Resource files: ${ResourceFiles}")
+target_sources(GlyphResources PRIVATE
+    ${GlyphResources_RCC}
+)
 
-# Привязываем ресурсы к библиотеке (без двойного раскрытия)
-target_sources(${LIB_NAME} PRIVATE ${ResourceFiles})
-
-# Указываем, где искать ресурсы
-target_include_directories(${LIB_NAME} PUBLIC
+# Если ресурсы должны быть доступны другим модулям
+target_include_directories(GlyphResources PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Зависимости Qt
-target_link_libraries(${LIB_NAME} PRIVATE Qt6::Core)
+target_link_libraries(GlyphResources PRIVATE
+    Qt6::Core
+)
+
+qt_finalize_target(GlyphResources)

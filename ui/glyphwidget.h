@@ -9,6 +9,7 @@
 #include <QVector>
 #include <QFont>
 #include <QHash>
+#include <QMargins>
 
 #include "glyphmanager.h"
 #include "appcontext.h"
@@ -34,19 +35,7 @@ public:
     ~GlyphWidget();
 
 public slots:
-    // void setGlyphSize(int newFontPtSize);
     void setGlyphMeta (QSharedPointer<GlyphMeta> newGlyph);
-    void enableTemplateLayer(bool editable);
-    void enableGrid(bool enable);
-    void enablePreviewLayer(bool enable);
-    void enableUserLayer(bool enable);
-    void enableGlyphRectLayer(bool enable);
-    void enableBitmapRectLayer(bool enable);
-    void enableBaselineLayer(bool enable);
-    void setLeftGridCells(int value);
-    void setBottomGridCells(int value);
-    void pasteGlyphToUserLayer();
-    void clearUserLayer ();
 
 signals:
 
@@ -57,24 +46,23 @@ protected:
     void mousePressEvent(QMouseEvent *event);
 
 private:
+    void setupSignals();
     void paintGrid (QPainter &painter);
     void paintBaseLines(QPainter &painter);
     void paintBitmapRect(QPainter &painter);
     void paintTemplateGlyph(QPainter &painter);
     void paintPreviewGlyph(QPainter &painter);
-    void paintUserGlyph(QPainter &painter);
+    void paintDrawGlyph(QPainter &painter);
 
     void initContext ();
+    void initValues ();
 
     Ui::GlyphWidget *ui;
 
     AppContext *m_appContext;
-    QSharedPointer<QImage> m_userGlyph;
-    QSharedPointer<QImage> m_templateGlyph;
-    QSharedPointer<QImage> m_previewGlyph;
 
     int m_gridCellSize;
-    int m_padding;
+    QMargins m_margins;
     int m_leftCells;
     int m_bottomCells;
     int m_xGridCells;
@@ -83,7 +71,7 @@ private:
     bool m_templateLayerEnable;
     bool m_gridLayerEnable;
     bool m_previewLayerEnable;
-    bool m_userLayerEnable;
+    bool m_drawLayerEnable;
     bool m_glyphRectEnable;
     bool m_baselineEnable;
     bool m_bitmapRectEnable;

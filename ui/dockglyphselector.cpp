@@ -1,5 +1,4 @@
 #include <QGroupBox>
-#include "fontmanager.h"
 
 #include "dockglyphselector.h"
 
@@ -138,7 +137,7 @@ void DockGlyphSelector::setupGlyphTable () {
 }
 
 void DockGlyphSelector::selectFont(const QFont &font) {
-    emit m_appContext->fontChanged(font);
+    m_appContext->setFont(font);
 
     m_fontCharacterModel->setFont(font);
 
@@ -153,9 +152,9 @@ void DockGlyphSelector::selectFont(const QFont &font) {
     // В классе MainWindow
     connect(m_fontCharsTable, &QTableView::clicked, this, [=](const QModelIndex &index) {
         QChar character = m_fontCharacterModel->characterAt(index);
-        emit m_appContext->characterChanged(character);
-        QSharedPointer<GlyphMeta> glyphMeta = m_appContext->findOrCreateCurrentGlyph(true);
-        emit glyphChanged(glyphMeta);
+        m_appContext->setCharacter(character);
+        // QSharedPointer<GlyphMeta> glyphMeta = m_appContext->findOrCreateCurrentGlyph(true);
+        // emit glyphChanged(glyphMeta);
     });
 }
 
@@ -167,6 +166,7 @@ void DockGlyphSelector::setupFontComboBox ()
         if (font != QFont())
         {
             selectFont(font);
+            m_appContext->setFont(font);
         }
     });
 }

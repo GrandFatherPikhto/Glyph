@@ -1,9 +1,8 @@
 #include "glyphmanager.h"
 
 
-GlyphManager::GlyphManager(AppSettings *appSettings, QObject *parent)
+GlyphManager::GlyphManager(QObject *parent)
     : QObject{parent}
-    , m_appSettings(appSettings)
     , m_ftRender(QSharedPointer<IGlyphRenderer>())
     , m_glyphKey(QSharedPointer<GlyphKey>())
     , m_glyphMeta(QSharedPointer<GlyphMeta>())
@@ -39,8 +38,21 @@ QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int
 
     GlyphKey key (character, bitmapDimension, font);
 
-    if (key == m_glyphMeta->key())
+    if (!m_glyphMeta.isNull() && key == m_glyphMeta->key())
     {
+        if (m_glyphMeta->glyphSize() != glyphSize)
+        {
+            m_glyphMeta->setGlyphSize(glyphSize);
+            m_glyphMeta->setDirty();
+        }
+
+        if (m_glyphMeta->font() != font)
+        {
+            m_glyphMeta->setFont(font);
+            m_glyphMeta->setFontPath(fontPath);
+            m_glyphMeta->setDirty();
+        }
+
         return m_glyphMeta;
     }
 
@@ -71,13 +83,6 @@ QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int
     return glyphMeta;
 }
 
-void GlyphManager::renderGlyphLayers(QSharedPointer<GlyphMeta> glyphMeta, const QSize &previewSize)
-{
-    renderTemplateImage(glyphMeta, m_appSettings->templateColor(), m_appSettings->templateBgColor());
-    renderPreviewImage(glyphMeta, m_appSettings->previewColor(), m_appSettings->previewBgColor(), previewSize);
-    renderDrawImage(glyphMeta, m_appSettings->drawColor(), m_appSettings->drawBgColor());
-}
-
 void GlyphManager::renderTemplateImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer)
 {
     if (glyphMeta.isNull())
@@ -86,13 +91,12 @@ void GlyphManager::renderTemplateImage (QSharedPointer<GlyphMeta> glyphMeta, con
     if (glyphMeta->isDirty() || glyphMeta->layerTemplate().isNull())
     {
         QSharedPointer<IGlyphRenderer>renderer = userRenderer.isNull() ? m_ftRender : userRenderer;
-        QSize targetSize = (size == QSize()) ?  QSize(glyphMeta->glyphSize(), glyphMeta->glyphSize()) : size;
-        glyphMeta->setLayerTemplate(renderer->renderGlyph(glyphMeta, color, bgColor, targetSize));
+        glyphMeta->setLayerTemplate(renderer->renderGlyph(glyphMeta, color, bgColor, size));
         glyphMeta->setTemplateRect(renderer->renderRect());
     }
 }
 
-void GlyphManager::renderPreviewImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer)
+void GlyphManager::renderPreviewImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &previewSize, QSharedPointer<IGlyphRenderer> userRenderer)
 {
     if (glyphMeta.isNull())
         return;
@@ -100,8 +104,9 @@ void GlyphManager::renderPreviewImage (QSharedPointer<GlyphMeta> glyphMeta, cons
     QSharedPointer<IGlyphRenderer>renderer = userRenderer.isNull() ? m_ftRender : userRenderer;
 
     renderer = userRenderer.isNull() ? m_ftRender : userRenderer;
-    glyphMeta->setLayerPreview(renderer->renderGlyph(glyphMeta, color, bgColor, size));
+    glyphMeta->setLayerPreview(renderer->renderGlyph(glyphMeta, color, bgColor, previewSize));
     glyphMeta->setPreviewRect(renderer->renderRect());
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << glyphMeta->previewRect() << glyphMeta->layerPreview()->rect();
 }
 
 void GlyphManager::renderDrawImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer)
@@ -110,7 +115,7 @@ void GlyphManager::renderDrawImage (QSharedPointer<GlyphMeta> glyphMeta, const Q
 
     renderer = userRenderer.isNull() ? m_drawRender : userRenderer;
     QSize targetSize = (size == QSize()) ? QSize(glyphMeta->bitmapDimension(), glyphMeta->bitmapDimension()) : size;
-    glyphMeta->setLayerPreview(renderer->renderGlyph(glyphMeta, color, bgColor, targetSize));
+    glyphMeta->setLayerDraw(renderer->renderGlyph(glyphMeta, color, bgColor, targetSize));
     glyphMeta->setDrawRect(renderer->renderRect());
 }
 

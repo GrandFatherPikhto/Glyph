@@ -1,7 +1,7 @@
 set(LIB_NAME GlyphMain)
 
 # Создаем библиотеку для компонентов главного окна
-add_library(${LIB_NAME} STATIC
+qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
     main.cpp
 )
 
@@ -9,20 +9,10 @@ add_library(${LIB_NAME} STATIC
 target_link_libraries(${LIB_NAME} PRIVATE
     Qt6::Core
     Qt6::Widgets
-    DockGlyphSelector
+    GlyphUI
     GlyphCore
-    AppContext
-    GlyphPreview
-    GlyphWidget
-    FontManager
-    GlyphRenderer
-    UnicodeMetadata
-    DockGlyph
+    GlyphModels
     GlyphResources
-    GlyphModel
-    FontCharacterModel
-    FontMetadataModel
-    GlyphMainWindow
 )
 
 # Указываем пути для include-файлов
@@ -35,3 +25,5 @@ target_include_directories(${LIB_NAME} PUBLIC
 #     resources/icons.qrc  # Пример пути к ресурсам
 # )
 # target_sources(${LIB_NAME} PRIVATE ${MainWindowResources})
+
+qt_finalize_target(${LIB_NAME})

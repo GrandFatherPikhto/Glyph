@@ -13,12 +13,15 @@ MainWindow::MainWindow(QWidget *parent)
     , m_appContext(nullptr)
     , m_dockGlyph(nullptr)
     , m_dockGlyphSelector(nullptr)
-    , m_mainLayout(nullptr)
+    , m_centralLayout(nullptr)
     , m_glyphWidget(nullptr)
+    , m_mainToolbar(nullptr)
+    , m_mainStatubar(nullptr)
 {
     ui->setupUi(this);
     m_appContext = new AppContext(this);
 
+    setupMainToolbar ();
     setupGlyphWidget();
     setupDockPanels();
     setupStatusBar();
@@ -33,10 +36,12 @@ MainWindow::~MainWindow()
 void MainWindow::setupSignals ()
 {
     QObject::connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::slotActionQuitTriggered);
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
-    QObject::connect(m_dockGlyph, &DockGlyph::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
-        
+    QObject::connect(m_appContext, &AppContext::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
+    QObject::connect(m_appContext, &AppContext::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
+        // qDebug() << __FILE__ << __LINE__ << glyphMeta->toString();
     });
+
+
 #if 0    
     QObject::connect(this, &MainWindow::templateLayerEnable, m_glyphWidget, &GlyphWidget::enableTemplateLayer);
     QObject::connect(this, &MainWindow::previewLayerEnable, m_glyphWidget, &GlyphWidget::enablePreviewLayer);
@@ -55,10 +60,8 @@ void MainWindow::setupSignals ()
 
 void MainWindow::setupGlyphWidget ()
 {
-    m_mainLayout = new QGridLayout(this);
     m_glyphWidget = new GlyphWidget(m_appContext, this);
-    m_mainLayout->addWidget(m_glyphWidget);
-    ui->centralwidget->setLayout(m_mainLayout);
+    setCentralWidget(m_glyphWidget);
 }
 
 void MainWindow::setupDockPanels ()
@@ -77,7 +80,16 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     QMainWindow::closeEvent(event);
 }
 
+void MainWindow::setupMainToolbar ()
+{
+    m_mainToolbar = new MainToolbar(m_appContext, this);
+    addToolBar(m_mainToolbar);
+}
+
 void MainWindow::setupStatusBar () {
+    m_mainStatubar = new MainStatusbar(m_appContext, this);
+    setStatusBar(nullptr);
+    setStatusBar(m_mainStatubar);
 }
 
 void MainWindow::slotActionQuitTriggered()
@@ -89,12 +101,14 @@ void MainWindow::saveGeometryAndState() {
     QSettings settings;
     settings.setValue("mainWindowGeometry", saveGeometry());
     settings.setValue("mainWindowState", saveState());
+    // m_appContext->appSettings()->saveApplicationSettings();
 }
 
 void MainWindow::restoreGeometryAndState() {
     QSettings settings;
     restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
     restoreState(settings.value("mainWindowState").toByteArray());
+    // m_appContext->appSettings()->restoreApplicationSettings();
 }
 
 void MainWindow::showEvent(QShowEvent *event)
