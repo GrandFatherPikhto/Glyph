@@ -1,7 +1,6 @@
 #include <QDebug>
 
 #include "glyphmodel.h"
-#include "unicodemetadata.h"
 
 GlyphModel::GlyphModel(AppContext *appContext, QObject *parent)
     : QAbstractItemModel(parent)
@@ -12,6 +11,10 @@ GlyphModel::GlyphModel(AppContext *appContext, QObject *parent)
     m_headers.append("Script");
     m_headers.append("Category");
     m_headers.append("Decomposition");
+
+    QObject::connect(m_appContext->glyphManager(), &GlyphManager::glyphDataChanged, this, [=](){
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Glyph Data Changed";
+    });
 }
 
 QVariant GlyphModel::headerData(int section, Qt::Orientation orientation, int role) const

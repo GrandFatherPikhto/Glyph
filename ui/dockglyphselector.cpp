@@ -149,12 +149,10 @@ void DockGlyphSelector::selectFont(const QFont &font) {
 
     emit m_fontCharacterModel->layoutChanged();
 
-    // В классе MainWindow
     connect(m_fontCharsTable, &QTableView::clicked, this, [=](const QModelIndex &index) {
         QChar character = m_fontCharacterModel->characterAt(index);
-        m_appContext->setCharacter(character);
-        // QSharedPointer<GlyphMeta> glyphMeta = m_appContext->findOrCreateCurrentGlyph(true);
-        // emit glyphChanged(glyphMeta);
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << character << m_fontCharacterModel->isSelected(index);
+        m_appContext->setCharacter(character, !m_fontCharacterModel->isSelected(index));
     });
 }
 
@@ -204,7 +202,7 @@ void DockGlyphSelector::restoreGlyphDockSelectorState()
     if (m_mainSplitter) {
         m_mainSplitter->restoreState(
             settings.value("splitter/state").toByteArray());
-// qDebug() << "Restore splitter state";
+        // qDebug() << "Restore splitter state";
     }
 
     // Восстанавливаем QDockWidget
@@ -227,7 +225,7 @@ void DockGlyphSelector::restoreGlyphDockSelectorState()
     }
 
     QString strMSB = settings.value("DockGlyphSelector/MSB").toString();
-// qDebug() << __FILE__ << __LINE__ << strMSB;
+    // qDebug() << __FILE__ << __LINE__ << strMSB;
     m_fontMSB->setText(strMSB);
 }
 

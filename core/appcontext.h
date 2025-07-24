@@ -9,6 +9,7 @@
 #include <QRect>
 #include <QString>
 #include <QMargins>
+#include <QPainter>
 
 #include "glyphmanager.h"
 #include "fontmanager.h"
@@ -26,6 +27,7 @@ public:
     QSharedPointer<GlyphMeta> findOrCreateGlyph(const QChar &character = QChar(), bool temporary = false)
     {
         Q_ASSERT(m_glyphManager != nullptr);
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Temporary: " << temporary;
         return m_glyphManager->findOrCreate(
             character == QChar() ? m_character : character,
             m_bitmapDimension,
@@ -102,6 +104,9 @@ public:
 
 signals:
     void glyphChanged(QSharedPointer<GlyphMeta> glyphMeta);
+    void glyphRendered(QSharedPointer<GlyphMeta> glyphMeta);
+    void glyphPreviewRendered(QSharedPointer<GlyphMeta> glyphMeta);
+    void glyphDrawChanged(QSharedPointer<GlyphMeta> glyphMeta);
 
     void leftGridCellsChanged   (int value);
     void bottomGridCellsChanged (int value);
@@ -260,9 +265,11 @@ public slots:
 
     void setFont(const QFont &newFont) { 
         Q_ASSERT(m_fontManager != nullptr);
-        if (m_font != newFont)
+        QFont font(newFont);
+        font.setPixelSize(m_glyphSize);
+        if (m_font != font)
         {
-            m_font = newFont; 
+            m_font = font;
             m_fontPath = m_fontManager->findFontPath(m_font);
             glyphUpdate();
         }
@@ -276,12 +283,12 @@ public slots:
         }
     }
 
-    void setCharacter(const QChar &newChar)
+    void setCharacter(const QChar &newChar, bool temporary = false)
     {
-        if (m_character != newChar)
+        // if (m_character != newChar)
         {
             m_character = newChar;
-            glyphUpdate();
+            glyphUpdate(temporary);
         }
     }
     
@@ -341,13 +348,7 @@ public slots:
         }
     }
 
-    void renderGlyphLayers (QSharedPointer<GlyphMeta> glyphMeta, const QSize & preivewSize)
-    {
-        Q_ASSERT(m_glyphManager != nullptr);
-        m_glyphManager->renderTemplateImage(glyphMeta, m_templateColor, m_templateBgColor);
-        m_glyphManager->renderPreviewImage(glyphMeta, m_previewColor, m_previewBgColor, preivewSize);
-        m_glyphManager->renderDrawImage(glyphMeta, m_drawColor, m_drawBgColor);
-    }
+    void renderGlyphLayers (QSharedPointer<GlyphMeta> glyphMeta, const QSize & preivewSize);
 
     void setMargins(const QMargins &value)
     {
@@ -360,11 +361,11 @@ public slots:
 
 private:
 
-    void glyphUpdate()
+    void glyphUpdate(bool temporary = true)
     {
         if (m_character != QChar() && m_glyphSize >= 6 && m_bitmapDimension >= 6)
         {
-            QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph();
+            QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph(m_character, temporary);
             emit glyphChanged(glyphMeta);
         }
     }

@@ -352,8 +352,6 @@ void GlyphWidget::setGlyphMeta(QSharedPointer<GlyphMeta> newGlyphMeta)
         m_glyphMeta = newGlyphMeta;
     }
 
-    m_glyphMeta->setDirty();
-    m_glyphMeta->setResized();
     m_appContext->renderGlyphLayers(m_glyphMeta, QSize(width(), height()));
 
     initContext();
@@ -391,6 +389,8 @@ void GlyphWidget::mousePressEvent(QMouseEvent *event)
             m_glyphMeta->layerDraw()->setPixelColor(xSegment, ySegment, newColor);
             update();
         }
+
+        emit m_appContext->glyphDrawChanged(m_glyphMeta);
     }
 }
 

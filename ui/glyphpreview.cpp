@@ -4,22 +4,27 @@ GlyphPreview::GlyphPreview(AppContext *appContext, QWidget *parent)
     : QWidget{parent}
     , m_appContext(appContext)
     , m_glyphMeta(nullptr)
-    , m_padding(10)
+    , m_margins(QMargins(2,2,2,2))
 {
     setMinimumHeight(20);
+
+    QObject::connect(m_appContext, &AppContext::glyphDrawChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
+        m_glyphMeta = glyphMeta;
+        update();
+    });
+
+    QObject::connect(m_appContext, &AppContext::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
+        if (!glyphMeta.isNull() && !glyphMeta->layerDraw().isNull())
+        {
+            m_glyphMeta = glyphMeta;
+            update();
+        }
+    });
 }
-
-
-void GlyphPreview::slotSetGlyphMeta (QSharedPointer<GlyphMeta> glyphMeta)
-{
-    m_glyphMeta = glyphMeta;
-    update();
-}
-
 
 void GlyphPreview::paintEvent(QPaintEvent *event)
 {
-    if (!m_glyphMeta)
+    if (!m_glyphMeta || m_glyphMeta->layerDraw().isNull())
         return;
 
     initContext();
@@ -28,15 +33,16 @@ void GlyphPreview::paintEvent(QPaintEvent *event)
 
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.setRenderHint(QPainter::Antialiasing, false);
-    // qDebug() << "Glyph: " << templateGlyph->size();
-    if(m_glyphMeta->layerTemplate().isNull()) 
+
+    if(!m_glyphMeta->layerDraw().isNull())
     {
+        QSize scaleSize(m_glyphMeta->drawRect().size());
+        scaleSize *= m_cellSize;
+        // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_glyphMeta->toString() << m_glyphMeta->layerDraw().isNull() << scaleSize << m_cellSize;
         painter.drawImage(
-            m_glyphRect.left(),
-            m_glyphRect.top(),
-            m_glyphMeta->layerTemplate()->scaled(
-                m_glyphRect.width(),
-                m_glyphRect.height(),
+            m_renderRect.topLeft(),
+            m_glyphMeta->layerDraw()->scaled(
+                scaleSize,
                 Qt::IgnoreAspectRatio,
                 Qt::FastTransformation));
     }
@@ -50,24 +56,12 @@ void GlyphPreview::initContext ()
     if (!m_glyphMeta && m_glyphMeta->bitmapDimension() > 6)
         return;
 
-    int renderSize = width() > height() ? height() - m_padding * 2 : width() - m_padding * 2;
-    
-    m_renderRect = QRect(
-        QPoint(m_padding, m_padding),
-        QSize(renderSize, renderSize)
-    );
-
-    m_cellSize = renderSize / m_glyphMeta->bitmapDimension();
-
-    QRect glyphRect(m_glyphMeta->templateRect());
-    glyphRect.translate(QPoint(0, m_glyphMeta->bitmapDimension() - glyphRect.top() * 2));
-    m_glyphRect = QRect(
-        QPoint(m_renderRect.left() + (glyphRect.left()) * m_cellSize,
-               m_renderRect.top() + (glyphRect.top() * m_cellSize)),
-        QSize(glyphRect.width() * m_cellSize, glyphRect.height() * m_cellSize)
-        );
-
-    // qDebug() << "Preview Render: " << m_renderRect << ", Glyph: " << m_glyphRect << ", Cell: " << m_cellSize;
+    int renderDimension = width() > height() ? height() : width ();
+    m_cellSize = renderDimension / m_glyphMeta->bitmapDimension();
+    int left = (width() - m_glyphMeta->bitmapDimension()*m_cellSize) / 2;
+    int top = (height() - m_glyphMeta->bitmapDimension()*m_cellSize) / 2;
+    m_renderRect = QRect(QPoint(left, top), QSize(renderDimension, renderDimension));
+    m_renderRect -= m_margins;
 }
 
 void GlyphPreview::paintGrid (QPainter &painter)

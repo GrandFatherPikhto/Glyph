@@ -26,7 +26,17 @@ DockGlyph::DockGlyph(AppContext *appContext, QWidget *parent)
 
     ui->dockWidgetContents->layout()->addWidget(m_mainSplitter);
 
+    QObject::connect(m_appContext->glyphManager(), &GlyphManager::glyphDataChanged, this, [=](){
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Glyph Data Changed";
+        emit m_glyphModel->layoutChanged();
+    });
+
     connectSygnals();
+
+    // ui->dockWidgetContents->layout()->addWidget();
+    QObject::connect(ui->pushButtonHide, &QPushButton::toggled, this, [=](bool checked){
+        ui->groupBoxGridSize->setHidden(checked);
+    });
 }
 
 DockGlyph::~DockGlyph()
@@ -58,6 +68,17 @@ void DockGlyph::connectSygnals()
 
     QObject::connect(ui->character, &QLineEdit::returnPressed, this, &DockGlyph::slotCharacterChanged);
     QObject::connect(ui->character, &QLineEdit::editingFinished, this, &DockGlyph::slotCharacterChanged);
+
+    QObject::connect(m_glyphTable, &QTableView::clicked, this, [=](const QModelIndex &index){
+        // QChar character = m_fontCharacterModel->characterAt(index);
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_appContext->glyphAt(index.row())->toString();
+        // m_appContext->setCharacter(character, !m_fontCharacterModel->isSelected(index));
+        QSharedPointer<GlyphMeta> glyphMeta = m_appContext->glyphAt(index.row());
+        if (!glyphMeta.isNull())
+        {
+            emit m_appContext->glyphChanged(glyphMeta);
+        }
+    });
 }
 
 void DockGlyph::slotFontChanged(const QFont &font)

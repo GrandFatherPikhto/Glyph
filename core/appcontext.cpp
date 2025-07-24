@@ -38,19 +38,18 @@ AppContext::AppContext(QObject *parent)
 
 AppContext::~AppContext()
 {
-    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__;
     saveAppContext();
 }
 
 void AppContext::setupSignals()
 {
     QObject::connect(this, &AppContext::clearDrawLayer, this, [=](){
-        qDebug() << "Clear Draw Layer";
         QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph();
         if (glyphMeta.isNull() || glyphMeta->layerDraw().isNull())
             return;
         
         glyphMeta->layerDraw()->fill(m_drawBgColor);
+        emit glyphDrawChanged(glyphMeta);
     });
 
     QObject::connect(this, &AppContext::pasteTemplateToDrawLayer, this, [=](){
@@ -74,6 +73,7 @@ void AppContext::setupSignals()
         QPainter painter(glyphMeta->layerDraw().data());
         painter.drawImage(glyphRect, srcImg);
         painter.end();
+        emit glyphDrawChanged(glyphMeta);
     });
 }
 
@@ -174,4 +174,25 @@ void AppContext::restoreAppContext()
 
 
     settings.endGroup();
+}
+
+void AppContext::renderGlyphLayers (QSharedPointer<GlyphMeta> glyphMeta, const QSize & preivewSize)
+{
+    Q_ASSERT(m_glyphManager != nullptr);
+    if (glyphMeta.isNull())
+        return;
+
+    if (glyphMeta->isDirty())
+    {
+        m_glyphManager->renderTemplateImage(glyphMeta, m_templateColor, m_templateBgColor);
+        m_glyphManager->renderDrawImage(glyphMeta, m_drawColor, m_drawBgColor);
+        emit glyphRendered(glyphMeta);
+        emit glyphDrawChanged(glyphMeta);
+    }
+
+    if (glyphMeta->isResized())
+    {
+        m_glyphManager->renderPreviewImage(glyphMeta, m_previewColor, m_previewBgColor, preivewSize);
+        emit glyphPreviewRendered(glyphMeta);
+    }
 }

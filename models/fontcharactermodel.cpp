@@ -152,6 +152,16 @@ QChar FontCharacterModel::characterAt(const QModelIndex &index) const {
     return m_characters.at(index.row()).getChar();
 }
 
+const FontCharItem & FontCharacterModel::fontCharItemAt(const QModelIndex &index) const
+{
+    return m_characters.at(index.row());
+}
+
+bool FontCharacterModel::isSelected(const QModelIndex &index) const
+{
+    return m_characters.at(index.row()).isSelected();
+}
+
 void FontCharacterModel::setUnicodeMSBFilter(qint16 msb)
 {
     m_MSBFilter = msb;
@@ -170,7 +180,6 @@ Qt::ItemFlags FontCharacterModel::flags(const QModelIndex &index) const {
 
 void FontCharacterModel::filterCharList()
 {
-// qDebug() << __FUNCTION__ << m_fontCharacters.length();
     beginResetModel(); // Сообщаем представлению о начале изменений    
     m_characters.clear();
     for (const auto& charItem : std::as_const(m_fontCharacters)) {
@@ -182,21 +191,21 @@ void FontCharacterModel::filterCharList()
         }
     }
     endResetModel(); // Сообщаем представлению об окончании изменений    
-// qDebug() << m_fontCharacters.length() << "/" << m_characters.length();
 }
 
 void FontCharacterModel::fillCharList ()
 {
-// qDebug() << __FUNCTION__;
     m_fontCharacters.clear();
 
     QFontMetrics fm(m_font);
+    QVector<quint64> supportedChars = m_appContext->fontManager()->listSupportedChars(m_font);
 
-    // QLoggingCategory category("qt.text.font.db");
-    // category.setEnabled(QtMsgType::QtInfoMsg, false);
+    for (quint64 code : supportedChars) { // Пропускаем управляющие символы
+        if (code > 65536)
+            continue;
 
-    for (uint16_t code = 32; code < 65535; ++code) { // Пропускаем управляющие символы
-        QChar ch(code);
+        QChar ch(static_cast<uint16_t>(code));
+        //  &&
         if (fm.inFont(ch) && ch.category() != QChar::Other_NotAssigned)
         {
             QRect bbox = fm.boundingRect(ch);
@@ -220,8 +229,7 @@ void FontCharacterModel::fillCharList ()
         }
         QLoggingCategory::setFilterRules("qt.text.font.db=true");
     }
-// qDebug() << __FUNCTION__ << " Added " << m_fontCharacters.length() << " chars";
-    // Дополнительно можно явно уведомить:
+
     // emit dataChanged(index(0, 0), index(rowCount()-1, columnCount()-1));
     emit categoriesChanged(m_categories);
     emit scriptsChanged(m_scripts);
@@ -232,7 +240,7 @@ void FontCharacterModel::handleSelectionCategoriesChanged(const QItemSelection &
 {
     const QModelIndexList selectedIndexes = selected.indexes();
     for (const QModelIndex &index : selectedIndexes) {
-        // qDebug() << "Selected" << ;
+        // qDebug() << "Selected" << index.data(Qt::UserRole).toString();
         quint32 id = index.data(Qt::UserRole).toUInt();
         if (!m_categoryFilter.contains(index.data(Qt::UserRole))) {
             m_categoryFilter.append(id);

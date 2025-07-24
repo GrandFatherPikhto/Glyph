@@ -26,6 +26,7 @@ public:
     }
 
 private:
+    QSize m_targetSize;
     QRect m_renderRect;
     QSharedPointer<GlyphMeta> m_glyphMeta;
 };

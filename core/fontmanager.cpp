@@ -4,13 +4,29 @@
 
 FontManager::FontManager(QObject *parent)
     : QObject(parent)
+    , m_ftLibrary(0)
+    , m_ftFace(0)
+    , m_fontPath(QString())
 {
     initDefault();
+    if (FT_Init_FreeType(&m_ftLibrary)) {
+        fprintf(stderr, "Could not init FreeType library\n");
+        // return 1;
+    }
 }
 
 FontManager::~FontManager()
 {
+    // Очистка
+    if (m_ftFace)
+    {
+        FT_Done_Face(m_ftFace);
+    }
 
+    if (m_ftLibrary)
+    {
+        FT_Done_FreeType(m_ftLibrary);
+    }
 }
 
 void FontManager::initDefault ()
@@ -109,4 +125,45 @@ QString FontManager::getFontPathOverRegisterKey(HKEY &hKey)
 void FontManager::addFontDir(const QString &newFontDir) 
 {
     m_fontDirectory.append(newFontDir);
+}
+
+
+const QVector<quint64> & FontManager::listSupportedChars(const QFont &font)
+{
+    FT_ULong charcode;
+    FT_UInt gindex;
+
+    QString fontPath = findFontPath(font);
+
+    // Загрузка шрифта
+    if (FT_New_Face(m_ftLibrary, fontPath.toStdString().c_str(), 0, &m_ftFace)) {
+        fprintf(stderr, "Could not open font\n");
+        FT_Done_FreeType(m_ftLibrary);
+        m_ftLibrary = 0;
+        // return 1;
+    }
+
+    // Установка размера шрифта (опционально)
+    FT_Set_Pixel_Sizes(m_ftFace, 0, 16);
+
+    // Получаем первый символ в charmap
+    charcode = FT_Get_First_Char(m_ftFace, &gindex);
+    m_supportedChars.clear();
+
+    while (gindex != 0) {
+        // Выводим код символа (можете преобразовать в Unicode при необходимости)
+        // printf("Char code: %lu, Glyph index: %u\n", charcode, gindex);
+
+        // Получаем следующий символ
+        charcode = FT_Get_Next_Char(m_ftFace, charcode, &gindex);
+        m_supportedChars.append(charcode);
+    }
+
+    if (m_ftFace)
+    {
+        FT_Done_Face(m_ftFace);
+        m_ftFace = 0;
+    }
+
+    return m_supportedChars;
 }

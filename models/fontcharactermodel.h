@@ -39,7 +39,9 @@ public:
 
     // void setFont(const QFont &font);
 
+    const FontCharItem & fontCharItemAt(const QModelIndex &index) const;
     QChar characterAt(const QModelIndex &index) const;
+    bool isSelected(const QModelIndex &index) const;
 
     void setCategoryFilter(const QVector<quint32> &categories) {
         QVector<quint32> temp = categories; // Создаем копию

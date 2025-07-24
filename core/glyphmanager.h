@@ -8,9 +8,6 @@
 #include "glyphmeta.h"
 #include "glyphkey.h"
 #include "iglyphrenderer.h"
-#include "freetypeglyphrenderer.h"
-#include "drawglyphrenderer.h"
-
 
 class GlyphManager : public QObject
 {
@@ -30,6 +27,8 @@ enum ImageType {
     QSharedPointer<GlyphMeta> findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font = QFont(), const QString &fontPath = QString(), bool temporary = false);
 
     QSharedPointer<GlyphMeta> find(const GlyphKey &key);
+    bool remove(const GlyphKey &key);
+    bool append(QSharedPointer<GlyphMeta> glyphMeta);
     
     void sort();
 
@@ -60,10 +59,12 @@ enum ImageType {
 
 public slots:
 
-    signals:
+signals:
+    void glyphDataChanged();
 
 private:
-    void updateSelected();
+    const GlyphKey currentGlyphParams(const QChar &ch, int bitmapDimension, const QFont &font = QFont(), const QString &path = QString(), int glyphSize = -1);
+
     void updateData();
 
     QVector<QSharedPointer<GlyphMeta>> m_metaGlyphs;

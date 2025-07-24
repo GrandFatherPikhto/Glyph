@@ -8,6 +8,7 @@
 #include <QWidget>
 #include <QPainter>
 #include <QSharedPointer>
+#include <QMargins>
 
 class GlyphPreview : public QWidget
 {
@@ -16,7 +17,7 @@ public:
     explicit GlyphPreview(AppContext *appContext, QWidget *parent = nullptr);
 
 public slots:
-    void slotSetGlyphMeta (QSharedPointer<GlyphMeta> glyphMeta);
+
 
 signals:
 
@@ -35,7 +36,7 @@ private:
     QRect m_glyphRect;
     QRect m_renderRect;
 
-    int m_padding;
+    QMargins m_margins;
 
     int m_cellSize;
 };

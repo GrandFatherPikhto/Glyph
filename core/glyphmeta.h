@@ -23,7 +23,7 @@ public:
     };
 
     // Первые два параметры ДОЛЖНЫ БЫТЬ заполнены. Потому, что это параметры GlyphKey
-    GlyphMeta(const QChar &newCharacter, int bitmapDimension, int glyphSize, const QFont &newFont = QFont(), const QString &newFontPath = QString(), bool temporary = false, bool dirty = false)
+    GlyphMeta(const QChar &newCharacter, int bitmapDimension, int glyphSize, const QFont &newFont = QFont(), const QString &newFontPath = QString(), bool temporary = false, bool dirty = true, bool resized = true)
         : m_character(newCharacter)
         , m_glyphSize(glyphSize)
         , m_bitmapDimension(bitmapDimension)
@@ -34,8 +34,8 @@ public:
         , m_previewRect(QRect())
         , m_drawRect(QRect())
         , m_userRect(QRect())
-        , m_dirty(false)
-        , m_resized(false)
+        , m_dirty(dirty)
+        , m_resized(resized)
         , m_temporary(temporary)
         , m_layerDraw(QSharedPointer<QImage>())
         , m_layerPreview(QSharedPointer<QImage>())

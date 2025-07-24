@@ -1,4 +1,6 @@
 #include "glyphmanager.h"
+#include "freetypeglyphrenderer.h"
+#include "drawglyphrenderer.h"
 
 
 GlyphManager::GlyphManager(QObject *parent)
@@ -29,15 +31,23 @@ QSharedPointer<GlyphMeta> GlyphManager::find(const GlyphKey &key)
     return QSharedPointer<GlyphMeta>();
 }
 
-QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font, const QString &fontPath, bool temporary)
+bool GlyphManager::remove(const GlyphKey &key)
 {
-    if (character == QChar() || bitmapDimension < 6 || glyphSize < 6)
+    auto it = m_index.find(key);
+    if (it != m_index.end())
     {
-        return QSharedPointer<GlyphMeta>();
+        m_metaGlyphs.remove(it.value());
+        m_index.remove(key);
+        updateData();
+        return true;
     }
 
-    GlyphKey key (character, bitmapDimension, font);
+    return false;
+}
 
+const GlyphKey GlyphManager::currentGlyphParams(const QChar &character, int bitmapDimension, const QFont &font, const QString &fontPath, int glyphSize)
+{
+    GlyphKey key (character, bitmapDimension, font);
     if (!m_glyphMeta.isNull() && key == m_glyphMeta->key())
     {
         if (m_glyphMeta->glyphSize() != glyphSize)
@@ -53,34 +63,61 @@ QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int
             m_glyphMeta->setDirty();
         }
 
-        return m_glyphMeta;
+        // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Temporary!";
+    }
+    return key;
+}
+
+bool GlyphManager::append(QSharedPointer<GlyphMeta> glyphMeta)
+{
+    auto it = m_index.find(glyphMeta->key());
+    if (it == m_index.end())
+    {
+        m_metaGlyphs.append(m_glyphMeta);
+        m_index.insert(glyphMeta->key(), m_metaGlyphs.indexOf(m_glyphMeta));
+        updateData();
+
+        return true;
     }
 
-    QSharedPointer<GlyphMeta> glyphMeta = find(key);
+    return false;
+}
 
-    if (glyphMeta.isNull() || (!m_glyphMeta.isNull() && m_glyphMeta->key() != glyphMeta->key()))
+QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font, const QString &fontPath, bool temporary)
+{
+    if (character == QChar() || bitmapDimension < 6 || glyphSize < 6)
     {
-        glyphMeta = QSharedPointer<GlyphMeta>::create(
+        return QSharedPointer<GlyphMeta>();
+    }
+
+    GlyphKey key = currentGlyphParams(character, bitmapDimension, font, fontPath, glyphSize);
+    m_glyphMeta = find(key);
+
+    if (m_glyphMeta.isNull())
+    {
+        m_glyphMeta = QSharedPointer<GlyphMeta>::create(
             character,
             bitmapDimension,
             glyphSize,
             font,
             fontPath,
             temporary,
-            true
-        );
+            true, // Dirty
+            true // Resized
+            );
+    } else if (temporary)
+    {
+        remove(key);
     }
 
-    if(!temporary)
+    if (!temporary && append(m_glyphMeta))
     {
-        m_metaGlyphs.append(glyphMeta);
-        m_index.insert(key, m_metaGlyphs.indexOf(glyphMeta));
         updateData();
     }
 
-    m_glyphMeta = glyphMeta;
-    
-    return glyphMeta;
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << ", Size: " << m_metaGlyphs.size();
+
+    return m_glyphMeta;
 }
 
 void GlyphManager::renderTemplateImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer)
@@ -122,6 +159,7 @@ void GlyphManager::renderDrawImage (QSharedPointer<GlyphMeta> glyphMeta, const Q
 void GlyphManager::updateData()
 {
     sort();
+    emit glyphDataChanged ();
 }
 
 QSharedPointer<IGlyphRenderer> GlyphManager::getRenderer (GlyphManager::ImageType type)
