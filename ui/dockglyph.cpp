@@ -47,7 +47,7 @@ DockGlyph::~DockGlyph()
 void DockGlyph::restoreData()
 {
     ui->bitmapDimension->setValue(m_appContext->bitmapDimension());
-    ui->fontComboBox->setCurrentFont(m_appContext->font());
+    ui->fontComboBox->setCurrentFont(m_appContext->glyphFont());
     if (m_appContext->character() != QChar())
         ui->character->setText(QString("%1").arg(m_appContext->character()));
     ui->glyphSize->setValue(m_appContext->glyphSize());
@@ -56,7 +56,7 @@ void DockGlyph::restoreData()
 
 void DockGlyph::connectSygnals()
 {
-    QObject::connect(ui->fontComboBox, &QFontComboBox::currentFontChanged, m_appContext, &AppContext::setFont);
+    QObject::connect(ui->fontComboBox, &QFontComboBox::currentFontChanged, m_appContext, &AppContext::setGlyphFont);
     QObject::connect(ui->bitmapDimension, &QSpinBox::valueChanged, m_appContext, &AppContext::setBitmapDimension);
     QObject::connect(ui->glyphSize, &QSpinBox::valueChanged, m_appContext, &AppContext::setGlyphSize);
 
@@ -83,8 +83,11 @@ void DockGlyph::connectSygnals()
 
 void DockGlyph::slotFontChanged(const QFont &font)
 {
-    m_appContext->setFont(font);
-    ui->fontPath->setText(m_appContext->fontPath());
+    if (m_appContext->glyphFont().family() != font.family())
+    {
+        m_appContext->setGlyphFont(font);
+        ui->fontPath->setText(m_appContext->fontPath());
+    }
 }
 
 void DockGlyph::slotCharacterChanged()

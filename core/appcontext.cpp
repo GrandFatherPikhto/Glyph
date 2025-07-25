@@ -11,8 +11,6 @@ AppContext::AppContext(QObject *parent)
     , m_previewBgColor(Qt::white)
     , m_drawColor(Qt::gray)
     , m_drawBgColor(Qt::white)
-    , m_fontPath(QString(""))
-    , m_font(QFont())
     , m_glyphSize(-1)
     , m_bitmapDimension(-1)
     , m_character(QChar())
@@ -25,10 +23,11 @@ AppContext::AppContext(QObject *parent)
     , m_bitmapRectLayerEnable(false)
     , m_leftGridCells(0)
     , m_bottomGridCells(0)
+    , m_fontMSB(-1)
     , m_margins(QMargins(0, 0, 0, 0))
 {
     m_fontManager = new FontManager(this);
-    m_glyphManager = new GlyphManager(this);
+    m_glyphManager = new GlyphManager(m_fontManager, this);
     m_unicodeMetadata = new UnicodeMetadata (this);
 
     restoreAppContext();
@@ -53,7 +52,7 @@ void AppContext::setupSignals()
     });
 
     QObject::connect(this, &AppContext::pasteTemplateToDrawLayer, this, [=](){
-        qDebug() << "Paste Template to User Layer";
+        // qDebug() << "Paste Template to User Layer";
         QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph();
         if (glyphMeta.isNull() || glyphMeta->layerTemplate().isNull() || glyphMeta->layerDraw().isNull())
             return;
@@ -92,8 +91,7 @@ void AppContext::saveAppContext()
 
     settings.setValue("glyph/size", m_glyphSize);
     settings.setValue("glyph/bitmapDimension", m_bitmapDimension);
-    settings.setValue("glyph/font", m_font);
-    settings.setValue("glyph/fontPath", m_fontPath);
+    settings.setValue("glyph/font", m_fontManager->glyphFont());
     settings.setValue("glyph/character", m_character.unicode());
 
     settings.setValue("glyph/gridLayerEnable", m_gridLayerEnable);
@@ -106,6 +104,8 @@ void AppContext::saveAppContext()
 
     settings.setValue("glyph/leftGridCells", m_leftGridCells);
     settings.setValue("glyph/bottomGridCells", m_bottomGridCells);
+
+    settings.setValue("glyph/fontMSB", m_fontMSB);
 
     settings.setValue("glyph/margins/left", m_margins.left());
     settings.setValue("glyph/margins/top", m_margins.top());
@@ -147,7 +147,6 @@ void AppContext::restoreAppContext()
 
     m_glyphSize = settings.value("glyph/size").toInt();
     m_bitmapDimension = settings.value("glyph/bitmapDimension").toInt();
-    m_fontPath = settings.value("glyph/fontPath").toString();
     
     int unicode = settings.value("glyph/character").toInt();
     if (unicode >= 0)
@@ -165,14 +164,13 @@ void AppContext::restoreAppContext()
 
     m_leftGridCells = settings.value("glyph/leftGridCells", 0).toInt();
     m_bottomGridCells = settings.value("glyph/bottomGridCells", 0).toInt();
+    m_fontMSB = settings.value("glyph/fontMSB", -1).toInt();
     m_margins = QMargins(
         settings.value("glyph/margins/left", 50).toInt(),
         settings.value("glyph/margins/top", 50).toInt(),
         settings.value("glyph/margins/right", 50).toInt(),
         settings.value("glyph/margins/bottom", 50).toInt()
         );
-
-
     settings.endGroup();
 }
 

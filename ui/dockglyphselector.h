@@ -27,6 +27,9 @@
 
 #include "fontcharactermodel.h"
 #include "fontmetadatamodel.h"
+#include "fontscriptmodel.h"
+#include "fontcategorymodel.h"
+#include "fontdecompositionmodel.h"
 #include "glyphmanager.h"
 #include "appcontext.h"
 
@@ -41,13 +44,9 @@ signals:
     void glyphChanged (QSharedPointer<GlyphMeta> glyphMeta);
 
 public slots:
-    void selectFont(const QFont &font);
     void saveDockState();
 
-
-    //void applyFilters(); // Применение фильтров
 private slots:
-    //void applyFilters(); // Применение фильтров
 
     // QWidget interface
 protected:
@@ -60,14 +59,25 @@ private:
     void restoreGlyphDockSelectorState ();
 
     void setupUI();
+    void setupSignals ();
     void setupFontCategoryList ();
     void setupFontScriptList ();
+    void setupFontDecompositionList ();
     void setupFontMSBSelector ();
     void setupGlyphTable ();
     void setupFontComboBox ();
 
+    void setGlyphFont (const QFont &font);
+    void setFontMSB (const QString &text);
+    void selectCharacter(const QModelIndex &index);
+    void setCharacter(const QModelIndex &index);
+
     void fillCategories (const QVector<quint32> &categories);
     void fillScripts(const QVector<quint32> &scripts);
+
+    void setFontCategoryFilter(const QItemSelection &selected, const QItemSelection &deselected);
+    void setFontScriptFilter(const QItemSelection &selected, const QItemSelection &deselected);
+    void setFontDecompositionFilter(const QItemSelection &selected, const QItemSelection &deselected);
     
     AppContext *m_appContext;
 
@@ -76,8 +86,11 @@ private:
     QSplitter   *m_mainSplitter;
 
     QSplitter   *m_glyphSplitter;
+
     QListView   *m_fontCategoryList;
     QListView   *m_fontScriptList;
+    QListView   *m_fontDecompositionList;
+
     // QSpinBox    *m_fontMSB;
     QLineEdit   *m_fontMSB;
     QTableView  *m_fontCharsTable;
@@ -86,11 +99,9 @@ private:
 
     FontCharacterModel *m_fontCharacterModel;
 
-    FontMetadataModel *m_scriptsModel;
-    FontMetadataModel *m_categoriesModel;
-    FontMetadataModel *m_decompositionsModel;
-
-    QString m_fontPath;
+    FontScriptModel *m_scriptModel;
+    FontCategoryModel *m_categoryModel;
+    FontDecompositionModel *m_decompositionModel;
 };
 
 #endif // GLYPHSELECTORDOCK_H

@@ -3,8 +3,9 @@
 #include "drawglyphrenderer.h"
 
 
-GlyphManager::GlyphManager(QObject *parent)
+GlyphManager::GlyphManager(FontManager *fontManager, QObject *parent)
     : QObject{parent}
+    , m_fontManager(fontManager)
     , m_ftRender(QSharedPointer<IGlyphRenderer>())
     , m_glyphKey(QSharedPointer<GlyphKey>())
     , m_glyphMeta(QSharedPointer<GlyphMeta>())
@@ -45,9 +46,9 @@ bool GlyphManager::remove(const GlyphKey &key)
     return false;
 }
 
-const GlyphKey GlyphManager::currentGlyphParams(const QChar &character, int bitmapDimension, const QFont &font, const QString &fontPath, int glyphSize)
+const GlyphKey GlyphManager::currentGlyphParams(const QChar &character, int bitmapDimension, int glyphSize)
 {
-    GlyphKey key (character, bitmapDimension, font);
+    GlyphKey key (character, bitmapDimension, m_fontManager->glyphFont());
     if (!m_glyphMeta.isNull() && key == m_glyphMeta->key())
     {
         if (m_glyphMeta->glyphSize() != glyphSize)
@@ -56,10 +57,10 @@ const GlyphKey GlyphManager::currentGlyphParams(const QChar &character, int bitm
             m_glyphMeta->setDirty();
         }
 
-        if (m_glyphMeta->font() != font)
+        if (m_glyphMeta->font().family() != m_fontManager->glyphFont().family())
         {
-            m_glyphMeta->setFont(font);
-            m_glyphMeta->setFontPath(fontPath);
+            m_glyphMeta->setFont(m_fontManager->glyphFont());
+            m_glyphMeta->setFontPath(m_fontManager->glyphFontPath());
             m_glyphMeta->setDirty();
         }
 
@@ -83,14 +84,14 @@ bool GlyphManager::append(QSharedPointer<GlyphMeta> glyphMeta)
     return false;
 }
 
-QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font, const QString &fontPath, bool temporary)
+QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, bool temporary)
 {
     if (character == QChar() || bitmapDimension < 6 || glyphSize < 6)
     {
         return QSharedPointer<GlyphMeta>();
     }
 
-    GlyphKey key = currentGlyphParams(character, bitmapDimension, font, fontPath, glyphSize);
+    GlyphKey key = currentGlyphParams(character, bitmapDimension, glyphSize);
     m_glyphMeta = find(key);
 
     if (m_glyphMeta.isNull())
@@ -99,8 +100,8 @@ QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int
             character,
             bitmapDimension,
             glyphSize,
-            font,
-            fontPath,
+            m_fontManager->glyphFont(),
+            m_fontManager->glyphFontPath(),
             temporary,
             true, // Dirty
             true // Resized

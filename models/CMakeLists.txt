@@ -3,7 +3,9 @@ set(LIB_NAME GlyphModels)
 
 # Создаём статическую библиотеку для GlyphKey и GlyphMeta
 qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
-    fontcharitem.h
+    fontdecompositionmodel.h fontdecompositionmodel.cpp
+    fontscriptmodel.h fontscriptmodel.cpp
+    fontcategorymodel.h fontcategorymodel.cpp
     fontcharactermodel.h fontcharactermodel.cpp
     fontmetadataitem.h
     fontmetadatamodel.h fontmetadatamodel.cpp

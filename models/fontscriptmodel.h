@@ -1,29 +1,30 @@
-#ifndef SCRIPTMODEL_H
-#define SCRIPTMODEL_H
+#ifndef FONTSCRIPTMODEL_H
+#define FONTSCRIPTMODEL_H
 
 #include <QAbstractListModel>
 #include <QObject>
 
-#include "fontmetadataitem.h"
-
-class FontMetadataModel : public QAbstractListModel
+class FontScriptModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    explicit FontMetadataModel(QObject *parent = nullptr);
+    explicit FontScriptModel(QObject *parent = nullptr);
 
     // Переопределение методов модели
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
     // Добавление данных
-    void addItem(quint32 id, const QString& name);
+    void addItem(QChar::Script id, const QString& name);
+    void setItems(const QVector<QChar::Script> items);
     void clearItems ();
 
 private:
+    void initNames ();
     void sortItems();
 
-    QVector<FontMetadataItem> m_items;
+    QVector<QChar::Script> m_items;
+    QMap<QChar::Script, QString> m_names;
 };
 
-#endif // SCRIPTMODEL_H
+#endif // FONTSCRIPTMODEL_H

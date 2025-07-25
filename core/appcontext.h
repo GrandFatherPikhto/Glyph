@@ -27,13 +27,11 @@ public:
     QSharedPointer<GlyphMeta> findOrCreateGlyph(const QChar &character = QChar(), bool temporary = false)
     {
         Q_ASSERT(m_glyphManager != nullptr);
-        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Temporary: " << temporary;
+        // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Temporary: " << temporary;
         return m_glyphManager->findOrCreate(
             character == QChar() ? m_character : character,
             m_bitmapDimension,
             m_glyphSize,
-            m_font, 
-            m_fontPath, 
             temporary);
     }
 
@@ -47,10 +45,9 @@ public:
     const QColor & previewBgColor () {return m_previewBgColor; }
     const QColor & drawColor() { return m_drawColor; }
     const QColor & drawBgColor() { return m_drawBgColor; }
+
     int glyphSize() { return m_glyphSize; }
     int bitmapDimension () { return m_bitmapDimension; }
-    const QFont & font() { return m_font; }
-    const QString & fontPath () { return m_fontPath; }
     const QChar & character() { return m_character; }
     bool gridLayerEnable () { return m_gridLayerEnable; }
     bool templateLayerEnable () { return m_templateLayerEnable; }
@@ -61,6 +58,14 @@ public:
     bool bitmapRectLayerEnable ()  { return m_bitmapRectLayerEnable; } 
     int leftGridCells () { return m_leftGridCells; }
     int bottomGridCells () { return m_bottomGridCells; }
+    
+    const QFont & glyphFont() { return m_fontManager->glyphFont(); }
+    const QString & fontPath () { return m_fontManager->glyphFontPath(); }
+    int fontMSB() { return m_fontMSB; }
+    const QVector<QChar::Category> & fontCategories () { return m_fontManager->fontCategories(); }
+    const QVector<QChar::Script> & fontScripts () { return m_fontManager->fontScripts(); }
+    const QVector<QChar::Decomposition> & fontDecompositions () { return m_fontManager->fontDecompositions(); }
+
     const QMargins & margins() { return m_margins; }
 
     // Обёртки
@@ -125,6 +130,12 @@ signals:
     void glyphRectLayerEnableChanged(bool value);
     void baselineLayerEnableChanged(bool value);
     void bitmapRectLayerEnableChanged(bool value);
+
+    void fontMSBChanged(int value);
+    void fontChanged (const QFont &newFont);
+    void fontCategoriesChanged (const QVector<QChar::Category> &value);
+    void fontScriptsChanged (const QVector<QChar::Script> &value);
+    void fontDecompositionsChanged (const QVector<QChar::Decomposition> &value);
 
     void marginsChanged (const QMargins &value);
 
@@ -263,24 +274,9 @@ public slots:
         }
     }
 
-    void setFont(const QFont &newFont) { 
+    void setGlyphFont(const QFont &newFont) { 
         Q_ASSERT(m_fontManager != nullptr);
-        QFont font(newFont);
-        font.setPixelSize(m_glyphSize);
-        if (m_font != font)
-        {
-            m_font = font;
-            m_fontPath = m_fontManager->findFontPath(m_font);
-            glyphUpdate();
-        }
-    }
-
-    void setFontPath(const QString &newFontPath) { 
-        if (m_fontPath != newFontPath)
-        {
-            m_fontPath = newFontPath;
-            glyphUpdate();
-        }
+        m_fontManager->setGlyphFont(newFont);
     }
 
     void setCharacter(const QChar &newChar, bool temporary = false)
@@ -340,6 +336,15 @@ public slots:
         }
     }
 
+    void setFontMSB(int value)
+    {
+        if (m_fontMSB != value)
+        {
+            m_fontMSB = value;
+            emit fontMSBChanged(m_fontMSB);
+        }
+    }
+
     void setBitmapRectLayerEnable (bool value) {
         if (m_bitmapRectLayerEnable != value)
         {
@@ -380,6 +385,7 @@ private:
     int m_leftGridCells;
     int m_bottomGridCells;
 
+
     QMargins m_margins;
 
     bool m_gridLayerEnable;
@@ -391,9 +397,7 @@ private:
     bool m_bitmapRectLayerEnable;
 
     QChar m_character;
-
-    QFont m_font;
-    QString m_fontPath;
+    int m_fontMSB;
 
     QColor m_templateBgColor;
     QColor m_templateColor;

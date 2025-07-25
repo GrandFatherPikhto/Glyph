@@ -15,6 +15,9 @@ qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
     appcontext.h
     appcontext.cpp
 
+    freetypeexception.h
+    freetypeexception.cpp
+
     fontmanager.h
     fontmanager.cpp
 

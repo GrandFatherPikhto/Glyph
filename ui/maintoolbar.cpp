@@ -110,7 +110,6 @@ void MainToolbar::setupSignals()
     });
 
     QObject::connect(m_gridEnable, &QAction::toggled, this, [=](bool checked) {
-        qDebug() << checked;
         m_appContext->setGridLayerEnable(checked);
         emit gridEnable(checked);
     });

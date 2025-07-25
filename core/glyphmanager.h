@@ -7,6 +7,7 @@
 
 #include "glyphmeta.h"
 #include "glyphkey.h"
+#include "fontmanager.h"
 #include "iglyphrenderer.h"
 
 class GlyphManager : public QObject
@@ -21,10 +22,10 @@ enum ImageType {
         ImagePreview
     };
 
-    explicit GlyphManager(QObject *parent = nullptr);
+    explicit GlyphManager(FontManager *fontManager, QObject *parent = nullptr);
     ~GlyphManager();
 
-    QSharedPointer<GlyphMeta> findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, const QFont &font = QFont(), const QString &fontPath = QString(), bool temporary = false);
+    QSharedPointer<GlyphMeta> findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, bool temporary = false);
 
     QSharedPointer<GlyphMeta> find(const GlyphKey &key);
     bool remove(const GlyphKey &key);
@@ -63,8 +64,7 @@ signals:
     void glyphDataChanged();
 
 private:
-    const GlyphKey currentGlyphParams(const QChar &ch, int bitmapDimension, const QFont &font = QFont(), const QString &path = QString(), int glyphSize = -1);
-
+    const GlyphKey currentGlyphParams(const QChar &ch, int bitmapDimension, int glyphSize = -1);
     void updateData();
 
     QVector<QSharedPointer<GlyphMeta>> m_metaGlyphs;
@@ -75,6 +75,8 @@ private:
 
     QSharedPointer<GlyphKey> m_glyphKey;
     QSharedPointer<GlyphMeta> m_glyphMeta;
+
+    FontManager *m_fontManager;
 };
 
 #endif // GLYPHMANAGER_H
