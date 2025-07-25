@@ -46,8 +46,14 @@ public:
     void setScriptFilter(const QVector<QChar::Script> &filter);
     void setCategoryFilter(const QVector<QChar::Category> &filter);
     void setDecompositionFilter(const QVector<QChar::Decomposition> &filter);
-    void setMSBFilter (qint16 filter);
+    void setFontMSBFilter (int filter);
+    void setCharactersFilter (const QString &value);
+    void setFromToFilter(int msb, int from, int to);
     int fontMSBFilter() { return m_fontMSBFilter; }
+
+    int fromFilter() { return m_fromFilter; }
+    int toFilter() { return m_toFilter; }
+    const QString & charactersFilter() { return m_charactersFilter; }
 
     const QFont & glyphFont() { return m_font; }
 
@@ -64,6 +70,9 @@ public:
     QChar::Category fontCategoryAt(int pos) {return m_fontCategories.at(pos); }
     QChar::Script fontScriptAt(int pos) {return m_fontScripts.at(pos); }
     QChar::Decomposition fontDecompositionAt (int pos) {return m_fontDecompositions.at(pos);}
+    int fontScriptSize () { return m_fontScripts.size(); }
+    int fontCategorySize () { return m_fontCategories.size(); }
+    int fontDecompositionSize () { return m_fontDecompositions.size(); }
 
     const QVector<QChar::Script> & fontScripts () { return m_fontScripts; }
     const QVector<QChar::Decomposition> & fontDecompositions () { return m_fontDecompositions; }
@@ -85,6 +94,7 @@ private:
     void initFontContext ();
     void filterCharacters ();
     void releaseFontFace ();
+    void releaseLibrary ();
 
     QStringList customFontDirs;
 
@@ -107,11 +117,14 @@ private:
     QVector<QChar::Category> m_fontCategories;
     QVector<QChar::Decomposition> m_fontDecompositions;
 
+    QString m_charactersFilter;
     QVector<QChar::Script> m_fontScriptsFilter;
     QVector<QChar::Category> m_fontCategoriesFilter;
     QVector<QChar::Decomposition> m_fontDecompositionsFilter;
 
     int m_fontMSBFilter;
+    int m_fromFilter;
+    int m_toFilter;
     int m_fontSize;
 };
 #endif // FONTMANAGER_H

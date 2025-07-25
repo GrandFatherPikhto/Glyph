@@ -7,8 +7,6 @@ qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
     fontscriptmodel.h fontscriptmodel.cpp
     fontcategorymodel.h fontcategorymodel.cpp
     fontcharactermodel.h fontcharactermodel.cpp
-    fontmetadataitem.h
-    fontmetadatamodel.h fontmetadatamodel.cpp
     glyphmodel.h glyphmodel.cpp
 )
 

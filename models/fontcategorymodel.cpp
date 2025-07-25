@@ -1,23 +1,28 @@
 #include "fontcategorymodel.h"
 
-FontCategoryModel::FontCategoryModel(QObject *parent)
+FontCategoryModel::FontCategoryModel(AppContext *appContext, QObject *parent)
     : QAbstractListModel{parent}
+    , m_appContext(appContext)
 {
     initNames();
+    QObject::connect(m_appContext->fontManager(), FontManager::glyphFontChanged, this, [=](const QFont &font){
+        Q_UNUSED(font);
+        layoutChanged();
+    });
 }
 
 int FontCategoryModel::rowCount(const QModelIndex &parent) const
 {
-    return m_items.size();
+    return m_appContext->fontManager()->fontCategorySize();
 }
 
 QVariant FontCategoryModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() >= m_items.size())
+    if (!index.isValid() || index.row() >= m_appContext->fontManager()->fontCategorySize())
         return QVariant();
 
-    QString name = QString("Unknown Script");
-    QChar::Category item = m_items[index.row()];
+    QString name = QString("Unknown Category");
+    QChar::Category item = m_appContext->fontManager()->fontCategoryAt(index.row());
     auto it = m_names.find(static_cast<QChar::Category>(item));
     if (it != m_names.end())
     {
@@ -34,39 +39,6 @@ QVariant FontCategoryModel::data(const QModelIndex &index, int role) const
         default:
             return QVariant();
     }
-}
-
-void FontCategoryModel::setItems(const QVector<QChar::Category> items)
-{
-    beginResetModel();
-    m_items.clear ();
-    endResetModel();
-
-    beginInsertRows(QModelIndex(), 0, items.size());
-    m_items = items;
-    endInsertRows();
-}
-
-void FontCategoryModel::addItem(QChar::Category id, const QString &name)
-{
-    if (!m_items.contains(id))
-    {
-        beginInsertRows(QModelIndex(), m_items.size(), m_items.size());
-        m_items.append(id);
-        endInsertRows ();
-        sortItems ();
-    }
-}
-
-void FontCategoryModel::sortItems() {
-
-}
-
-void FontCategoryModel::clearItems()
-{
-    beginResetModel();
-    m_items.clear();
-    endResetModel ();
 }
 
 void FontCategoryModel::initNames ()

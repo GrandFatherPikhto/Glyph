@@ -50,6 +50,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 qt_add_executable(Glyph
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
+
 )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Glyph APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

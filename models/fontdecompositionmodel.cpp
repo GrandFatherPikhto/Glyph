@@ -1,23 +1,28 @@
 #include "fontdecompositionmodel.h"
 
-FontDecompositionModel::FontDecompositionModel(QObject *parent)
+FontDecompositionModel::FontDecompositionModel(AppContext *appContext, QObject *parent)
     : QAbstractListModel{parent}
+    , m_appContext(appContext)
 {
     initNames();
+    QObject::connect(m_appContext->fontManager(), &FontManager::glyphFontChanged, this, [=](const QFont &font){
+        Q_UNUSED(font);
+        emit layoutChanged();
+    });
 }
 
 int FontDecompositionModel::rowCount(const QModelIndex &parent) const
 {
-    return m_items.size();
+    return m_appContext->fontManager()->fontDecompositionSize();
 }
 
 QVariant FontDecompositionModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() >= m_items.size())
+    if (!index.isValid() || index.row() >= m_appContext->fontManager()->fontDecompositionSize())
         return QVariant();
 
     QString name = QString("Unknown Script");
-    QChar::Decomposition item = m_items[index.row()];
+    QChar::Decomposition item = m_appContext->fontManager()->fontDecompositionAt(index.row());
     auto it = m_names.find(static_cast<QChar::Decomposition>(item));
     if (it != m_names.end())
     {
@@ -34,39 +39,6 @@ QVariant FontDecompositionModel::data(const QModelIndex &index, int role) const
         default:
             return QVariant();
     }
-}
-
-void FontDecompositionModel::setItems(const QVector<QChar::Decomposition> items)
-{
-    beginResetModel();
-    m_items.clear ();
-    endResetModel();
-
-    beginInsertRows(QModelIndex(), 0, items.size());
-    m_items = items;
-    endInsertRows();
-}
-
-void FontDecompositionModel::addItem(QChar::Decomposition id, const QString &name)
-{
-    if (!m_items.contains(id))
-    {
-        beginInsertRows(QModelIndex(), m_items.size(), m_items.size());
-        m_items.append(id);
-        endInsertRows ();
-        sortItems ();
-    }
-}
-
-void FontDecompositionModel::sortItems() {
-
-}
-
-void FontDecompositionModel::clearItems()
-{
-    beginResetModel();
-    m_items.clear();
-    endResetModel ();
 }
 
 void FontDecompositionModel::initNames ()

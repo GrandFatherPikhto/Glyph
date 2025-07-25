@@ -54,8 +54,8 @@ void MainWindow::setupSignals ()
     QObject::connect(this, &MainWindow::bottomGridCells, m_glyphWidget, &GlyphWidget::setBottomGridCells);
     QObject::connect(this, &MainWindow::pasteGlyphToUserLayer, m_glyphWidget, &GlyphWidget::pasteGlyphToUserLayer);
     QObject::connect(this, &MainWindow::clearUserLayer, m_glyphWidget, &GlyphWidget::clearUserLayer);
-#endif    
-    QObject::connect(m_dockGlyphSelector, &DockGlyphSelector::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
+#endif
+    //QObject::connect(m_dockGlyphSelector, &DockGlyphSelector::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
 }
 
 void MainWindow::setupGlyphWidget ()

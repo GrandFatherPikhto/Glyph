@@ -17,6 +17,7 @@ qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
     dockglyph.h
     dockglyph.cpp
 
+    dockglyphselector.ui
     dockglyphselector.h
     dockglyphselector.cpp
 

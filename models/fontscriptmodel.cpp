@@ -1,23 +1,28 @@
 #include "fontscriptmodel.h"
 
-FontScriptModel::FontScriptModel(QObject *parent)
+FontScriptModel::FontScriptModel(AppContext *appContext, QObject *parent)
     : QAbstractListModel{parent}
+    , m_appContext(appContext)
 {
     initNames();
+    QObject::connect(m_appContext->fontManager(), &FontManager::glyphFontChanged, this, [=](const QFont &font){
+        Q_UNUSED(font);
+        emit layoutChanged();
+    });
 }
 
 int FontScriptModel::rowCount(const QModelIndex &parent) const
 {
-    return m_items.size();
+    return m_appContext->fontManager()->fontScriptSize();
 }
 
 QVariant FontScriptModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() >= m_items.size())
+    if (!index.isValid() || index.row() >= m_appContext->fontManager()->fontScriptSize())
         return QVariant();
 
     QString name = QString("Unknown Script");
-    QChar::Script item = m_items[index.row()];
+    QChar::Script item = m_appContext->fontManager()->fontScriptAt(index.row());
     auto it = m_names.find(static_cast<QChar::Script>(item));
     if (it != m_names.end())
     {
@@ -34,39 +39,6 @@ QVariant FontScriptModel::data(const QModelIndex &index, int role) const
         default:
             return QVariant();
     }
-}
-
-void FontScriptModel::setItems(const QVector<QChar::Script> items)
-{
-    beginResetModel();
-    m_items.clear ();
-    endResetModel();
-
-    beginInsertRows(QModelIndex(), 0, items.size());
-    m_items = items;
-    endInsertRows();
-}
-
-void FontScriptModel::addItem(QChar::Script id, const QString &name)
-{
-    if (!m_items.contains(id))
-    {
-        beginInsertRows(QModelIndex(), m_items.size(), m_items.size());
-        m_items.append(id);
-        endInsertRows ();
-        sortItems ();
-    }
-}
-
-void FontScriptModel::sortItems() {
-
-}
-
-void FontScriptModel::clearItems()
-{
-    beginResetModel();
-    m_items.clear();
-    endResetModel ();
 }
 
 void FontScriptModel::initNames ()

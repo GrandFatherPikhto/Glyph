@@ -15,7 +15,16 @@ FontCharacterModel::~FontCharacterModel()
 
 void FontCharacterModel::setupSignals()
 {
+    QObject::connect(m_appContext->fontManager(), &FontManager::filteredCharactersChanged, this, [=](const QVector<QChar> &items){
+        Q_UNUSED(items)
+        // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Character List Changed";
+        emit layoutChanged ();
+    });
 
+    QObject::connect(m_appContext->fontManager(), &FontManager::glyphFontChanged, this, [=](const QFont &font){
+        Q_UNUSED(font);
+        emit layoutChanged();
+    });
 }
 
 QVariant FontCharacterModel::headerData(int section, Qt::Orientation orientation, int role) const

@@ -9,6 +9,8 @@ FontManager::FontManager(QObject *parent)
     , m_fontPath(QString())
     , m_fontMSBFilter(0)
     , m_fontSize(-1)
+    , m_fromFilter(-1)
+    , m_toFilter(-1)
 {
     initDefault();
     if (FT_Init_FreeType(&m_ftLibrary)) {
@@ -21,15 +23,8 @@ FontManager::~FontManager()
 {
     saveFontManagerSettings ();
     // Очистка
-    if (m_ftFace)
-    {
-        FT_Done_Face(m_ftFace);
-    }
-
-    if (m_ftLibrary)
-    {
-        FT_Done_FreeType(m_ftLibrary);
-    }
+    releaseFontFace ();
+    releaseLibrary  ();
 }
 
 void FontManager::initDefault ()
@@ -144,6 +139,15 @@ void FontManager::releaseFontFace ()
     }
 }
 
+void FontManager::releaseLibrary ()
+{
+    if (m_ftLibrary)
+    {
+        FT_Done_FreeType(m_ftLibrary);
+        m_ftLibrary = 0;
+    }
+}
+
 void FontManager::initFontContext()
 {
     FT_ULong charcode;
@@ -225,10 +229,28 @@ void FontManager::setDecompositionFilter(const QVector<QChar::Decomposition> &fi
     filterCharacters ();
 }
 
-void FontManager::setMSBFilter (qint16 filter)
+void FontManager::setCharactersFilter(const QString &filter)
+{
+    m_charactersFilter = filter;
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_charactersFilter;
+    filterCharacters ();
+}
+
+void FontManager::setFontMSBFilter (int filter)
 {
     m_fontMSBFilter = filter;
     filterCharacters ();
+}
+
+void FontManager::setFromToFilter(int msb, int from, int to)
+{
+    if (msb >= 0 && from >= 0 && to >= 0)
+    {
+        m_fontMSBFilter = msb;
+        m_fromFilter = (from < to) ? from : to;
+        m_toFilter = (from > to) ? from : to;
+        filterCharacters ();
+    }
 }
 
 void FontManager::filterCharacters ()
@@ -241,11 +263,18 @@ void FontManager::filterCharacters ()
             && (m_fontCategoriesFilter.isEmpty() || m_fontCategoriesFilter.contains(character.category()))
             && (m_fontScriptsFilter.isEmpty() || m_fontScriptsFilter.contains(character.script()))
             && (m_fontDecompositionsFilter.isEmpty() || m_fontDecompositionsFilter.contains(character.decompositionTag()))
-        ) 
+            && (m_charactersFilter.isEmpty() || m_charactersFilter.contains(character))
+            && ((m_fromFilter < 0 || m_toFilter < 0 || m_fontMSBFilter < 0) ||
+                ((character.unicode() >= ((m_fontMSBFilter << 8) & 0xFF00 | (m_fromFilter & 0x00FF))) &&
+                    (character.unicode() <= ((m_fontMSBFilter << 8) & 0xFF00 | (m_toFilter & 0x00FF))))) 
+        )
         {
             m_filteredChars.append(character);
         }
     }
+
+    emit filteredCharactersChanged (m_filteredChars);
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_filteredChars.size();
 }
 
 void FontManager::saveFontManagerSettings ()
@@ -255,7 +284,10 @@ void FontManager::saveFontManagerSettings ()
     settings.beginGroup("FontManager");
     settings.setValue("font", m_font);
     settings.setValue("size", m_fontSize);
-    settings.setValue("MSB", m_fontMSBFilter);
+    settings.setValue("filter/MSB", m_fontMSBFilter);
+    settings.setValue("filter/from", m_fromFilter);
+    settings.setValue("filter/to", m_toFilter);
+    settings.setValue("filter/characters", m_charactersFilter);
     settings.endGroup();
 }
 
@@ -266,6 +298,9 @@ void FontManager::restoreFontManagerSettings ()
     m_fontSize = settings.value("size", 14).toInt();
     QFont font = settings.value("font").value<QFont>();
     setGlyphFont(font);
-    m_fontMSBFilter = settings.value("MSB", 0).toInt();
+    m_fontMSBFilter = settings.value("filter/MSB", 0).toInt();
+    m_fromFilter = settings.value("filter/from", -1).toInt();
+    m_toFilter = settings.value("filter/to", -1).toInt();
+    m_charactersFilter = settings.value("filter/characters", "").toString();
     settings.endGroup();
 }
