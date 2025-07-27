@@ -11,8 +11,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_appContext(nullptr)
-    , m_dockGlyph(nullptr)
+    // , m_dockGlyphTable(nullptr)
     , m_dockGlyphSelector(nullptr)
+    , m_dockGlyphEdit(nullptr)
     , m_centralLayout(nullptr)
     , m_glyphWidget(nullptr)
     , m_mainToolbar(nullptr)
@@ -40,22 +41,6 @@ void MainWindow::setupSignals ()
     QObject::connect(m_appContext, &AppContext::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
         // qDebug() << __FILE__ << __LINE__ << glyphMeta->toString();
     });
-
-
-#if 0    
-    QObject::connect(this, &MainWindow::templateLayerEnable, m_glyphWidget, &GlyphWidget::enableTemplateLayer);
-    QObject::connect(this, &MainWindow::previewLayerEnable, m_glyphWidget, &GlyphWidget::enablePreviewLayer);
-    QObject::connect(this, &MainWindow::gridEnable, m_glyphWidget, &GlyphWidget::enableGrid);
-    QObject::connect(this, &MainWindow::userLayerEnable, m_glyphWidget, &GlyphWidget::enableUserLayer);
-    QObject::connect(this, &MainWindow::glyphRectLayerEnable, m_glyphWidget, &GlyphWidget::enableGlyphRectLayer);
-    QObject::connect(this, &MainWindow::baselineLayerEnable, m_glyphWidget, &GlyphWidget::enableBaselineLayer);
-    QObject::connect(this, &MainWindow::bitmapRectLayerEnable, m_glyphWidget, &GlyphWidget::enableBitmapRectLayer);
-    QObject::connect(this, &MainWindow::leftGridCells, m_glyphWidget, &GlyphWidget::setLeftGridCells);
-    QObject::connect(this, &MainWindow::bottomGridCells, m_glyphWidget, &GlyphWidget::setBottomGridCells);
-    QObject::connect(this, &MainWindow::pasteGlyphToUserLayer, m_glyphWidget, &GlyphWidget::pasteGlyphToUserLayer);
-    QObject::connect(this, &MainWindow::clearUserLayer, m_glyphWidget, &GlyphWidget::clearUserLayer);
-#endif
-    //QObject::connect(m_dockGlyphSelector, &DockGlyphSelector::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
 }
 
 void MainWindow::setupGlyphWidget ()
@@ -66,11 +51,14 @@ void MainWindow::setupGlyphWidget ()
 
 void MainWindow::setupDockPanels ()
 {
-    m_dockGlyph = new DockGlyph(m_appContext, this);
-    addDockWidget(Qt::LeftDockWidgetArea, m_dockGlyph);
     m_dockGlyphSelector = new DockGlyphSelector(m_appContext, this);
     addDockWidget(Qt::LeftDockWidgetArea, m_dockGlyphSelector);
-    // tabifiedDockWidgetActivated(m_dockGlyph, m_dockGlyphSelector);
+    // m_dockGlyphTable = new DockGlyphTable(m_appContext, this);
+    // addDockWidget(Qt::RightDockWidgetArea, m_dockGlyphTable);
+    m_dockGlyphEdit = new DockGlyphEdit(m_appContext, this);
+    addDockWidget(Qt::RightDockWidgetArea, m_dockGlyphEdit);
+    // emit tabifyDockWidget(m_dockGlyphTable, m_dockGlyphEdit);
+    // emit tabifiedDockWidgetActivated(m_dockGlyphTable);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

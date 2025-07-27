@@ -13,9 +13,11 @@
 #include <QCloseEvent>
 #include <QLabel>
 
+#include "glyphui_global.h"
+
 #include "appcontext.h"
 
-class MainToolbar : public QToolBar
+class GLYPHUI_EXPORT MainToolbar : public QToolBar
 {
     Q_OBJECT
 public:
@@ -59,8 +61,10 @@ private:
     QAction *m_pasteGlyphToUserLayer;
     QAction *m_clearUserLayer;
 
+#if 0
     QLabel *m_leftCellsLabel;
     QLabel *m_bottomCellsLabel;
+#endif
 
     QSpinBox *m_addLeftCells;
     QSpinBox *m_addBottomCells;

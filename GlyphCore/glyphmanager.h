@@ -4,11 +4,15 @@
 #include <QObject>
 #include <QVector>
 #include <QHash>
+#include <QMutex>
+
+#include <algorithm>
 
 #include "glyphmeta.h"
 #include "glyphkey.h"
 #include "fontmanager.h"
 #include "iglyphrenderer.h"
+#include "bitmapdimension.h"
 
 class GlyphManager : public QObject
 {
@@ -30,6 +34,7 @@ enum ImageType {
     QSharedPointer<GlyphMeta> find(const GlyphKey &key);
     bool remove(const GlyphKey &key);
     bool append(QSharedPointer<GlyphMeta> glyphMeta);
+
     
     void sort();
 
@@ -58,23 +63,39 @@ enum ImageType {
     void renderPreviewImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
     void renderDrawImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size = QSize(), QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
 
+    int bitmapDimensionSize () { return m_bitmapDimensionValues.size(); }
+    QSharedPointer<BitmapDimension> bitmapDimensionAt(int pos);
+    QSharedPointer<BitmapDimension> bitmapDimension(int value);
+
 public slots:
 
 signals:
     void glyphDataChanged();
+    void bitmapDimensionsChanged();
 
 private:
     const GlyphKey currentGlyphParams(const QChar &ch, int bitmapDimension, int glyphSize = -1);
     void updateData();
 
+    bool appendBitmapDimension (int bitmapSize);
+    bool removeBitmapDimension (int bitmapSize);
+    void generateBitmapDimensionValues ();
+
     QVector<QSharedPointer<GlyphMeta>> m_metaGlyphs;
+    QVector<int> m_filteredGlyphs;
     QHash<GlyphKey, int> m_index;
+
+    QHash<int, QSharedPointer<BitmapDimension>> m_bitmapDimensions;
+    QVector<int> m_bitmapDimensionValues;
+
 
     QSharedPointer<IGlyphRenderer> m_ftRender;
     QSharedPointer<IGlyphRenderer> m_drawRender;
 
     QSharedPointer<GlyphKey> m_glyphKey;
     QSharedPointer<GlyphMeta> m_glyphMeta;
+
+    mutable QMutex m_mutex;    
 
     FontManager *m_fontManager;
 };

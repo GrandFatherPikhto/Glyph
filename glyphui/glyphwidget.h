@@ -11,6 +11,8 @@
 #include <QHash>
 #include <QMargins>
 
+#include "glyphui_global.h"
+
 #include "glyphmanager.h"
 #include "appcontext.h"
 #include "glyphmeta.h"
@@ -26,7 +28,7 @@ namespace Ui {
 class GlyphWidget;
 }
 
-class GlyphWidget : public QWidget
+class GLYPHUI_EXPORT GlyphWidget : public QWidget
 {
     Q_OBJECT
 

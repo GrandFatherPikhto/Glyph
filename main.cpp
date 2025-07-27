@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("DAE");
     QCoreApplication::setApplicationName("Glyph");
 
-    Q_INIT_RESOURCE(icons); //< Нужно, если ресурс добавлен в виде статической библиотеки!
+    Q_INIT_RESOURCE(main); //< Нужно, если ресурс добавлен в виде библиотеки (main.qrc)
 
 #if 0
     qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &context, const QString &msg) {

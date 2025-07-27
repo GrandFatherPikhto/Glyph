@@ -9,10 +9,12 @@
 #include <QSharedPointer>
 #include <QString>
 
+#include "glyphui_global.h"
+
 #include "appcontext.h"
 #include "glyphmeta.h"
 
-class MainStatusbar : public QStatusBar
+class GLYPHUI_EXPORT MainStatusbar : public QStatusBar
 {
     Q_OBJECT
 public:

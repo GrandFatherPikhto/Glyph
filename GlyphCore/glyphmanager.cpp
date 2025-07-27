@@ -19,6 +19,124 @@ GlyphManager::GlyphManager(FontManager *fontManager, QObject *parent)
 
 GlyphManager::~GlyphManager()
 {
+
+}
+
+void GlyphManager::generateBitmapDimensionValues()
+{
+    m_bitmapDimensionValues = m_bitmapDimensions.keys();
+    std::sort(m_bitmapDimensionValues.begin(), m_bitmapDimensionValues.end());
+    qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_bitmapDimensions.size();
+
+    emit bitmapDimensionsChanged();
+}
+
+QSharedPointer<BitmapDimension> GlyphManager::bitmapDimension(int value)
+{
+    auto it = m_bitmapDimensions.find(value);
+    if (it == m_bitmapDimensions.end())
+    {
+        return QSharedPointer<BitmapDimension>();
+    }
+
+    return it.value();
+}
+
+QSharedPointer<BitmapDimension> GlyphManager::bitmapDimensionAt(int pos)
+{
+    if (pos < 0 || pos >= m_bitmapDimensionValues.size())
+        return QSharedPointer<BitmapDimension>();
+    
+    int bitmapDimension = m_bitmapDimensionValues.at(pos);
+    auto it = m_bitmapDimensions.find(bitmapDimension);
+
+    if (it == m_bitmapDimensions.end())
+    {
+        return QSharedPointer<BitmapDimension>();
+    }
+
+    return it.value();
+}
+
+bool GlyphManager::appendBitmapDimension(int bitmapDimension)
+{
+    auto it = m_bitmapDimensions.find(bitmapDimension);
+    if (it == m_bitmapDimensions.end())
+    {
+        // Создаем новое измерение если не найдено
+        auto dimension = QSharedPointer<BitmapDimension>::create(bitmapDimension, QMargins(0,0,0,0));
+        m_bitmapDimensions.insert(bitmapDimension, dimension);
+        generateBitmapDimensionValues();
+
+        return true;
+    }
+
+    // Увеличиваем счетчик существующего измерения
+    it.value()->incrementCounter();
+
+    return false;
+}
+
+
+bool GlyphManager::removeBitmapDimension(int value)
+{
+    auto it = m_bitmapDimensions.find(value);
+    if (it == m_bitmapDimensions.end())
+        return false;
+
+    // Декрементируем счетчик
+    int newCount = it.value()->decrementCounter();
+    
+    // Удаляем если счетчик достиг нуля
+    if (newCount <= 0)
+    {
+        m_bitmapDimensions.erase(it);
+        generateBitmapDimensionValues();
+
+        return true;
+    }
+    
+    return false;
+}
+
+bool GlyphManager::remove(const GlyphKey &key)
+{
+    QMutexLocker locker(&m_mutex);
+
+    auto it = m_index.find(key);
+    if (it == m_index.end())
+        return false;
+
+    // Получаем метаданные глифа перед удалением
+    if (it.value() >= 0 && it.value() < m_metaGlyphs.size())
+    {
+        auto glyphMeta = m_metaGlyphs[it.value()];
+        removeBitmapDimension(key.bitmapDimension());
+    }
+
+    m_metaGlyphs.removeAt(it.value());
+    m_index.remove(key);
+    updateData();
+
+    return true;
+}
+
+bool GlyphManager::append(QSharedPointer<GlyphMeta> glyphMeta)
+{
+    QMutexLocker locker(&m_mutex);
+    if (!glyphMeta)
+        return false;
+
+    auto key = glyphMeta->key();
+    if (m_index.contains(key))
+        return false;
+
+    m_metaGlyphs.append(glyphMeta);
+    m_index.insert(key, m_metaGlyphs.size() - 1);
+    appendBitmapDimension(glyphMeta->bitmapDimension());
+    updateData();
+ 
+    return true;
 }
 
 QSharedPointer<GlyphMeta> GlyphManager::find(const GlyphKey &key)
@@ -30,20 +148,6 @@ QSharedPointer<GlyphMeta> GlyphManager::find(const GlyphKey &key)
     }
 
     return QSharedPointer<GlyphMeta>();
-}
-
-bool GlyphManager::remove(const GlyphKey &key)
-{
-    auto it = m_index.find(key);
-    if (it != m_index.end())
-    {
-        m_metaGlyphs.remove(it.value());
-        m_index.remove(key);
-        updateData();
-        return true;
-    }
-
-    return false;
 }
 
 const GlyphKey GlyphManager::currentGlyphParams(const QChar &character, int bitmapDimension, int glyphSize)
@@ -67,21 +171,6 @@ const GlyphKey GlyphManager::currentGlyphParams(const QChar &character, int bitm
         // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Temporary!";
     }
     return key;
-}
-
-bool GlyphManager::append(QSharedPointer<GlyphMeta> glyphMeta)
-{
-    auto it = m_index.find(glyphMeta->key());
-    if (it == m_index.end())
-    {
-        m_metaGlyphs.append(m_glyphMeta);
-        m_index.insert(glyphMeta->key(), m_metaGlyphs.indexOf(m_glyphMeta));
-        updateData();
-
-        return true;
-    }
-
-    return false;
 }
 
 QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, bool temporary)

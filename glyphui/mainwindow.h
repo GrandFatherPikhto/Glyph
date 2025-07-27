@@ -9,12 +9,15 @@
 #include <QLabel>
 #include <QSpinBox>
 
-#include "dockglyph.h"
+#include "glyphui_global.h"
+
+#include "dockglyphtable.h"
 #include "dockglyphselector.h"
 #include "appcontext.h"
 #include "glyphwidget.h"
 #include "maintoolbar.h"
 #include "mainstatusbar.h"
+#include "dockglyphedit.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -22,7 +25,7 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
+class GLYPHUI_EXPORT MainWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -63,11 +66,13 @@ private:
 
     Ui::MainWindow *ui;
 
-    DockGlyph *m_dockGlyph;
+    // DockGlyphTable *m_dockGlyphTable;
+    DockGlyphSelector *m_dockGlyphSelector;
+    DockGlyphEdit *m_dockGlyphEdit;
+
     MainToolbar *m_mainToolbar;
     MainStatusbar *m_mainStatubar;
 
-    DockGlyphSelector *m_dockGlyphSelector;
 
     GlyphWidget *m_glyphWidget;
     QGridLayout *m_centralLayout;

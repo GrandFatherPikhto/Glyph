@@ -8,6 +8,7 @@ qt_add_library(${LIB_NAME} STATIC MANUAL_FINALIZATION
     fontcategorymodel.h fontcategorymodel.cpp
     fontcharactermodel.h fontcharactermodel.cpp
     glyphmodel.h glyphmodel.cpp
+    bitmapdimensionmodel.h bitmapdimensionmodel.cpp
 )
 
 # Указываем, что заголовочные файлы — часть библиотеки

@@ -7,6 +7,8 @@
 #include <QHideEvent>
 #include <QCloseEvent>
 
+#include "glyphui_global.h"
+
 #include "appcontext.h"
 #include "fontcharactermodel.h"
 #include "fontcategorymodel.h"
@@ -17,7 +19,7 @@ namespace Ui {
 class DockGlyphSelector;
 }
 
-class DockGlyphSelector : public QDockWidget
+class GLYPHUI_EXPORT DockGlyphSelector : public QDockWidget
 {
     Q_OBJECT
 

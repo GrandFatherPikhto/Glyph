@@ -10,8 +10,10 @@ MainToolbar::MainToolbar(AppContext *appContext, QWidget *parent)
     , m_glyphRectLayerEnable(nullptr)
     , m_baselineLayerEnable(nullptr)
     , m_bitmapRectLayerEnable(nullptr)
+#if 0
     , m_addBottomCells(nullptr)
     , m_addLeftCells(nullptr)
+#endif
     , m_pasteGlyphToUserLayer(nullptr)
     , m_clearUserLayer(nullptr)
 {
@@ -29,44 +31,45 @@ MainToolbar::~MainToolbar ()
 
 void MainToolbar::setupUI()
 {
-    m_templateLayerEnable = new QAction(QIcon(":/button/icons/template"), "Template Layer", this);
+    m_templateLayerEnable = new QAction(QIcon(":/toolbar/template"), "Template Layer", this);
     m_templateLayerEnable->setCheckable(true);
     addAction(m_templateLayerEnable);
 
-    m_gridEnable = new QAction(QIcon(":/button/icons/grid"), "Grid Enable", this);
+    m_gridEnable = new QAction(QIcon(":/toolbar/grid"), "Grid Enable", this);
     m_gridEnable->setCheckable(true);
     addAction(m_gridEnable);
 
-    m_userLayerEnable = new QAction(QIcon(":/button/icons/user"), "User Layer Enable", this);
+    m_userLayerEnable = new QAction(QIcon(":/toolbar/user"), "User Layer Enable", this);
     m_userLayerEnable->setCheckable(true);
     addAction(m_userLayerEnable);
 
 
-    m_previewLayerEnable = new QAction(QIcon(":/button/icons/preview"), "Preview Layer Enable", this);
+    m_previewLayerEnable = new QAction(QIcon(":/toolbar/preview"), "Preview Layer Enable", this);
     m_previewLayerEnable->setCheckable(true);
     addAction(m_previewLayerEnable);
 
-    m_glyphRectLayerEnable = new QAction(QIcon(":/button/icons/glyphrect"), "Glyph Rect Layer Enable", this);
+    m_glyphRectLayerEnable = new QAction(QIcon(":/toolbar/glyphrect"), "Glyph Rect Layer Enable", this);
     m_glyphRectLayerEnable->setCheckable(true);
     addAction(m_glyphRectLayerEnable);
 
 
-    m_bitmapRectLayerEnable = new QAction(QIcon(":/button/icons/bitmaprect"), "BaseLine Layer Enable", this);
+    m_bitmapRectLayerEnable = new QAction(QIcon(":/toolbar/bitmaprect"), "BaseLine Layer Enable", this);
     m_bitmapRectLayerEnable->setCheckable(true);
     addAction(m_bitmapRectLayerEnable);
 
-    m_baselineLayerEnable = new QAction(QIcon(":/button/icons/baseline"), "Bitmap Rect Layer Enable", this);
+    m_baselineLayerEnable = new QAction(QIcon(":/toolbar/baseline"), "Bitmap Rect Layer Enable", this);
     m_baselineLayerEnable->setCheckable(true);
     addAction(m_baselineLayerEnable);
 
-    m_pasteGlyphToUserLayer = new QAction(QIcon(":/button/icons/paste"), "Paste Glyph to User Layer", this);
+    m_pasteGlyphToUserLayer = new QAction(QIcon(":/toolbar/paste"), "Paste Glyph to User Layer", this);
     addAction(m_pasteGlyphToUserLayer);
 
-    m_clearUserLayer = new QAction(QIcon(":/button/icons/clear"), "Clear User Layer");
+    m_clearUserLayer = new QAction(QIcon(":/toolbar/clear"), "Clear User Layer");
     addAction(m_clearUserLayer);
 
     addSeparator();
 
+#if 0
     m_leftCellsLabel = new QLabel("Left Cells: ", this);
     addWidget(m_leftCellsLabel);
 
@@ -84,6 +87,7 @@ void MainToolbar::setupUI()
     addWidget(m_addBottomCells);
 
     addSeparator();
+#endif
 
 }
 
@@ -98,8 +102,10 @@ void MainToolbar::initState ()
     m_glyphRectLayerEnable->setChecked(m_appContext->glyphRectLayerEnable());
     m_baselineLayerEnable->setChecked(m_appContext->baselineLayerEnable());
     m_bitmapRectLayerEnable->setChecked(m_appContext->bitmapRectLayerEnable());
+#if 0
     m_addBottomCells->setValue(m_appContext->bottomGridCells());
     m_addLeftCells->setValue(m_appContext->leftGridCells());
+#endif
 }
 
 void MainToolbar::setupSignals()
@@ -149,6 +155,7 @@ void MainToolbar::setupSignals()
         emit clearUserLayer();
     });
 
+#if 0
     QObject::connect(m_addLeftCells, &QSpinBox::valueChanged, this, [=](int value){
         m_appContext->setLeftGridCells(value);
         emit leftGridCellsChanged(value);
@@ -158,6 +165,7 @@ void MainToolbar::setupSignals()
         m_appContext->setBottomGridCells(value);
         emit bottomGridCellsChanged(value);
     });
+#endif
 }
 
 void MainToolbar::saveToolbarState()

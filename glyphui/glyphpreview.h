@@ -1,6 +1,8 @@
 #ifndef GLYPHPREVIEW_H
 #define GLYPHPREVIEW_H
 
+#include "glyphui_global.h"
+
 #include "appcontext.h"
 #include "glyphmeta.h"
 
@@ -10,7 +12,7 @@
 #include <QSharedPointer>
 #include <QMargins>
 
-class GlyphPreview : public QWidget
+class GLYPHUI_EXPORT GlyphPreview : public QWidget
 {
     Q_OBJECT
 public:

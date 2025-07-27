@@ -182,8 +182,8 @@ void FontManager::initFontContext()
 
         // Получаем следующий символ
         charcode = FT_Get_Next_Char(m_ftFace, charcode, &gindex);
-        if (charcode >= 65536)
-            continue;
+        if (charcode >= 0xFFFFFFFF)
+             continue;
 
         QChar ch(static_cast<quint32>(charcode));
         m_supportedChars.append(ch);

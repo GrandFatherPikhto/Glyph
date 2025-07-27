@@ -8,35 +8,27 @@
 #include <QFont>
 #include <QSplitter>
 
-#include "glyphmanager.h"
+#include "glyphui_global.h"
+
+// #include "glyphmanager.h"
 #include "glyphmeta.h"
 #include "glyphpreview.h"
 #include "glyphmodel.h"
 #include "appcontext.h"
 
 namespace Ui {
-class DockGlyph;
+class DockGlyphTable;
 }
 
-class DockGlyph : public QDockWidget
+class GLYPHUI_EXPORT DockGlyphTable : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    explicit DockGlyph(AppContext *appContext, QWidget *parent = nullptr);
-    ~DockGlyph();
+    explicit DockGlyphTable(AppContext *appContext, QWidget *parent = nullptr);
+    ~DockGlyphTable();
 
 private slots:
-
-    void slotFontChanged(const QFont &font);
-    void slotCharacterChanged();
-    // void slotBitmapDimensionChanged(int newValue);
-    // void slotGlyphSizeChanged(int newValue);
-    // void slotMoveCenterClicked();
-    // void slotMoveLeftClicked();
-    // void slotMoveTopClicked();
-    // void slotMoveDownClicked();
-    // void slotMoveRightClicked();
 
 signals:
     void glyphChanged(QSharedPointer<GlyphMeta> glyph);
@@ -64,14 +56,14 @@ private:
     void connectSygnals ();
     void updateGlyph ();
 
-    Ui::DockGlyph *ui;
+    Ui::DockGlyphTable *ui;
     AppContext *m_appContext;
     GlyphPreview *m_glyphPreview;
-    QTableView *m_glyphTable;
+    // QTableView *m_glyphTable;
 
     // QSharedPointer<GlyphMeta> m_glyphMeta;
     
-    QSplitter *m_mainSplitter;
+    // QSplitter *m_mainSplitter;
 
     GlyphModel *m_glyphModel;
 };
