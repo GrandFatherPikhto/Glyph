@@ -17,10 +17,10 @@ GlyphWidget::GlyphWidget(AppContext *appContext, QWidget *parent)
     , m_baselineEnable(false)
     , m_bitmapRectEnable(false)
     , m_margins(QMargins(0,0,0,0))
-    , m_xGridCells(-1)
-    , m_yGridCells(-1)
-    , m_leftCells(0)
-    , m_bottomCells(0)
+    // , m_xGridCells(-1)
+    // , m_yGridCells(-1)
+    // , m_leftCells(0)
+    // , m_bottomCells(0)
 {
     ui->setupUi(this);
     initValues();
@@ -36,70 +36,55 @@ void GlyphWidget::initValues()
 {
     Q_ASSERT(m_appContext != nullptr);
 
-    m_glyphRectEnable = m_appContext->glyphRectLayerEnable();
-    m_templateLayerEnable = m_appContext->templateLayerEnable();
-    m_gridLayerEnable = m_appContext->gridLayerEnable();
-    m_previewLayerEnable = m_appContext->previewLayerEnable();
-    m_drawLayerEnable = m_appContext->drawLayerEnable();
-    m_baselineEnable = m_appContext->baselineLayerEnable();
-    m_bitmapRectEnable = m_appContext->bitmapRectLayerEnable();
-    m_xGridCells = m_appContext->leftGridCells();
-    m_leftCells = m_appContext->leftGridCells();
-    m_bottomCells = m_appContext->bottomGridCells ();
-    m_margins = m_appContext->margins();
-
-    if (!m_glyphMeta.isNull())
-    {
-        m_xGridCells = m_glyphMeta->bitmapDimension() + m_appContext->leftGridCells();
-        m_yGridCells = m_glyphMeta->bitmapDimension() + m_appContext->bottomGridCells();
-    }
+    m_glyphRectEnable = m_appContext->appSettings()->glyphRectLayerEnable();
+    m_templateLayerEnable = m_appContext->appSettings()->templateLayerEnable();
+    m_gridLayerEnable = m_appContext->appSettings()->gridLayerEnable();
+    m_previewLayerEnable = m_appContext->appSettings()->previewLayerEnable();
+    m_drawLayerEnable = m_appContext->appSettings()->drawLayerEnable();
+    m_baselineEnable = m_appContext->appSettings()->baselineLayerEnable();
+    m_bitmapRectEnable = m_appContext->appSettings()->bitmapRectLayerEnable();
+    m_gridDimensions.setPaddings(m_appContext->appSettings()->gridPaddings());
+    m_margins = m_appContext->appSettings()->glyphWidgetMargins();
 }
 
 void GlyphWidget::setupSignals()
 {
-    QObject::connect(m_appContext, &AppContext::leftGridCellsChanged, this, [=](int value){
-        m_leftCells = value;
-        initContext ();
+    QObject::connect(m_appContext->appSettings(), &AppSettings::gridPaddingsChanged, this, [=](const GridPaddings &paddings){
+        m_gridDimensions.setPaddings(paddings);
         update ();
     });
 
-    QObject::connect(m_appContext, &AppContext::bottomGridCellsChanged, this, [=](int value){
-        m_bottomCells = value;
-        initContext();
-        update ();
-    });
-
-    QObject::connect(m_appContext, &AppContext::templateLayerEnableChanged, this, [=](bool value){
+    QObject::connect(m_appContext->appSettings(), &AppSettings::templateLayerEnableChanged, this, [=](bool value){
         m_templateLayerEnable = value;
         update();
     });
 
-    QObject::connect(m_appContext, &AppContext::previewLayerEnableChanged, this, [=](bool value){
+    QObject::connect(m_appContext->appSettings(), &AppSettings::previewLayerEnableChanged, this, [=](bool value){
         m_previewLayerEnable = value;
         update();
     });
 
-    QObject::connect(m_appContext, &AppContext::drawLayerEnableChanged, this, [=](bool value){
+    QObject::connect(m_appContext->appSettings(), &AppSettings::drawLayerEnableChanged, this, [=](bool value){
         m_drawLayerEnable = value;
         update();
     });
 
-    QObject::connect(m_appContext, &AppContext::gridLayerEnableChanged, this, [=](bool value){
+    QObject::connect(m_appContext->appSettings(), &AppSettings::gridLayerEnableChanged, this, [=](bool value){
         m_gridLayerEnable = value;
         update ();
     });
 
-    QObject::connect(m_appContext, &AppContext::baselineLayerEnableChanged, this, [=](bool value){
+    QObject::connect(m_appContext->appSettings(), &AppSettings::baselineLayerEnableChanged, this, [=](bool value){
         m_baselineEnable = value;
         update();
     });
 
-    QObject::connect(m_appContext, &AppContext::bitmapRectLayerEnableChanged, this, [=](bool value){
+    QObject::connect(m_appContext->appSettings(), &AppSettings::bitmapRectLayerEnableChanged, this, [=](bool value){
         m_bitmapRectEnable = value;
         update ();
     });
 
-    QObject::connect(m_appContext, &AppContext::glyphRectLayerEnableChanged, this, [=](bool value){
+    QObject::connect(m_appContext->appSettings(), &AppSettings::glyphRectLayerEnableChanged, this, [=](bool value){
         m_glyphRectEnable = value;
         update ();
     });
@@ -117,7 +102,7 @@ void GlyphWidget::initContext ()
 {
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid())
         return;
-
+/*
     m_leftCells = m_appContext->leftGridCells();
     m_bottomCells = m_appContext->bottomGridCells ();
 
@@ -153,6 +138,7 @@ void GlyphWidget::initContext ()
         ltRender + QPoint(0, glyphRect.top() * m_gridCellSize),
         QSize(glyphRect.width()*m_gridCellSize, glyphRect.height()*m_gridCellSize)
     );
+*/    
 }
 
 
@@ -218,7 +204,7 @@ void GlyphWidget::paintBitmapRect(QPainter &painter)
     QPen pen(QColor(0x33, 0x33, 0x33, 0xEE));
     pen.setWidth(3);
     painter.setPen(pen);
-    painter.drawRect(m_renderRect);
+    painter.drawRect(m_gridDimensions.widgetBitmapRect(size()).translated(m_margins.left(), m_margins.top()));
 }
 
 void GlyphWidget::paintGrid (QPainter &painter)
@@ -229,23 +215,26 @@ void GlyphWidget::paintGrid (QPainter &painter)
     QPen pen(Qt::black);
     pen.setWidth(1);
     painter.setPen(pen);
+
+    int cellSize = m_gridDimensions.widgetCellSize(size());
+
     // Горизонтальные линии
-    for (int y = 0; y <= m_yGridCells; ++y) {
+    for (int y = 0; y <= m_gridDimensions.rows(); ++y) {
         painter.drawLine(
-            m_gridRect.left(),
-            m_gridRect.top() + y * m_gridCellSize,
-            m_gridRect.left() + m_xGridCells * m_gridCellSize,
-            m_gridRect.top() + y * m_gridCellSize
+            m_margins.left(),
+            m_margins.top() + y * cellSize,
+            m_margins.left() + m_gridDimensions.rows() * cellSize,
+            m_margins.top() + y * cellSize
             );
     }
 
     // Вертикальные линии
-    for (int x = 0; x <= m_xGridCells; ++x) {
+    for (int x = 0; x <= m_gridDimensions.cols(); ++x) {
         painter.drawLine(
-            m_gridRect.left() + x * m_gridCellSize,
-            m_gridRect.top(),
-            m_gridRect.left() + x * m_gridCellSize,
-            m_gridRect.top() + m_yGridCells * m_gridCellSize
+            m_margins.left() + x * cellSize,
+            m_margins.top(),
+            m_margins.left() + x * cellSize,
+            m_margins.top() + m_gridDimensions.rows() * cellSize
             );
     }
 }
@@ -265,10 +254,11 @@ void GlyphWidget::paintBaseLines(QPainter &painter)
     if (disp < 0)
         glyphRect.translate(QPoint(0, disp));
     glyphRect.translate(m_glyphMeta->offset());
+    int cellSize = m_gridDimensions.widgetCellSize(size());
     // Baseline
     painter.drawLine(
         0,
-        m_renderRect.top() + (glyphRect.top()) * m_gridCellSize,
+        m_margins.top() + (glyphRect.top()) * m_gridCellSize,
         width(),
         m_renderRect.top() + (glyphRect.top()) * m_gridCellSize
         );

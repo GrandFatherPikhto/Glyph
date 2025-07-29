@@ -5,6 +5,10 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QDebug>
+#include <QMargins>
+
+#include "gridpaddings.h"
+#include "griddimensions.h"
 
 int main(int argc, char *argv[])
 {
@@ -29,6 +33,15 @@ int main(int argc, char *argv[])
         fprintf(stdout, "%s\n", msg.toLocal8Bit().constData());
     });
 #endif
+
+    qRegisterMetaType<QMargins>("QMargins");
+    qRegisterMetaTypeStreamOperators<QMargins>("QMargins");
+
+    qRegisterMetaType<GridPaddings>("GridPaddings");
+    qRegisterMetaTypeStreamOperators<GridPaddings>("GridPaddings");
+
+    qRegisterMetaType<GlyphDimensions>("GridDimensions");
+    qRegisterMetaTypeStreamOperators<GlyphDimensions>("GridDimensions");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

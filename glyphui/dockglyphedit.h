@@ -8,12 +8,16 @@
 #include <QHideEvent>
 #include <QCloseEvent>
 
+#include <QModelIndex>
+
 #include "appcontext.h"
 #include "glyphui_global.h"
 
 #include "glyphpreview.h"
 #include "glyphmodel.h"
 #include "bitmapdimensionmodel.h"
+#include "bitmapdimension.h"
+#include "bitmapdimensions.h"
 
 namespace Ui {
 class DockGlyphEdit;
@@ -33,12 +37,15 @@ protected:
     void closeEvent(QCloseEvent *event) override;    
 
 private:
+    void restoreDefaultValues ();
     void setupDockGlyphEditModels ();
     void setupDockGlyphEditUI();
     void setupSignals ();
 
     void saveGeometryAndState();
     void restoreGeometryAndState ();
+    void syncOutBitmapDimensions (int value = -1);
+    void syncInBitmapDimensions  (const QModelIndex &current, const QModelIndex &previous);
 
     Ui::DockGlyphEdit *ui;
     AppContext *m_appContext;

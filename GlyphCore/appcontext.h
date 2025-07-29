@@ -14,6 +14,7 @@
 #include "glyphmanager.h"
 #include "fontmanager.h"
 #include "unicodemetadata.h"
+#include "appsettings.h"
 
 class AppContext : public QObject
 {
@@ -24,49 +25,16 @@ public:
 
     void setupSignals();
 
-    QSharedPointer<GlyphMeta> findOrCreateGlyph(const QChar &character = QChar(), bool temporary = false)
-    {
-        Q_ASSERT(m_glyphManager != nullptr);
-        // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Temporary: " << temporary;
-        return m_glyphManager->findOrCreate(
-            character == QChar() ? m_character : character,
-            m_bitmapDimension,
-            m_glyphSize,
-            temporary);
-    }
-
     GlyphManager * glyphManager() { return m_glyphManager; }
     FontManager * fontManager() { return m_fontManager; }
+    AppSettings * appSettings() { return m_appSettings; }
 
-    // Геттеры
-    const QColor & templateColor () {return m_templateColor; }
-    const QColor & templateBgColor () {return m_templateBgColor; }
-    const QColor & previewColor () {return m_previewColor; }
-    const QColor & previewBgColor () {return m_previewBgColor; }
-    const QColor & drawColor() { return m_drawColor; }
-    const QColor & drawBgColor() { return m_drawBgColor; }
-
-    int glyphSize() { return m_glyphSize; }
-    int bitmapDimension () { return m_bitmapDimension; }
-    const QChar & character() { return m_character; }
-    bool gridLayerEnable () { return m_gridLayerEnable; }
-    bool templateLayerEnable () { return m_templateLayerEnable; }
-    bool previewLayerEnable () { return m_previewLayerEnable; }
-    bool drawLayerEnable () { return m_drawLayerEnable; }
-    bool glyphRectLayerEnable () { return m_glyphRectLayerEnable; }
-    bool baselineLayerEnable      () { return m_baselineLayerEnable; }
-    bool bitmapRectLayerEnable ()  { return m_bitmapRectLayerEnable; } 
-    int leftGridCells () { return m_leftGridCells; }
-    int bottomGridCells () { return m_bottomGridCells; }
-    
     const QFont & glyphFont() { return m_fontManager->glyphFont(); }
     const QString & fontPath () { return m_fontManager->glyphFontPath(); }
     int fontMSB() { return m_fontMSB; }
     const QVector<QChar::Category> & fontCategories () { return m_fontManager->fontCategories(); }
     const QVector<QChar::Script> & fontScripts () { return m_fontManager->fontScripts(); }
     const QVector<QChar::Decomposition> & fontDecompositions () { return m_fontManager->fontDecompositions(); }
-
-    const QMargins & margins() { return m_margins; }
 
     // Обёртки
     int glyphTableSize()
@@ -116,99 +84,18 @@ signals:
     void leftGridCellsChanged   (int value);
     void bottomGridCellsChanged (int value);
 
-    void templateColorChanged (const QColor &color);
-    void templateBgColorChanged (const QColor &color);
-    void previewColorChanged (const QColor &color);
-    void previewBgColorChanged (const QColor &color);
-    void drawColorChanged (const QColor &color);
-    void drawBgColorChanged (const QColor &color);
-
-    void gridLayerEnableChanged(bool value);
-    void templateLayerEnableChanged(bool value);
-    void previewLayerEnableChanged(bool value);
-    void drawLayerEnableChanged(bool value);
-    void glyphRectLayerEnableChanged(bool value);
-    void baselineLayerEnableChanged(bool value);
-    void bitmapRectLayerEnableChanged(bool value);
-
     void fontMSBChanged(int value);
     void fontChanged (const QFont &newFont);
     void fontCategoriesChanged (const QVector<QChar::Category> &value);
     void fontScriptsChanged (const QVector<QChar::Script> &value);
     void fontDecompositionsChanged (const QVector<QChar::Decomposition> &value);
 
-    void marginsChanged (const QMargins &value);
-
     void pasteTemplateToDrawLayer();
     void clearDrawLayer ();
     
 public slots:
 // Сеттеры
-    void setLeftGridCells (int value) { 
-        if (m_leftGridCells != value)
-        {
-            m_leftGridCells = value; 
-            emit leftGridCellsChanged(m_leftGridCells);
-        }
-    }
-
-    void setBottomGridCells (int value) { 
-        if (m_bottomGridCells != value)
-        {
-            m_bottomGridCells = value;
-            emit bottomGridCellsChanged(m_bottomGridCells);
-        } 
-    }
-
-    void setTemplateColor(const QColor &color) { 
-        if (m_templateColor != color)
-        {
-            m_templateColor = color;
-            emit templateColorChanged(m_templateColor);
-        }
-    }
-
-    void setTemplateBgColor(const QColor &color) {
-        if( m_templateBgColor != color)
-        {
-            m_templateBgColor = color;
-            emit templateBgColorChanged(m_templateBgColor);
-        }
-    }
-
-    void setPreviewColor(const QColor &color) { 
-        if (m_previewColor != color)
-        {
-            m_previewColor = color;
-            emit previewColorChanged(m_previewColor);
-        }
-    }
-
-    void setPreviewBgColor(const QColor &color) {
-        if (m_previewBgColor != color)
-        {
-            m_previewBgColor = color;
-            emit previewBgColorChanged(m_previewBgColor);
-        }
-    }
-
-    void setDrawColor(const QColor &color) { 
-        if (m_drawColor != color)
-        {
-            m_drawColor = color;
-            emit drawColorChanged(m_drawColor);
-        }
-    }
-
-    void setDrawBgColor(const QColor &color) {
-        if (m_drawBgColor != color)
-        {
-            m_drawBgColor = color;
-            emit drawBgColorChanged(m_drawBgColor);
-        }
-    }
-
-    void setGlyphSize(int value) {
+/*     void setGlyphSize(int value) {
         if (m_glyphSize != value)
         {
             m_glyphSize = value;
@@ -216,52 +103,8 @@ public slots:
         }
     }
 
-    void setGlyphMoveLeft()
-    {
-        QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph();
-        if (glyphMeta.isNull())
-            return;
-        glyphMeta->moveLeft();
-        emit glyphChanged(glyphMeta);
-    }
-
-    void setGlyphMoveTop()
-    {
-        QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph();
-        if (glyphMeta.isNull())
-            return;
-        glyphMeta->moveTop();
-        emit glyphChanged(glyphMeta);
-    }
-
-    void setGlyphMoveDown()
-    {
-        QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph();
-        if (glyphMeta.isNull())
-            return;
-        glyphMeta->moveDown();
-        emit glyphChanged(glyphMeta);
-    }
-
-    void setGlyphMoveRight()
-    {
-        QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph();
-        if (glyphMeta.isNull())
-            return;
-        glyphMeta->moveRight();
-        emit glyphChanged(glyphMeta);
-    }
-
-    void resetGlyphOffset()
-    {
-        QSharedPointer<GlyphMeta> glyphMeta = findOrCreateGlyph();
-        if (glyphMeta.isNull())
-            return;
-        glyphMeta->resetOffset();
-        emit glyphChanged(glyphMeta);
-    }
-
-    void setBitmapDimension(int value) {
+ */
+/*     void setBitmapDimension(int value) {
         if (m_bitmapDimension != value)
         {
             m_bitmapDimension = value;
@@ -273,13 +116,13 @@ public slots:
             glyphUpdate();
         }
     }
-
+ */
     void setGlyphFont(const QFont &newFont) { 
         Q_ASSERT(m_fontManager != nullptr);
         m_fontManager->setGlyphFont(newFont);
     }
 
-    void setCharacter(const QChar &newChar, bool temporary = false)
+/*     void setCharacter(const QChar &newChar, bool temporary = false)
     {
         // if (m_character != newChar)
         {
@@ -287,75 +130,12 @@ public slots:
             glyphUpdate(temporary);
         }
     }
-    
-    void setGridLayerEnable (bool value) { 
-        if (m_gridLayerEnable != value)
-        {
-            m_gridLayerEnable = value; 
-            emit gridLayerEnableChanged(m_gridLayerEnable);
-        }
-    }
-
-    void setTemplateLayerEnable (bool value) {
-        if (m_templateLayerEnable != value)
-        {
-            m_templateLayerEnable = value;
-            emit templateLayerEnableChanged(m_templateLayerEnable);
-        } 
-    }
-
-    void setPreviewLayerEnable (bool value) { 
-        if (m_previewLayerEnable != value)
-        {
-            m_previewLayerEnable = value;
-            emit previewLayerEnableChanged(m_previewLayerEnable);
-        } 
-    }
-
-    void setDrawLayerEnable (bool value) {
-        if(m_drawLayerEnable != value)
-        {
-            m_drawLayerEnable = value;
-            emit drawLayerEnableChanged(m_drawLayerEnable);
-        }
-    }
-
-    void setGlyphRectLayerEnable (bool value) { 
-        if (m_glyphRectLayerEnable != value)
-        {
-            m_glyphRectLayerEnable = value;
-            emit glyphRectLayerEnableChanged (m_glyphRectLayerEnable);
-        }
-    }
-
-    void setBaselineLayerEnable (bool value) { 
-        if (m_baselineLayerEnable != value)
-        {
-            m_baselineLayerEnable = value;
-            emit baselineLayerEnableChanged(m_baselineLayerEnable);
-        }
-    }
-
-    void setFontMSB(int value)
-    {
-        if (m_fontMSB != value)
-        {
-            m_fontMSB = value;
-            emit fontMSBChanged(m_fontMSB);
-        }
-    }
-
-    void setBitmapRectLayerEnable (bool value) {
-        if (m_bitmapRectLayerEnable != value)
-        {
-            m_bitmapRectLayerEnable = value;
-            emit bitmapRectLayerEnableChanged(m_bitmapRectLayerEnable);
-        }
-    }
+ */
+        
 
     void renderGlyphLayers (QSharedPointer<GlyphMeta> glyphMeta, const QSize & preivewSize);
 
-    void setMargins(const QMargins &value)
+/*     void setMargins(const QMargins &value)
     {
         if (m_margins != value)
         {
@@ -363,10 +143,11 @@ public slots:
             emit marginsChanged(m_margins);
         }
     }
-
+ */
 private:
 
-    void glyphUpdate(bool temporary = true)
+
+/*     void glyphUpdate(bool temporary = true)
     {
         if (m_character != QChar() && m_glyphSize >= 6 && m_bitmapDimension >= 6)
         {
@@ -374,37 +155,16 @@ private:
             emit glyphChanged(glyphMeta);
         }
     }
-
+ */
 
     GlyphManager *m_glyphManager;
     FontManager *m_fontManager;
     UnicodeMetadata *m_unicodeMetadata;
+    AppSettings *m_appSettings;
 
-    int m_glyphSize;
-    int m_bitmapDimension;
-    int m_leftGridCells;
-    int m_bottomGridCells;
-
-
-    QMargins m_margins;
-
-    bool m_gridLayerEnable;
-    bool m_templateLayerEnable;
-    bool m_previewLayerEnable;
-    bool m_drawLayerEnable;
-    bool m_glyphRectLayerEnable;
-    bool m_baselineLayerEnable;
-    bool m_bitmapRectLayerEnable;
-
-    QChar m_character;
+    // QChar m_character;
     int m_fontMSB;
 
-    QColor m_templateBgColor;
-    QColor m_templateColor;
-    QColor m_previewBgColor;
-    QColor m_previewColor;
-    QColor m_drawBgColor;
-    QColor m_drawColor;
 
 };
 

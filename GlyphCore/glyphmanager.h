@@ -8,11 +8,13 @@
 
 #include <algorithm>
 
+#include "appsettings.h"
 #include "glyphmeta.h"
 #include "glyphkey.h"
 #include "fontmanager.h"
 #include "iglyphrenderer.h"
 #include "bitmapdimension.h"
+#include "bitmapdimensions.h"
 
 class GlyphManager : public QObject
 {
@@ -26,16 +28,28 @@ enum ImageType {
         ImagePreview
     };
 
-    explicit GlyphManager(FontManager *fontManager, QObject *parent = nullptr);
+    explicit GlyphManager(FontManager *fontManager, AppSettings *appSettings, QObject *parent = nullptr);
     ~GlyphManager();
 
-    QSharedPointer<GlyphMeta> findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, bool temporary = false);
+    QSharedPointer<GlyphMeta> findOrCreate(const QChar &character = QChar(), int bitmapDimension = -1, int glyphSize = -1, bool temporary = false);
 
     QSharedPointer<GlyphMeta> find(const GlyphKey &key);
     bool remove(const GlyphKey &key);
     bool append(QSharedPointer<GlyphMeta> glyphMeta);
 
-    
+    void setBitmapDimension(int value);
+    void setGlyphSize(int value);
+
+    int bitmapDimension() { return m_bitmapDimension; }
+    int glyphSize() {return m_glyphSize; }
+
+    GlyphKey glyphKey ()
+    {
+        if (m_glyphMeta.isNull())
+            return GlyphKey();
+        return m_glyphMeta->key();
+    }
+
     void sort();
 
     int size()
@@ -52,52 +66,69 @@ enum ImageType {
         return nullptr;
     }
 
-    QSharedPointer<GlyphKey> getTemporaryGlyphKey ()
-    {
-        return m_glyphKey;
-    }
+    QSharedPointer<IGlyphRenderer> getRenderer (ImageType type);
 
-    QSharedPointer<IGlyphRenderer> getRenderer (GlyphManager::ImageType type);
+    BitmapDimensions * bitmapDimensions() { return m_bitmapDimensions; }
 
     void renderTemplateImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size = QSize(), QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
     void renderPreviewImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
     void renderDrawImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size = QSize(), QSharedPointer<IGlyphRenderer> userRenderer = QSharedPointer<IGlyphRenderer>());
 
-    int bitmapDimensionSize () { return m_bitmapDimensionValues.size(); }
-    QSharedPointer<BitmapDimension> bitmapDimensionAt(int pos);
-    QSharedPointer<BitmapDimension> bitmapDimension(int value);
+    QSharedPointer<GlyphMeta> execClearDrawLayer (const QColor &bgColor = QColor());
+    QSharedPointer<GlyphMeta> execPasteTemplateToDrawLayer(const QColor &color = QColor(), const QColor &bgColor = QColor());
+    void execRenderGlyphLayers (const QSize &size);
+
+    void setGlyphOffsetMoveLeft();
+    void setGlyphOffsetMoveTop();
+    void setGlyphOffsetMoveRight();
+    void setGlyphOffsetMoveDown();
+    void setGlyphOffsetReset();
 
 public slots:
 
 signals:
-    void glyphDataChanged();
-    void bitmapDimensionsChanged();
+    void glyphDataChanged ();
+    void glyphChanged (QSharedPointer<GlyphMeta> glyph);
+    void layerDrawChanged(QSharedPointer<GlyphMeta> glyph);
+    void renderGlyphLayers(const QSize &size /** size Preview Layer */);
+    void glyphTemplateLayerRendered(QSharedPointer<GlyphMeta> glyph);
+    void glyphDrawLayerRendered(QSharedPointer<GlyphMeta> glyph);
+    void glyphPreviewLayerRendered(QSharedPointer<GlyphMeta> glyph);
+
+    void pasteTemplateToDrawLayer ();
+    void clearDrawLayer ();
+
+    void glyphOffsetLeft ();
+    void glyphOffsetTop ();
+    void glyphOffsetRight ();
+    void glyphOffsetDown ();
+    void glyphOffsetReset ();
 
 private:
     const GlyphKey currentGlyphParams(const QChar &ch, int bitmapDimension, int glyphSize = -1);
+    void filterGlyphs();
     void updateData();
-
-    bool appendBitmapDimension (int bitmapSize);
-    bool removeBitmapDimension (int bitmapSize);
-    void generateBitmapDimensionValues ();
+    void setupSignals ();
 
     QVector<QSharedPointer<GlyphMeta>> m_metaGlyphs;
     QVector<int> m_filteredGlyphs;
     QHash<GlyphKey, int> m_index;
 
-    QHash<int, QSharedPointer<BitmapDimension>> m_bitmapDimensions;
-    QVector<int> m_bitmapDimensionValues;
-
-
     QSharedPointer<IGlyphRenderer> m_ftRender;
     QSharedPointer<IGlyphRenderer> m_drawRender;
 
-    QSharedPointer<GlyphKey> m_glyphKey;
     QSharedPointer<GlyphMeta> m_glyphMeta;
 
     mutable QMutex m_mutex;    
 
     FontManager *m_fontManager;
+    BitmapDimensions *m_bitmapDimensions;
+
+    int m_bitmapDimension;
+    int m_glyphSize;
+    QChar m_character;
+    
+    AppSettings *m_appSettings;
 };
 
 #endif // GLYPHMANAGER_H

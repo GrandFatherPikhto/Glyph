@@ -13,11 +13,18 @@ DockGlyphEdit::DockGlyphEdit(AppContext *appContext, QWidget *parent)
     setupDockGlyphEditModels();
     setupDockGlyphEditUI();
     setupSignals();
+    restoreDefaultValues();
 }
 
 DockGlyphEdit::~DockGlyphEdit()
 {
     delete ui;
+}
+
+void DockGlyphEdit::restoreDefaultValues ()
+{
+    ui->spinBoxGlyphSize->setValue(m_appContext->appSettings()->glyphSize());
+    ui->spinBoxBitmapDimension->setValue(m_appContext->appSettings()->bitmapDimension());
 }
 
 void DockGlyphEdit::setupDockGlyphEditModels ()
@@ -46,25 +53,70 @@ void DockGlyphEdit::setupSignals ()
         emit m_glyphModel->layoutChanged();
     });
 
-    QObject::connect(m_appContext->glyphManager(), &GlyphManager::bitmapDimensionsChanged, this, [=](){
+    QObject::connect(m_appContext->glyphManager()->bitmapDimensions(), &BitmapDimensions::bitmapDimensionsChanged, this, [=](){
 
     });
 
-    QObject::connect(ui->spinBoxBottomCells, &QSpinBox::valueChanged, this, [=](int value){
-        // QMargins margins = m_appContext->
-        if (ui->listViewBitmapDimensions->selectionModel()->hasSelection())
-        {
-            QModelIndex idx = ui->listViewBitmapDimensions->selectionModel()->currentIndex();
-            int dimension = idx.data(Qt::UserRole).toInt();
-            QSharedPointer<BitmapDimension> dim = m_appContext->glyphManager()->bitmapDimension(dimension);
-            if (!dim.isNull())
-            {
-                QMargins margins = dim->gridMargins();
-                margins.setBottom(value);
-                dim->setGridMargins(margins);
-            }
-        }
-    });
+    QObject::connect(ui->listViewBitmapDimensions->selectionModel(), QItemSelectionModel::currentChanged, this, &DockGlyphEdit::syncInBitmapDimensions);
+
+    QObject::connect(ui->spinBoxLeftCells, &QSpinBox::valueChanged, this, &DockGlyphEdit::syncOutBitmapDimensions);
+    QObject::connect(ui->spinBoxTopCells, &QSpinBox::valueChanged, this, &DockGlyphEdit::syncOutBitmapDimensions);
+    QObject::connect(ui->spinBoxRightCells, &QSpinBox::valueChanged, this, &DockGlyphEdit::syncOutBitmapDimensions);
+    QObject::connect(ui->spinBoxBottomCells, &QSpinBox::valueChanged, this, &DockGlyphEdit::syncOutBitmapDimensions);
+
+    QObject::connect(ui->spinBoxGlyphSize, &QSpinBox::valueChanged, m_appContext->appSettings(), &AppSettings::setGlyphSize);
+    QObject::connect(ui->spinBoxBitmapDimension, &QSpinBox::valueChanged, m_appContext->appSettings(), &AppSettings::setBitmapDimension);
+
+    QObject::connect(ui->pushButtonOffsetReset, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetReset);
+    QObject::connect(ui->pushButtonOffsetMoveLeft, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetMoveLeft);
+    QObject::connect(ui->pushButtonOffsetMoveTop, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetMoveTop);
+    QObject::connect(ui->pushButtonOffsetMoveRight, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetMoveRight);
+    QObject::connect(ui->pushButtonOffsetMoveBottom, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetMoveDown);
+}
+
+void DockGlyphEdit::syncOutBitmapDimensions (int value)
+{
+    Q_UNUSED(value)
+
+    if (!ui->listViewBitmapDimensions->selectionModel()->hasSelection())
+        return;
+
+    QModelIndex idx = ui->listViewBitmapDimensions->selectionModel()->currentIndex();
+    int dimension = idx.data(Qt::UserRole).toInt();
+    QSharedPointer<BitmapDimension> dim = m_appContext->glyphManager()->bitmapDimensions()->bitmapDimension(dimension);
+
+    if (dim.isNull())
+        return;
+
+    QMargins margins (
+            ui->spinBoxLeftCells->value()
+        , ui->spinBoxTopCells->value()
+        , ui->spinBoxRightCells->value()
+        , ui->spinBoxBottomCells->value()
+    );
+    dim->margins(margins);
+}
+
+void DockGlyphEdit::syncInBitmapDimensions (const QModelIndex &current, const QModelIndex &previous)
+{
+    Q_UNUSED(previous)
+
+    if (!ui->listViewBitmapDimensions->selectionModel()->hasSelection())
+        return;
+
+    if (!previous.isValid())
+        return;
+
+    int dimension = current.data(Qt::UserRole).toInt();
+    QSharedPointer<BitmapDimension> dim = m_appContext->glyphManager()->bitmapDimensions()->bitmapDimension(dimension);
+
+    if (dim.isNull())
+        return;
+
+    ui->spinBoxLeftCells->setValue(dim->margins().left());
+    ui->spinBoxTopCells->setValue(dim->margins().top());
+    ui->spinBoxRightCells->setValue(dim->margins().right());
+    ui->spinBoxBottomCells->setValue(dim->margins().bottom());
 }
 
 void DockGlyphEdit::saveGeometryAndState()

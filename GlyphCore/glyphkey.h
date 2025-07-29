@@ -10,18 +10,18 @@
 
 class GlyphKey {
 public:
-    GlyphKey(int character /* = -1 */, int bitmapDimension /* = -1 */)
+    GlyphKey(int character = -1, int bitmapDimension = -1)
     : m_unicode(character)
     , m_bitmapDimension(bitmapDimension)
     {
 
     }
 
-    GlyphKey(const QChar &character, int bitmapDimension, const QFont &font)
+    GlyphKey(const QChar &character, int bitmapDimension)
         : m_unicode(character.unicode())
         , m_bitmapDimension(bitmapDimension)
     {
-    
+
     }
 
     GlyphKey(const GlyphKey &key)
@@ -61,6 +61,11 @@ public:
     bool operator != (const GlyphKey &glyphKey) const {
         return m_unicode != glyphKey.m_unicode
                || m_bitmapDimension != glyphKey.m_bitmapDimension;
+    }
+
+    bool isValid ()
+    {
+        return (m_bitmapDimension > 0 && m_unicode > 0);
     }
 
     // Сеттеры

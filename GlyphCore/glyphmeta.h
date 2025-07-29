@@ -343,7 +343,7 @@ public:
     }
 
     GlyphKey key() {
-        return GlyphKey(m_character.unicode(), m_bitmapDimension, m_font.family());
+        return GlyphKey(m_character.unicode(), m_bitmapDimension);
     }
 
     QRect paintRect() {

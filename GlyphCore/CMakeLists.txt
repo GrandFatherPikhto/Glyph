@@ -58,6 +58,17 @@ qt_add_library(GlyphCore STATIC
     bitmapdimension.h
     bitmapdimension.cpp
     
+    bitmapdimensions.h 
+    bitmapdimensions.cpp
+    
+    appsettings.h
+    appsettings.cpp
+
+    gridpaddings.h 
+    glyphdimensions.h
+    glyphmarkup.h
+    ftglyph.h
+
     ${TS_FILES}
 )
 

@@ -2,19 +2,23 @@
 #include "freetypeglyphrenderer.h"
 #include "drawglyphrenderer.h"
 
-
-GlyphManager::GlyphManager(FontManager *fontManager, QObject *parent)
+GlyphManager::GlyphManager(FontManager *fontManager, AppSettings *appSettings, QObject *parent)
     : QObject{parent}
+    , m_appSettings(appSettings)
     , m_fontManager(fontManager)
     , m_ftRender(QSharedPointer<IGlyphRenderer>())
-    , m_glyphKey(QSharedPointer<GlyphKey>())
+    // , m_glyphKey(QSharedPointer<GlyphKey>())
     , m_glyphMeta(QSharedPointer<GlyphMeta>())
+    , m_bitmapDimensions(nullptr)
 {
+    m_bitmapDimensions = new BitmapDimensions(this);
     m_ftRender = QSharedPointer<FreeTypeGlyphRenderer>::create();
     m_drawRender = QSharedPointer<DrawGlyphRenderer>::create();
 
     m_index.clear();
     m_metaGlyphs.clear();
+
+    setupSignals();
 }
 
 GlyphManager::~GlyphManager()
@@ -22,81 +26,56 @@ GlyphManager::~GlyphManager()
 
 }
 
-void GlyphManager::generateBitmapDimensionValues()
+void GlyphManager::setupSignals()
 {
-    m_bitmapDimensionValues = m_bitmapDimensions.keys();
-    std::sort(m_bitmapDimensionValues.begin(), m_bitmapDimensionValues.end());
-    qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_bitmapDimensions.size();
+    QObject::connect(this, &GlyphManager::clearDrawLayer, this, [=](){ clearDrawLayer(); });
+    QObject::connect(this, &GlyphManager::pasteTemplateToDrawLayer, this, [=](){ execPasteTemplateToDrawLayer (); });
+    QObject::connect(this, &GlyphManager::renderGlyphLayers, this, &GlyphManager::execRenderGlyphLayers);
 
-    emit bitmapDimensionsChanged();
+    QObject::connect(this, &GlyphManager::glyphOffsetLeft, this, &GlyphManager::setGlyphOffsetMoveLeft);
+    QObject::connect(this, &GlyphManager::glyphOffsetTop, this, &GlyphManager::setGlyphOffsetMoveTop);
+    QObject::connect(this, &GlyphManager::glyphOffsetRight, this, &GlyphManager::setGlyphOffsetMoveRight);
+    QObject::connect(this, &GlyphManager::glyphOffsetDown, this, &GlyphManager::setGlyphOffsetMoveDown);
+    QObject::connect(this, &GlyphManager::glyphOffsetReset, this, &GlyphManager::setGlyphOffsetReset);
 }
 
-QSharedPointer<BitmapDimension> GlyphManager::bitmapDimension(int value)
+QSharedPointer<GlyphMeta> GlyphManager::execClearDrawLayer(const QColor &bgColor)
 {
-    auto it = m_bitmapDimensions.find(value);
-    if (it == m_bitmapDimensions.end())
-    {
-        return QSharedPointer<BitmapDimension>();
-    }
+    if (m_glyphMeta.isNull() || m_glyphMeta->layerDraw().isNull())
+        return QSharedPointer<GlyphMeta>();
 
-    return it.value();
+    m_glyphMeta->layerDraw()->fill(bgColor == QColor() ? m_appSettings->drawBgColor() : bgColor);
+
+    return m_glyphMeta;
 }
 
-QSharedPointer<BitmapDimension> GlyphManager::bitmapDimensionAt(int pos)
+QSharedPointer<GlyphMeta> GlyphManager::execPasteTemplateToDrawLayer(const QColor &color, const QColor &bgColor)
 {
-    if (pos < 0 || pos >= m_bitmapDimensionValues.size())
-        return QSharedPointer<BitmapDimension>();
-    
-    int bitmapDimension = m_bitmapDimensionValues.at(pos);
-    auto it = m_bitmapDimensions.find(bitmapDimension);
+    Q_UNUSED(color)
+    Q_UNUSED(bgColor)
 
-    if (it == m_bitmapDimensions.end())
+    if (m_glyphMeta.isNull() || m_glyphMeta->layerTemplate().isNull() || m_glyphMeta->layerDraw().isNull())
+        return QSharedPointer<GlyphMeta>();
+
+    QImage srcImg = QImage(*(m_glyphMeta->layerTemplate().data()));
+    QRect glyphRect = m_glyphMeta->paintRect();
+    for (int x = 0; x < m_glyphMeta->layerTemplate()->width(); x++)
     {
-        return QSharedPointer<BitmapDimension>();
+        for (int y = 0; y < m_glyphMeta->layerTemplate()->height(); y++)
+        {
+            if (srcImg.pixelColor(x, y).alpha())
+            {
+                srcImg.setPixelColor(x, y, QColor(0x0, 0x0, 0x0, 0xFF));
+            }
+        }
     }
+    QPainter painter(m_glyphMeta->layerDraw().data());
+    painter.drawImage(glyphRect, srcImg);
+    painter.end();
 
-    return it.value();
-}
+    emit layerDrawChanged(m_glyphMeta);
 
-bool GlyphManager::appendBitmapDimension(int bitmapDimension)
-{
-    auto it = m_bitmapDimensions.find(bitmapDimension);
-    if (it == m_bitmapDimensions.end())
-    {
-        // Создаем новое измерение если не найдено
-        auto dimension = QSharedPointer<BitmapDimension>::create(bitmapDimension, QMargins(0,0,0,0));
-        m_bitmapDimensions.insert(bitmapDimension, dimension);
-        generateBitmapDimensionValues();
-
-        return true;
-    }
-
-    // Увеличиваем счетчик существующего измерения
-    it.value()->incrementCounter();
-
-    return false;
-}
-
-
-bool GlyphManager::removeBitmapDimension(int value)
-{
-    auto it = m_bitmapDimensions.find(value);
-    if (it == m_bitmapDimensions.end())
-        return false;
-
-    // Декрементируем счетчик
-    int newCount = it.value()->decrementCounter();
-    
-    // Удаляем если счетчик достиг нуля
-    if (newCount <= 0)
-    {
-        m_bitmapDimensions.erase(it);
-        generateBitmapDimensionValues();
-
-        return true;
-    }
-    
-    return false;
+    return m_glyphMeta;
 }
 
 bool GlyphManager::remove(const GlyphKey &key)
@@ -111,7 +90,7 @@ bool GlyphManager::remove(const GlyphKey &key)
     if (it.value() >= 0 && it.value() < m_metaGlyphs.size())
     {
         auto glyphMeta = m_metaGlyphs[it.value()];
-        removeBitmapDimension(key.bitmapDimension());
+        m_bitmapDimensions->releaseBitmapDimension(key.bitmapDimension());
     }
 
     m_metaGlyphs.removeAt(it.value());
@@ -133,7 +112,8 @@ bool GlyphManager::append(QSharedPointer<GlyphMeta> glyphMeta)
 
     m_metaGlyphs.append(glyphMeta);
     m_index.insert(key, m_metaGlyphs.size() - 1);
-    appendBitmapDimension(glyphMeta->bitmapDimension());
+    m_bitmapDimensions->registerBitmapDimension(glyphMeta->bitmapDimension());
+
     updateData();
  
     return true;
@@ -152,7 +132,7 @@ QSharedPointer<GlyphMeta> GlyphManager::find(const GlyphKey &key)
 
 const GlyphKey GlyphManager::currentGlyphParams(const QChar &character, int bitmapDimension, int glyphSize)
 {
-    GlyphKey key (character, bitmapDimension, m_fontManager->glyphFont());
+    GlyphKey key (character, bitmapDimension);
     if (!m_glyphMeta.isNull() && key == m_glyphMeta->key())
     {
         if (m_glyphMeta->glyphSize() != glyphSize)
@@ -208,6 +188,28 @@ QSharedPointer<GlyphMeta> GlyphManager::findOrCreate(const QChar &character, int
     // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << ", Size: " << m_metaGlyphs.size();
 
     return m_glyphMeta;
+}
+
+void GlyphManager::setBitmapDimension(int value)
+{
+    if (m_bitmapDimension != value)
+    {
+        m_bitmapDimension = value;
+        QSharedPointer<GlyphMeta> glyphMeta = findOrCreate(m_character, m_bitmapDimension, m_glyphSize);
+        if (glyphMeta.isNull())
+        {
+            return;
+        }
+        filterGlyphs ();
+    }
+}
+
+void GlyphManager::setGlyphSize(int value)
+{
+    if (m_glyphSize != value)
+    {
+        findOrCreate(m_character, m_bitmapDimension, m_glyphSize);
+    }
 }
 
 void GlyphManager::renderTemplateImage (QSharedPointer<GlyphMeta> glyphMeta, const QColor &color, const QColor &bgColor, const QSize &size, QSharedPointer<IGlyphRenderer> userRenderer)
@@ -271,6 +273,31 @@ QSharedPointer<IGlyphRenderer> GlyphManager::getRenderer (GlyphManager::ImageTyp
     return QSharedPointer<IGlyphRenderer>();
 }
 
+void GlyphManager::execRenderGlyphLayers(const QSize &size)
+{
+    if (m_glyphMeta.isNull())
+        return;
+
+    if (m_glyphMeta->isDirty())
+    {
+        renderTemplateImage(m_glyphMeta, m_appSettings->templateColor(), m_appSettings->templateBgColor());
+        renderDrawImage(m_glyphMeta, m_appSettings->drawColor(), m_appSettings->drawBgColor());
+        emit glyphTemplateLayerRendered(m_glyphMeta);
+        emit glyphDrawLayerRendered(m_glyphMeta);
+    }
+
+    if (m_glyphMeta->isResized())
+    {
+        renderPreviewImage(m_glyphMeta, m_appSettings->previewColor(), m_appSettings->previewBgColor(), size);
+        emit glyphPreviewLayerRendered(m_glyphMeta);
+    }
+}
+
+void GlyphManager::filterGlyphs()
+{
+
+}
+
 void GlyphManager::sort() {
     // 1. Сортируем вектор умных указателей
     std::sort(m_metaGlyphs.begin(), m_metaGlyphs.end(),
@@ -284,4 +311,49 @@ void GlyphManager::sort() {
         const auto& metaGlyph = m_metaGlyphs.at(i);
         m_index.insert(metaGlyph->key(), i);  // Используем -> вместо .
     }
+}
+
+void GlyphManager::setGlyphOffsetMoveLeft()
+{
+    QSharedPointer<GlyphMeta> glyphMeta = findOrCreate();
+    if (glyphMeta.isNull())
+        return;
+    glyphMeta->moveLeft();
+    emit glyphChanged(glyphMeta);
+}
+
+void GlyphManager::setGlyphOffsetMoveTop()
+{
+    QSharedPointer<GlyphMeta> glyphMeta = findOrCreate();
+    if (glyphMeta.isNull())
+        return;
+    glyphMeta->moveTop();
+    emit glyphChanged(glyphMeta);
+}
+
+void GlyphManager::setGlyphOffsetMoveDown()
+{
+    QSharedPointer<GlyphMeta> glyphMeta = findOrCreate();
+    if (glyphMeta.isNull())
+        return;
+    glyphMeta->moveDown();
+    emit glyphChanged(glyphMeta);
+}
+
+void GlyphManager::setGlyphOffsetMoveRight()
+{
+    QSharedPointer<GlyphMeta> glyphMeta = findOrCreate();
+    if (glyphMeta.isNull())
+        return;
+    glyphMeta->moveRight();
+    emit glyphChanged(glyphMeta);
+}
+
+void GlyphManager::setGlyphOffsetReset()
+{
+    QSharedPointer<GlyphMeta> glyphMeta = findOrCreate();
+    if (glyphMeta.isNull())
+        return;
+    glyphMeta->resetOffset();
+    emit glyphChanged(glyphMeta);
 }

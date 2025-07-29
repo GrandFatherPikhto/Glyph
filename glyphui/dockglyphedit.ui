@@ -91,7 +91,7 @@
       </property>
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="1">
-        <widget class="QPushButton" name="pushButtonBaselineMoveTop">
+        <widget class="QPushButton" name="pushButtonOffsetMoveTop">
          <property name="text">
           <string/>
          </property>
@@ -108,7 +108,7 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QPushButton" name="pushButtonBaselineMoveLeft">
+        <widget class="QPushButton" name="pushButtonOffsetMoveLeft">
          <property name="text">
           <string/>
          </property>
@@ -125,7 +125,7 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QPushButton" name="pushButtonBaselinesReset">
+        <widget class="QPushButton" name="pushButtonOffsetReset">
          <property name="text">
           <string/>
          </property>
@@ -142,7 +142,7 @@
         </widget>
        </item>
        <item row="1" column="2">
-        <widget class="QPushButton" name="pushButtonBaselineRight">
+        <widget class="QPushButton" name="pushButtonOffsetMoveRight">
          <property name="text">
           <string/>
          </property>
@@ -159,7 +159,7 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QPushButton" name="pushButtonBaselineBottom">
+        <widget class="QPushButton" name="pushButtonOffsetMoveBottom">
          <property name="text">
           <string/>
          </property>
@@ -193,30 +193,44 @@
         </item>
        </layout>
       </widget>
-      <widget class="QGroupBox" name="groupBoxBitmapDimension">
+      <widget class="QGroupBox" name="groupBoxDimensions">
        <property name="title">
-        <string>Bitmap Dimension</string>
+        <string>Dimensions</string>
        </property>
-       <layout class="QGridLayout" name="gridLayout_2">
+       <layout class="QGridLayout" name="gridLayoutBitmapDimensions">
         <item row="0" column="0">
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="labelBitmapDimension">
           <property name="text">
-           <string>TextLabel</string>
+           <string>Bitmap Dimension</string>
           </property>
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QLabel" name="label_2">
+         <widget class="QLabel" name="labelGlyphSize">
           <property name="text">
-           <string>TextLabel</string>
+           <string>Glyph Size</string>
           </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QSpinBox" name="spinBox"/>
+         <widget class="QSpinBox" name="spinBoxBitmapDimension">
+          <property name="minimum">
+           <number>8</number>
+          </property>
+          <property name="maximum">
+           <number>1024</number>
+          </property>
+         </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QSpinBox" name="spinBox_2"/>
+         <widget class="QSpinBox" name="spinBoxGlyphSize">
+          <property name="minimum">
+           <number>8</number>
+          </property>
+          <property name="maximum">
+           <number>1024</number>
+          </property>
+         </widget>
         </item>
         <item row="2" column="0" colspan="2">
          <widget class="QListView" name="listViewBitmapDimensions"/>

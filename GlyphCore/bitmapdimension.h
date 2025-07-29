@@ -8,8 +8,8 @@ class BitmapDimension
 public:
     BitmapDimension(int bitmapDimension, const QMargins &margins);
 
-    void setGridMargins(const QMargins &value) { m_margins = value;  }
-    const QMargins & gridMargins() { return m_margins; }
+    void margins(const QMargins &value) { m_margins = value;  }
+    const QMargins & margins() { return m_margins; }
 
     int bitmapDimension() {return m_bitmapDimension; }
 

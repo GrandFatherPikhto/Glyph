@@ -16,6 +16,7 @@
 #include "glyphmanager.h"
 #include "appcontext.h"
 #include "glyphmeta.h"
+#include "griddimensions.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -63,12 +64,9 @@ private:
 
     AppContext *m_appContext;
 
-    int m_gridCellSize;
     QMargins m_margins;
-    int m_leftCells;
-    int m_bottomCells;
-    int m_xGridCells;
-    int m_yGridCells;
+    GlyphDimensions m_gridDimensions;
+
 
     bool m_templateLayerEnable;
     bool m_gridLayerEnable;
@@ -78,9 +76,9 @@ private:
     bool m_baselineEnable;
     bool m_bitmapRectEnable;
 
-    QRect m_renderRect;
-    QRect m_glyphRect;
-    QRect m_gridRect;
+    // QRect m_renderRect;
+    // QRect m_glyphRect;
+    // QRect m_gridRect;
 
     QSharedPointer<GlyphMeta> m_glyphMeta;
 };
