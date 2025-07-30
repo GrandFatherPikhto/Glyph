@@ -2,8 +2,9 @@
 #include "freetypeglyphrenderer.h"
 #include "drawglyphrenderer.h"
 
-RenderManager::RenderManager()
-    : m_ftRender(QSharedPointer<IGlyphRenderer>())
+RenderManager::RenderManager(AppContext *appContext, QObject *parent)
+    : QObject{parent}
+    , m_ftRender(QSharedPointer<IGlyphRenderer>())
     , m_drawRender(QSharedPointer<IGlyphRenderer>())
 {
     m_ftRender = QSharedPointer<FreeTypeGlyphRenderer>::create();
