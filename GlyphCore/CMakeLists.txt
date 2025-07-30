@@ -35,14 +35,21 @@ qt_add_library(GlyphCore STATIC
     glyphkey.h
     glyphkey.cpp
 
-    glyphmeta.h
-    glyphmeta.cpp
+    glyphcontext.h
+    
+    glyphimage.h
+    glyphimage.cpp
 
     glyphentry.h
-    glyphentry.cpp
+
+    glyphimages.h
+    glyphimages.cpp
 
     glyphmanager.h
     glyphmanager.cpp
+
+    rendermanager.h
+    rendermanager.cpp
 
     unicodemetadata.h
     unicodemetadata.cpp
@@ -56,7 +63,6 @@ qt_add_library(GlyphCore STATIC
     drawglyphrenderer.cpp
 
     bitmapdimension.h
-    bitmapdimension.cpp
     
     bitmapdimensions.h 
     bitmapdimensions.cpp
@@ -66,6 +72,7 @@ qt_add_library(GlyphCore STATIC
 
     gridpaddings.h 
     glyphdimensions.h
+    glyphoffset.h
     glyphmarkup.h
     ftglyph.h
 

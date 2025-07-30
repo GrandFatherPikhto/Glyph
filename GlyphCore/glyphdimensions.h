@@ -12,7 +12,18 @@
 
 class GlyphDimensions {
 public:
-    GlyphDimensions() noexcept {}
+    GlyphDimensions() 
+        : m_gridRect(QRect())
+        , m_bitmapRect(QRect())
+        , m_glyphRect(QRect())
+        , m_size(QSize())
+        , m_dimension(-1)
+        , m_margins(QMargins())
+        , m_glyphMarkup(GlyphMarkup())
+        , m_cellSize(-1)
+        {}
+
+    ~GlyphDimensions() {}
 
     void setGridPaddings(const GridPaddings &paddings);
     void setGlyphMarkup(const GlyphMarkup &markup);
@@ -20,7 +31,7 @@ public:
     void setBitmapDimension(int value);
     void setMargins (const QMargins &value);
 
-    bool isValid() const noexcept { return false; }
+    bool isValid() const noexcept { return !(m_size.isEmpty() || m_cellSize <= 0 || m_dimension <= 6); }
 
     int rows() const noexcept { return m_paddings.left() + m_paddings.right() + m_dimension; }
     int cols() const noexcept { return m_paddings.top() + m_paddings.bottom() + m_dimension; }
@@ -28,26 +39,80 @@ public:
 
     int gridCellSize() const { return m_cellSize; };
 
-    QPoint widgetBitmapLeftTop() const;
-    QRect widgetGridRect() const;
-    QRect widgetBitmapRect() const;
+    QRect widgetGridRect() const { return m_gridRect; }
+    QRect widgetBitmapRect() const { return m_bitmapRect; }
+    QRect widgetGlyphRect () const { return m_glyphRect; }
+
     bool widgetGridClick(const QPoint &click, int &row, int &col);
 
 private:
-    void calcCellSize ();
+    void calcWidgetCellSize   ();
+    void calcWidgetGridRect   ();
+    void calcWidgetBitmapRect ();
+    void calcWidgetGlyphRect  ();
+
+    void resetContext ();
     void updateContext();
 
     QSize m_size;
     int m_dimension;
     int m_cellSize;
+
+    QRect m_gridRect;
+    QRect m_glyphRect;
+    QRect m_bitmapRect;
+
     GlyphMarkup m_glyphMarkup;
     GridPaddings m_paddings;
     QMargins m_margins;
 };
 
+void GlyphDimensions::setGlyphMarkup(const GlyphMarkup &markup)
+{
+    m_glyphMarkup = markup;
+    updateContext();
+}
+
+void GlyphDimensions::setWidgetSize(const QSize &size)
+{
+    m_size = size;
+    updateContext ();
+}
+
+void GlyphDimensions::setGridPaddings(const GridPaddings &paddings)
+{
+    m_paddings = paddings;
+    updateContext ();
+}
+
+void GlyphDimensions::setMargins(const QMargins &margins)
+{
+    m_margins = margins;
+    updateContext ();
+}
+
+void GlyphDimensions::setBitmapDimension(int value)
+{
+    m_dimension = value;
+    updateContext ();
+}
+
+void GlyphDimensions::resetContext ()
+{
+    m_cellSize = -1;
+    m_gridRect = QRect   ();
+    m_bitmapRect = QRect ();
+    m_glyphRect  = QRect ();
+}
+
 void GlyphDimensions::updateContext()
 {
-    calcCellSize ();
+    resetContext ();
+
+    calcWidgetCellSize   ();
+    calcWidgetGridRect   ();
+    calcWidgetBitmapRect ();
+    calcWidgetGlyphRect  ();
 }
 
 constexpr void GlyphDimensions::setGridPaddings(const GridPaddings &paddings) noexcept
@@ -56,13 +121,10 @@ constexpr void GlyphDimensions::setGridPaddings(const GridPaddings &paddings) no
     updateContext();
 }
 
-void GlyphDimensions::calcCellSize()
+void GlyphDimensions::calcWidgetCellSize()
 {
-    if (rows() <= 0 || cols() <= 0 || m_size.isEmpty())
-    {
-        m_cellSize = -1;
+    if (!isValid())
         return;
-    }
 
     int cellX = m_size.width() / cols();
     int cellY = m_size.height() / rows();
@@ -70,45 +132,38 @@ void GlyphDimensions::calcCellSize()
     m_cellSize = cellX < cellY ? cellX : cellY;
 }
 
-QPoint GlyphDimensions::widgetBitmapLeftTop() const
+void GlyphDimensions::calcWidgetGridRect()
 {
-    if (!isValid() || m_size.isEmpty())
-        return QPoint();
+    if (!isValid())
+        return;
 
-    if (m_cellSize <= 0)
-        return QPoint();
-    
-    return QPoint(m_margins.left() + m_paddings.left() * m_cellSize, m_margins.top() + m_paddings.top() * m_cellSize);
+    m_gridRect = QRect(QPoint(m_margins.left(),m_margins.top()), QSize(rows() * m_cellSize, cols() * m_cellSize));
 }
 
-QRect GlyphDimensions::widgetGridRect() const
+void GlyphDimensions::calcWidgetBitmapRect()
 {
-    if (!isValid() || m_size.isEmpty())
-        return QRect();
+    if (!isValid())
+        return;
 
-    return QRect(QPoint(m_margins.left(),m_margins.top()), QSize(rows() * m_cellSize, cols() * m_cellSize));
+    m_bitmapRect = QRect(m_glyphRect.topLeft(), QSize(m_dimension * m_cellSize, m_dimension * m_cellSize));
 }
 
-inline constexpr QRect GlyphDimensions::widgetBitmapRect() const
+void GlyphDimensions::calcWidgetGlyphRect ()
 {
-    if (!isValid() || m_size.isEmpty())
-        return QRect();
+    if (!isValid())
+        return;
 
-    return QRect(widgetBitmapLeftTop(), QSize(m_dimension * m_cellSize, m_dimension * m_cellSize));
+    m_glyphRect = QRect((m_gridRect.topLeft() + QPoint()), QSize());
 }
 
-inline constexpr bool GlyphDimensions::widgetGridClick(const QPoint &click, int &row, int &col)
+bool GlyphDimensions::widgetGridClick(const QPoint &click, int &row, int &col)
 {
-    QRect bitmapRect = widgetBitmapRect(size);
-    if(bitmapRect.isEmpty())
-        return false;
-    bitmapRect.translated(leftTop);
-    if (!bitmapRect.contains(click))
+    if (!isValid() || m_bitmapRect.isEmpty() || m_gridRect.isEmpty())
         return false;
 
-    int cellSize = widgetCellSize(size);
-    if (cellSize <= 0)
+    if (!m_bitmapRect.contains(click))
         return false;
+
     row = -1;
     col = -1;
 
@@ -116,8 +171,10 @@ inline constexpr bool GlyphDimensions::widgetGridClick(const QPoint &click, int 
     {
         for (int y = 0; y < m_dimension; y++ )
         {
-            QRect cellRect(QPoint(m_paddings.left() * cellSize, m_paddings.top() * cellSize), QSize(x * cellSize, y * cellSize));
-            cellRect.translated(leftTop);
+            QRect cellRect(
+                (m_bitmapRect.topLeft() + QPoint(x * m_cellSize, y * m_cellSize)), 
+                QSize(m_cellSize, m_cellSize));
+            
             if (cellRect.contains(click))
             {
                 row = x;
@@ -130,21 +187,6 @@ inline constexpr bool GlyphDimensions::widgetGridClick(const QPoint &click, int 
     return false;
 }
 
-
-#if 0
-inline QDebug operator<<(QDebug debug, const GlyphDimensions &grid)
-{
-    QDebugStateSaver saver(debug); // Для автоматического сохранения состояния
-    debug.nospace() << "GridDimensions("
-                   << "dimension=" << grid.dimension()
-                   << " , (" << grid.paddings().left()
-                   << ", " << grid.paddings().top()
-                   << ", " << grid.paddings().right()
-                   << ", " << grid.paddings().bottom()
-                   << ")";
-    return debug;
-}
-#endif // QT_NO_DEBUG_OUTPUT
 
 Q_DECLARE_METATYPE(GlyphDimensions)
 

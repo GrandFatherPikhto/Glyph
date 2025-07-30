@@ -7,8 +7,7 @@
 #include <QPainter>
 #include <QImage>
 
-#include "glyphmeta.h"
-
+#include "glyphcontext.h"
 #include "iglyphrenderer.h"
 
 #include <ft2build.h>
@@ -23,29 +22,28 @@ public:
     explicit FreeTypeGlyphRenderer();
     ~FreeTypeGlyphRenderer();
 
-    QSharedPointer<QImage> renderGlyph(
-        QSharedPointer<GlyphMeta> glyphMeta,
-        const QColor &glyphColor,
+    bool renderGlyph(
+        QSharedPointer<GlyphContext> context,
+        QSharedPointer<QImage> image,
+        GlyphMarkup &glyphMarkup,
+        const QColor &color,
         const QColor &bgColor,
-        const QSize &targetSize
+        const QSize &size
     ) override;
 
-    // В freetyperender.h добавьте объявление:
     QString rendererName() const override;
-    QRect renderRect() const override {
-        return m_renderRect;
-    }
 
 private:
-    void calcRenderRect ();
+    void createImage (const QColor &color, const QColor &bgColor);
+    void setGlyphMarkup (GlyphMarkup &markup);
     void loadFontFace ();
     void loadGlyph ();
     void doneFace ();
     void doneLibrary ();
     void setTargetSize (const QSize &targetSize);
 
-    QSharedPointer<GlyphMeta> m_glyphMeta;
-    QRect m_renderRect;
+    QSharedPointer<GlyphContext> m_glyph;
+    QSharedPointer<QImage> m_image;
     QSize m_targetSize;
     FT_Error m_ftError;
     FT_Library m_ftLibrary;

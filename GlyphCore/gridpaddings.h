@@ -48,7 +48,7 @@ public:
         }
     }
 
-#ifndef QT_NO_DATASTREAM    
+#ifndef QT_NO_DATASTREAM
     friend QDataStream &operator<<(QDataStream &out, const GridPaddings &paddings);
     friend QDataStream &operator>>(QDataStream &in, GridPaddings &paddings);
 #endif
@@ -91,6 +91,18 @@ inline QDataStream &operator<<(QDataStream &out, const GridPaddings &paddings)
     return out;
 }
 
+inline QDataStream &operator>>(QDataStream &in, GridPaddings &paddings)
+{
+    in >> paddings.m_left
+       >> paddings.m_top
+       >> paddings.m_right
+       >> paddings.m_bottom;
+
+    return in;
+}
+#endif // QT_NO_DATASTREAM
+
+
 constexpr bool GridPaddings::operator==(const GridPaddings& paddings) const noexcept
 {
     return m_left == paddings.m_left &&
@@ -113,18 +125,6 @@ constexpr GridPaddings & GridPaddings::operator = (const GridPaddings & paddings
 
     return *this;
 }
-
-inline QDataStream &operator>>(QDataStream &in, GridPaddings &paddings)
-{
-    in >> paddings.m_left
-       >> paddings.m_top
-       >> paddings.m_right
-       >> paddings.m_bottom;
-
-
-    return in;
-}
-#endif // QT_NO_DATASTREAM
 
 #ifndef QT_NO_DEBUG_OUTPUT
 inline QDebug operator<<(QDebug debug, const GridPaddings &paddings)

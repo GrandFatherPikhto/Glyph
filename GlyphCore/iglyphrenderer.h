@@ -3,7 +3,10 @@
 
 #include <QSharedPointer>
 
-#include "glyphmeta.h"
+#include "glyphcontext.h"
+#include "glyphmarkup.h"
+
+#include <QImage>
 
 class IGlyphRenderer {
 public:
@@ -11,8 +14,7 @@ public:
     // virtual ~IGlyphRenderer() = default;
     
     // Основной метод рендеринга
-    virtual QSharedPointer<QImage> renderGlyph(QSharedPointer<GlyphMeta> glyphMeta, const QColor &glyphColor, const QColor &bgColor, const QSize &targetSize) = 0;
-    virtual QRect renderRect () const = 0;
+    virtual bool renderGlyph(QSharedPointer<GlyphContext> context, QSharedPointer<QImage> image, GlyphMarkup &glyphMarkup, const QColor &color, const QColor &bgColor, const QSize &targetSize) = 0;
 
     // Дополнительные возможности
     // virtual bool supportsFeature(GlyphFeature feature) const = 0;

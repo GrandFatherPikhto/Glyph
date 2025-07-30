@@ -11,8 +11,9 @@ DockGlyphSelector::DockGlyphSelector(AppContext *appContext, QWidget *parent)
     , m_decompositionModel(nullptr)
 {
     ui->setupUi(this);
-    setupModels ();
-    setupValues ();
+    
+    setupModels  ();
+    setupValues  ();
     setupSignals ();
 }
 
@@ -69,13 +70,13 @@ void DockGlyphSelector::setupSignals ()
 void DockGlyphSelector::setCharacter(const QModelIndex &index)
 {
     QChar character = m_appContext->fontManager()->filteredCharacterAt(index.row());
-    m_appContext->setCharacter(character, false);
+    emit m_appContext->glyphManager()->changeCharacter(character, false);
 }
 
 void DockGlyphSelector::selectCharacter(const QModelIndex &index)
 {
     QChar character = m_appContext->fontManager()->filteredCharacterAt(index.row());
-    m_appContext->setCharacter(character, true);
+    emit m_appContext->glyphManager()->changeCharacter(character, true);
 }
 
 void DockGlyphSelector::setFontCategoryFilter(const QItemSelection &selected, const QItemSelection &deselected)

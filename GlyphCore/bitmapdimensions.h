@@ -16,24 +16,24 @@ public:
     BitmapDimensions(QObject *parent = nullptr);
     ~BitmapDimensions();
 
-    bool registerBitmapDimension(int value)
+    QSharedPointer<BitmapDimension> registerBitmapDimension(int value)
     {
         auto it = m_bitmapDimensions.find(value);
 
         if (it == m_bitmapDimensions.end())
         {
             // Создаем новое измерение если не найдено
-            auto dimension = QSharedPointer<BitmapDimension>::create(value, QMargins(0,0,0,0));
+            auto dimension = QSharedPointer<BitmapDimension>::create(value);
             m_bitmapDimensions.insert(value, dimension);
             generateBitmapDimensionValues();
 
-            return true;
+            return dimension;
         }
 
         // Увеличиваем счетчик существующего измерения
         it.value()->incrementCounter();
 
-        return false;
+        return it.value();
     }
 
     bool releaseBitmapDimension(int value)
@@ -68,7 +68,7 @@ public:
         return it.value();
     }
 
-    bool setGridMargins(int bitmapDimension, const QMargins &margins)
+    bool setGridMargins(int bitmapDimension, const GridPaddings &paddings)
     {
         auto dimIt = m_bitmapDimensions.find(bitmapDimension);
         if (dimIt == m_bitmapDimensions.end())
@@ -76,7 +76,7 @@ public:
             return false;
         }
 
-        dimIt.value()->margins(margins);
+        dimIt.value()->paddings(paddings);
 
         return true;
     }
