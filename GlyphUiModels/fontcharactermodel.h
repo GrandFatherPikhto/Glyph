@@ -13,6 +13,10 @@
 
 #include "appcontext.h"
 
+class BitmapDimensions;
+class FontManager;
+class UnicodeMetadata;
+
 class FontCharacterModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -47,6 +51,8 @@ private:
     QFont m_font;
 
     AppContext *m_appContext;
+    FontManager *m_fontManager;
+    UnicodeMetadata *m_unicodeMetadata;
 };
 
 #endif // FONTCHARACTERSMODEL_H

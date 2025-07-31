@@ -13,17 +13,17 @@
 
 #include "glyphui_global.h"
 
-#include "glyphmanager.h"
-#include "appcontext.h"
-#include "glyphmeta.h"
-#include "griddimensions.h"
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include FT_TYPES_H
 #include FT_OUTLINE_H
 #include FT_RENDER_H
+
+class AppSettings;
+class AppContext;
+class GlyphContext;
+class GlyphManager;
 
 namespace Ui {
 class GlyphWidget;
@@ -38,12 +38,13 @@ public:
     ~GlyphWidget();
 
 public slots:
-    void setGlyphMeta (QSharedPointer<GlyphMeta> newGlyph);
+    void setGlyphMeta (QSharedPointer<GlyphContext> context);
 
 signals:
 
     // QWidget interface
 protected:
+    
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
     void mousePressEvent(QMouseEvent *event);
@@ -63,24 +64,12 @@ private:
     Ui::GlyphWidget *ui;
 
     AppContext *m_appContext;
+    GlyphManager *m_glyphManager;
+    AppSettings *m_appSettings;
 
     QMargins m_margins;
-    GlyphDimensions m_gridDimensions;
 
-
-    bool m_templateLayerEnable;
-    bool m_gridLayerEnable;
-    bool m_previewLayerEnable;
-    bool m_drawLayerEnable;
-    bool m_glyphRectEnable;
-    bool m_baselineEnable;
-    bool m_bitmapRectEnable;
-
-    // QRect m_renderRect;
-    // QRect m_glyphRect;
-    // QRect m_gridRect;
-
-    QSharedPointer<GlyphMeta> m_glyphMeta;
+    QSharedPointer<GlyphContext> m_glyphContext;
 };
 
 #endif // GLYPHWIDGET_H

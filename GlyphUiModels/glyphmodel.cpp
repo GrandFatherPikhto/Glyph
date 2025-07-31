@@ -1,20 +1,40 @@
 #include <QDebug>
 
 #include "glyphmodel.h"
+#include "appcontext.h"
+#include "glyphmanager.h"
+#include "unicodemetadata.h"
 
 GlyphModel::GlyphModel(AppContext *appContext, QObject *parent)
     : QAbstractItemModel(parent)
     , m_appContext(appContext)
+    , m_glyphManager(nullptr)
+    , m_unicodeMetadata(nullptr)
+{
+    Q_ASSERT(m_appContext->glyphManager() != nullptr && m_appContext->unicodeMetadata() != nullptr);
+    initHeaders ();
+    m_glyphManager = m_appContext->glyphManager();
+    m_unicodeMetadata = m_appContext->unicodeMetadata();
+
+    QObject::connect(m_glyphManager, &GlyphManager::glyphCreated, this, [=](QSharedPointer<GlyphContext> glyphContext) {
+        Q_UNUSED(glyphContext);
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Glyph Data Changed";
+    });
+
+    QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, [=](QSharedPointer<GlyphContext> glyphContext) {
+        Q_UNUSED(glyphContext);
+        layoutChanged();
+    });
+
+}
+
+void GlyphModel::initHeaders ()
 {
     m_headers.append("Unicode");
     m_headers.append("Character");
     m_headers.append("Script");
     m_headers.append("Category");
     m_headers.append("Decomposition");
-
-    QObject::connect(m_appContext->glyphManager(), &GlyphManager::glyphDataChanged, this, [=](){
-        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Glyph Data Changed";
-    });
 }
 
 QVariant GlyphModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -51,7 +71,7 @@ int GlyphModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    return m_appContext->glyphTableSize();
+    return m_glyphManager->filteredSize();
 }
 
 int GlyphModel::columnCount(const QModelIndex &parent) const
@@ -69,11 +89,11 @@ QVariant GlyphModel::data(const QModelIndex &index, int role) const
 
     int idx = index.row();
 
-    QSharedPointer<GlyphMeta> glyphMeta =  m_appContext->glyphAt(idx);
-    if (!glyphMeta)
+    QSharedPointer<GlyphContext> glyphContext =  m_glyphManager->filteredAt(idx);
+    if (glyphContext.isNull())
         return QVariant();
 
-    QChar ch = glyphMeta->character();
+    QChar ch = glyphContext->character();
     
     switch (index.column())
     {
@@ -87,9 +107,10 @@ QVariant GlyphModel::data(const QModelIndex &index, int role) const
     case 1:
         if (role == Qt::DisplayRole || role == Qt::EditRole)
             return QString(ch);
-        if (role == Qt::FontRole && glyphMeta->font() != QFont())
+
+        if (role == Qt::FontRole && glyphContext->glyphFont() != QFont())
         {
-            return glyphMeta->font();
+            return glyphContext->glyphFont();
         }
         if (role == Qt::TextAlignmentRole)
             return Qt::AlignCenter;
@@ -97,12 +118,12 @@ QVariant GlyphModel::data(const QModelIndex &index, int role) const
     case 2: // Язык
         if (role == Qt::DisplayRole)
         {
-            return ch.script() == QChar::Script_Unknown ? "Unknown" : m_appContext->unicodeScriptName(ch);
+            return ch.script() == QChar::Script_Unknown ? "Unknown" : m_unicodeMetadata->scriptName(ch);
         }
         break;
     case 3: // Категория символа
         if (role == Qt::DisplayRole)
-            return QChar::category(ch.unicode()) == QChar::Other_NotAssigned ? "N/A" : m_appContext->unicodeCategoryName(ch);
+            return QChar::category(ch.unicode()) == QChar::Other_NotAssigned ? "N/A" : m_unicodeMetadata->categoryName(ch);
         break;
 
     case 4:

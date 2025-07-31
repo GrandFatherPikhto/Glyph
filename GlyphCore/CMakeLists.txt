@@ -37,19 +37,16 @@ qt_add_library(GlyphCore STATIC
 
     glyphcontext.h
     
+    imagekey.h
     glyphimage.h
-    glyphimage.cpp
 
     glyphentry.h
-
-    glyphimages.h
-    glyphimages.cpp
 
     glyphmanager.h
     glyphmanager.cpp
 
-    rendermanager.h
-    rendermanager.cpp
+    glyphimagemanager.h
+    glyphimagemanager.cpp
 
     unicodemetadata.h
     unicodemetadata.cpp

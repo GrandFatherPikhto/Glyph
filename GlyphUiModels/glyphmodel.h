@@ -4,8 +4,9 @@
 #include <QAbstractItemModel>
 #include <QStringList>
 
-#include "glyphmanager.h"
-#include "appcontext.h"
+class AppContext;
+class GlyphManager;
+class UnicodeMetadata;
 
 class GlyphModel : public QAbstractItemModel
 {
@@ -29,7 +30,12 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
 private:
+    void initHeaders ();
+
     AppContext *m_appContext;
+    GlyphManager *m_glyphManager;
+    UnicodeMetadata *m_unicodeMetadata;
+
     QStringList m_headers;
 };
 

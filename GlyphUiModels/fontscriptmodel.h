@@ -4,7 +4,9 @@
 #include <QAbstractListModel>
 #include <QObject>
 
-#include "appcontext.h"
+class AppContext;
+class FontManager;
+class UnicodeMetadata;
 
 class FontScriptModel : public QAbstractListModel
 {
@@ -17,10 +19,10 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
 private:
-    void initNames ();
 
     AppContext *m_appContext;
-    QMap<QChar::Script, QString> m_names;
+    FontManager *m_fontManager;
+    UnicodeMetadata *m_unicodeMetadata;
 };
 
 #endif // FONTSCRIPTMODEL_H

@@ -12,8 +12,11 @@ public:
     explicit UnicodeMetadata (QObject *parent = nullptr) ;
 
     // Получение названий
+    QString scriptName(const QChar &character) { return scriptName(character.script()); }
     QString scriptName(QChar::Script script) const;
+    QString categoryName(const QChar &character) { return categoryName(character.category()); }
     QString categoryName(QChar::Category category) const;
+    QString decompositionName(const QChar &character) { return decompositionName(character.decompositionTag()); }
     QString decompositionName(QChar::Decomposition decomposition) const;
 
     // Полные списки

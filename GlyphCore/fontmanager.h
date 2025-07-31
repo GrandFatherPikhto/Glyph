@@ -21,10 +21,12 @@
 #include FT_OUTLINE_H
 #include FT_RENDER_H
 
+class AppContext;
+
 class FontManager : public QObject {
     Q_OBJECT
 public:
-    FontManager(QObject *parent = nullptr);
+    FontManager(AppContext *appContext);
     ~FontManager();
 
     bool setGlyphFont(const QFont &font);
@@ -126,5 +128,7 @@ private:
     int m_fromFilter;
     int m_toFilter;
     int m_fontSize;
+
+    AppContext *m_appContext;
 };
 #endif // FONTMANAGER_H

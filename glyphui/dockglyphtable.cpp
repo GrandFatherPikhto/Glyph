@@ -3,33 +3,31 @@
 #include "dockglyphtable.h"
 #include "ui_dockglyphtable.h"
 
+#include "glyphmanager.h"
+#include "glyphcontext.h"
+#include "glyphpreview.h"
+#include "glyphmodel.h"
+#include "appcontext.h"
+#include "appsettings.h"
+
 DockGlyphTable::DockGlyphTable(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
     , ui(new Ui::DockGlyphTable)
     , m_appContext(appContext)
+    , m_glyphManager(nullptr)
     , m_glyphPreview(nullptr)
-    // , m_glyphTable(nullptr)
-    // , m_mainSplitter(nullptr)
     , m_glyphModel(nullptr)
 {
     ui->setupUi(this);
+    setupValues ();
 
-    // m_mainSplitter = new QSplitter(Qt::Vertical, this);
     m_glyphPreview = new GlyphPreview(m_appContext, this);
-    // m_glyphTable = new QTableView(this);
     m_glyphModel = new GlyphModel(m_appContext, this);
-    // m_glyphTable->setModel(m_glyphModel);
-    // m_glyphTable->update();
     ui->tableViewGlyphs->setModel(m_glyphModel);
 
-    // m_mainSplitter->addWidget(m_glyphPreview);
-    // m_mainSplitter->addWidget(m_glyphTable);
-
-    // ui->dockWidgetContents->layout()->addWidget(m_mainSplitter);
-
-    QObject::connect(m_appContext->glyphManager(), &GlyphManager::glyphDataChanged, this, [=](){
+    QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, [=](QSharedPointer<GlyphContext> glyphContext){
+        Q_UNUSED(glyphContext);
         qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Glyph Data Changed";
-        emit m_glyphModel->layoutChanged();
     });
 
     connectSygnals();
@@ -40,34 +38,36 @@ DockGlyphTable::~DockGlyphTable()
     delete ui;
 }
 
+void DockGlyphTable::setupValues ()
+{
+    Q_ASSERT(m_appContext != nullptr && m_appContext->glyphManager() != nullptr && m_appContext->appSettings() != nullptr);
+    m_glyphManager = m_appContext->glyphManager();
+    m_appSettings = m_appContext->appSettings ();
+}
+
 void DockGlyphTable::restoreData()
 {
-    ui->spinBoxBitmapDimension->setValue(m_appContext->bitmapDimension());
-    if (m_appContext->character() != QChar())
-    ui->glyphSize->setValue(m_appContext->glyphSize());
+    ui->spinBoxBitmapDimension->setValue(m_appSettings->bitmapDimension());
+    if (m_glyphManager->character() != QChar())
+    ui->glyphSize->setValue(m_appSettings->glyphSize());
     // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_appContext->character() << m_appContext->font() << m_appContext->glyphSize() << m_appContext->bitmapDimension();
 }
 
 void DockGlyphTable::connectSygnals()
 {
-    QObject::connect(ui->spinBoxBitmapDimension, &QSpinBox::valueChanged, m_appContext, &AppContext::setBitmapDimension);
-    QObject::connect(ui->glyphSize, &QSpinBox::valueChanged, m_appContext, &AppContext::setGlyphSize);
+    QObject::connect(ui->spinBoxBitmapDimension, &QSpinBox::valueChanged, m_appSettings, &AppSettings::setBitmapDimension);
+    QObject::connect(ui->glyphSize, &QSpinBox::valueChanged, m_appSettings, &AppSettings::setGlyphSize);
 
-    QObject::connect(ui->resetOffset, &QPushButton::clicked, m_appContext, &AppContext::resetGlyphOffset);
-    QObject::connect(ui->moveLeft, &QPushButton::clicked, m_appContext, &AppContext::setGlyphMoveLeft);
-    QObject::connect(ui->moveTop, &QPushButton::clicked, m_appContext, &AppContext::setGlyphMoveTop);
-    QObject::connect(ui->moveRight, &QPushButton::clicked, m_appContext, &AppContext::setGlyphMoveRight);
-    QObject::connect(ui->moveDown, &QPushButton::clicked, m_appContext, &AppContext::setGlyphMoveDown);
+    QObject::connect(ui->resetOffset, &QPushButton::clicked, m_glyphManager , &GlyphManager::glyphOffsetReset);
+    QObject::connect(ui->moveLeft, &QPushButton::clicked, m_glyphManager, &GlyphManager::glyphOffsetLeft);
+    QObject::connect(ui->moveTop, &QPushButton::clicked, m_glyphManager, &GlyphManager::glyphOffsetUp);
+    QObject::connect(ui->moveRight, &QPushButton::clicked, m_glyphManager, &GlyphManager::glyphOffsetRight);
+    QObject::connect(ui->moveDown, &QPushButton::clicked, m_glyphManager, &GlyphManager::glyphOffsetDown);
 
     QObject::connect(ui->tableViewGlyphs, &QTableView::clicked, this, [=](const QModelIndex &index){
         // QChar character = m_fontCharacterModel->characterAt(index);
-        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_appContext->glyphAt(index.row())->toString();
-        // m_appContext->setCharacter(character, !m_fontCharacterModel->isSelected(index));
-        QSharedPointer<GlyphMeta> glyphMeta = m_appContext->glyphAt(index.row());
-        if (!glyphMeta.isNull())
-        {
-            emit m_appContext->glyphChanged(glyphMeta);
-        }
+        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_glyphManager->filteredAt(index.row());
+        m_glyphManager->changeCurrentGlyphByFilteredPos(index.row());
     });
 }
 

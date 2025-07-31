@@ -1,11 +1,12 @@
+#include "appcontext.h"
 #include "glyphmanager.h"
 #include "freetypeglyphrenderer.h"
 #include "drawglyphrenderer.h"
 
-GlyphManager::GlyphManager(FontManager *fontManager, AppSettings *appSettings, QObject *parent)
-    : QObject{parent}
-    , m_appSettings(appSettings)
-    , m_fontManager(fontManager)
+GlyphManager::GlyphManager(AppContext *appContext)
+    : QObject{appContext}
+    , m_appSettings(appContext->appSettings())
+    , m_fontManager(appContext->fontManager())
     , m_glyph(QSharedPointer<GlyphContext>())
     , m_bitmapDimensions(nullptr)
 {
@@ -26,11 +27,55 @@ void GlyphManager::resetHash ()
 
 void GlyphManager::setupSignals ()
 {
+    QObject::connect(this, &GlyphManager::changeCharacter, this, [=](const QChar &character, bool temporary){
+        findOrCreate(character, m_appSettings->bitmapDimension(), m_appSettings->glyphSize(), temporary);
+    });
 
+    QObject::connect(this, &GlyphManager::glyphOffsetReset, this, [=](){
+        if (!m_glyph.isNull())
+        {
+            m_glyph->offsetReset();
+            emit glyphChanged (m_glyph);
+        }
+    });
+
+    QObject::connect(this, &GlyphManager::glyphOffsetLeft, this, [=](){
+        if (!m_glyph.isNull())
+        {
+            m_glyph->offsetLeft();
+            emit glyphChanged (m_glyph);
+        }
+    });
+
+    QObject::connect(this, &GlyphManager::glyphOffsetUp, this, [=](){
+        if (!m_glyph.isNull())
+        {
+            m_glyph->offsetUp();
+            emit glyphChanged (m_glyph);
+        }
+    });
+
+    QObject::connect(this, &GlyphManager::glyphOffsetRight, this, [=](){
+        if (!m_glyph.isNull())
+        {
+            m_glyph->offsetRight();
+            emit glyphChanged (m_glyph);
+        }
+    });
+
+    QObject::connect(this, &GlyphManager::glyphOffsetDown, this, [=](){
+        if (!m_glyph.isNull())
+        {
+            m_glyph->offsetDown();
+            emit glyphChanged (m_glyph);
+        }
+    });
 }
 
 QSharedPointer<GlyphContext> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, bool temporary)
 {
+    QMutexLocker locker(&m_mutex);
+
     if (character == QChar() || bitmapDimension < 6 || glyphSize < 6)
     {
         return m_glyph;
@@ -48,11 +93,14 @@ QSharedPointer<GlyphContext> GlyphManager::findOrCreate(const QChar &character, 
     if (m_glyph.isNull())
     {
         QSharedPointer<BitmapDimension> dimension = m_bitmapDimensions->registerBitmapDimension(bitmapDimension);
-        QSharedPointer<GlyphEntry> entry = QSharedPointer<GlyphEntry>::create(dimension, character, glyphSize, m_fontManager->glyphFont(), m_fontManager->glyphFontPath());
+        QSharedPointer<GlyphEntry> entry = QSharedPointer<GlyphEntry>::create(dimension, character, glyphSize, temporary, m_fontManager->glyphFont(), m_fontManager->glyphFontPath());
         m_glyph = QSharedPointer<GlyphContext>::create(dimension, entry);
         append(m_glyph);
+        emit glyphCreated (m_glyph);
     }
 
+    emit glyphChanged(m_glyph);
+    
     return m_glyph;
 }
 
@@ -130,5 +178,57 @@ void GlyphManager::sortHash ()
 void GlyphManager::updateHash ()
 {
     sortHash();
+    filterGlyphs ();
     emit glyphsHashChanged ();
+}
+
+void GlyphManager::filterGlyphs ()
+{
+    m_filtered.clear();
+    for (const auto &glyphPtr : m_glyphs)
+    {
+        if (m_characterFilter.isEmpty() || m_characterFilter.contains(glyphPtr->character()))
+        {
+            m_filtered.append(glyphPtr);
+        }
+    }
+
+    std::sort(m_filtered.begin(), m_filtered.end(),
+        [](const QSharedPointer<GlyphContext>& a, const QSharedPointer<GlyphContext>& b) {
+            return a->glyphEntry()->character().unicode() < b->glyphEntry()->character().unicode();
+        });
+}
+
+const QChar GlyphManager::character()
+{
+    if (m_glyph.isNull())
+        return QChar();
+    return m_glyph->glyphEntry()->character();
+}
+
+void GlyphManager::setCharacterFilter(const QString &filter)
+{
+    m_characterFilter = filter;
+    filterGlyphs();
+}
+
+int GlyphManager::filteredSize ()
+{
+    return m_filtered.size();
+}
+
+QSharedPointer<GlyphContext> GlyphManager::glyphAt(int pos)
+{
+    if (pos >= m_glyphs.size())
+        return QSharedPointer<GlyphContext>();
+
+    return m_glyphs.at(pos);
+}
+
+QSharedPointer<GlyphContext> GlyphManager::filteredAt(int pos)
+{
+    if (pos >= m_filtered.size())
+        return QSharedPointer<GlyphContext>();
+
+    return m_filtered.at(pos);
 }

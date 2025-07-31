@@ -1,15 +1,29 @@
 #include "dockglyphedit.h"
 #include "ui_dockglyphedit.h"
 
+#include "appcontext.h"
+#include "appsettings.h"
+#include "glyphpreview.h"
+#include "glyphmodel.h"
+#include "glyphmanager.h"
+#include "bitmapdimensionmodel.h"
+#include "bitmapdimension.h"
+#include "bitmapdimensions.h"
+
+
 DockGlyphEdit::DockGlyphEdit(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
     , ui(new Ui::DockGlyphEdit)
     , m_appContext(appContext)
+    , m_appSettings(nullptr)
+    , m_glyphManager(nullptr)
     , m_glyphPreview(nullptr)
     , m_glyphModel(nullptr)
     , m_bitmapDimensionModel(nullptr)
 {
     ui->setupUi(this);
+
+    setupVariables ();
     setupDockGlyphEditModels();
     setupDockGlyphEditUI();
     setupSignals();
@@ -21,10 +35,17 @@ DockGlyphEdit::~DockGlyphEdit()
     delete ui;
 }
 
+void DockGlyphEdit::setupVariables ()
+{
+    Q_ASSERT(m_appContext != nullptr && m_appContext->appSettings() != nullptr && m_appContext->glyphManager());
+    m_appSettings = m_appContext->appSettings();
+    m_glyphManager = m_appContext->glyphManager ();
+}
+
 void DockGlyphEdit::restoreDefaultValues ()
 {
-    ui->spinBoxGlyphSize->setValue(m_appContext->appSettings()->glyphSize());
-    ui->spinBoxBitmapDimension->setValue(m_appContext->appSettings()->bitmapDimension());
+    ui->spinBoxGlyphSize->setValue(m_appSettings->glyphSize());
+    ui->spinBoxBitmapDimension->setValue(m_appSettings->bitmapDimension());
 }
 
 void DockGlyphEdit::setupDockGlyphEditModels ()
@@ -48,7 +69,7 @@ void DockGlyphEdit::setupDockGlyphEditUI ()
 
 void DockGlyphEdit::setupSignals ()
 {
-    QObject::connect(m_appContext->glyphManager(), &GlyphManager::glyphDataChanged, this, [=](){
+    QObject::connect(m_appContext->glyphManager(), &GlyphManager::glyphChanged, this, [=](){
         qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Glyph Data Changed";
         emit m_glyphModel->layoutChanged();
     });
@@ -67,11 +88,11 @@ void DockGlyphEdit::setupSignals ()
     QObject::connect(ui->spinBoxGlyphSize, &QSpinBox::valueChanged, m_appContext->appSettings(), &AppSettings::setGlyphSize);
     QObject::connect(ui->spinBoxBitmapDimension, &QSpinBox::valueChanged, m_appContext->appSettings(), &AppSettings::setBitmapDimension);
 
-    QObject::connect(ui->pushButtonOffsetReset, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetReset);
-    QObject::connect(ui->pushButtonOffsetMoveLeft, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetMoveLeft);
-    QObject::connect(ui->pushButtonOffsetMoveTop, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetMoveTop);
-    QObject::connect(ui->pushButtonOffsetMoveRight, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetMoveRight);
-    QObject::connect(ui->pushButtonOffsetMoveBottom, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::setGlyphOffsetMoveDown);
+    QObject::connect(ui->pushButtonOffsetReset, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::glyphOffsetReset);
+    QObject::connect(ui->pushButtonOffsetMoveLeft, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::glyphOffsetLeft);
+    QObject::connect(ui->pushButtonOffsetMoveTop, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::glyphOffsetUp);
+    QObject::connect(ui->pushButtonOffsetMoveRight, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::glyphOffsetRight);
+    QObject::connect(ui->pushButtonOffsetMoveBottom, &QPushButton::clicked, m_appContext->glyphManager(), &GlyphManager::glyphOffsetDown);
 }
 
 void DockGlyphEdit::syncOutBitmapDimensions (int value)
@@ -83,18 +104,18 @@ void DockGlyphEdit::syncOutBitmapDimensions (int value)
 
     QModelIndex idx = ui->listViewBitmapDimensions->selectionModel()->currentIndex();
     int dimension = idx.data(Qt::UserRole).toInt();
-    QSharedPointer<BitmapDimension> dim = m_appContext->glyphManager()->bitmapDimensions()->bitmapDimension(dimension);
+    QSharedPointer<BitmapDimension> dimensions = m_glyphManager->bitmapDimensions()->bitmapDimension(dimension);
 
-    if (dim.isNull())
+    if (dimensions.isNull())
         return;
 
-    QMargins margins (
-            ui->spinBoxLeftCells->value()
+    GridPaddings paddings (
+        ui->spinBoxLeftCells->value()
         , ui->spinBoxTopCells->value()
         , ui->spinBoxRightCells->value()
         , ui->spinBoxBottomCells->value()
     );
-    dim->margins(margins);
+    dimensions->paddings(paddings);
 }
 
 void DockGlyphEdit::syncInBitmapDimensions (const QModelIndex &current, const QModelIndex &previous)
@@ -108,15 +129,15 @@ void DockGlyphEdit::syncInBitmapDimensions (const QModelIndex &current, const QM
         return;
 
     int dimension = current.data(Qt::UserRole).toInt();
-    QSharedPointer<BitmapDimension> dim = m_appContext->glyphManager()->bitmapDimensions()->bitmapDimension(dimension);
+    QSharedPointer<BitmapDimension> bitmapDimension = m_appContext->glyphManager()->bitmapDimensions()->bitmapDimension(dimension);
 
-    if (dim.isNull())
+    if (bitmapDimension.isNull())
         return;
 
-    ui->spinBoxLeftCells->setValue(dim->margins().left());
-    ui->spinBoxTopCells->setValue(dim->margins().top());
-    ui->spinBoxRightCells->setValue(dim->margins().right());
-    ui->spinBoxBottomCells->setValue(dim->margins().bottom());
+    ui->spinBoxLeftCells->setValue(bitmapDimension->paddings().left());
+    ui->spinBoxTopCells->setValue(bitmapDimension->paddings().top());
+    ui->spinBoxRightCells->setValue(bitmapDimension->paddings().right());
+    ui->spinBoxBottomCells->setValue(bitmapDimension->paddings().bottom());
 }
 
 void DockGlyphEdit::saveGeometryAndState()

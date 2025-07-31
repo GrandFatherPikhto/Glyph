@@ -11,8 +11,9 @@
 
 #include "glyphui_global.h"
 
-#include "appcontext.h"
-#include "glyphmeta.h"
+class GlyphContext;
+class AppContext;
+class GlyphManager;
 
 class GLYPHUI_EXPORT MainStatusbar : public QStatusBar
 {
@@ -22,17 +23,18 @@ public:
     ~MainStatusbar();
 
 public slots:
-    void setGlyph(QSharedPointer<GlyphMeta> glyphMeta);
+    void setGlyph(QSharedPointer<GlyphContext> glyphContext);
 
 private:
+    void initValues ();
     void setupUI();
+    void setupSignals ();
     void saveToolbarState();
     void restoreToolbarState();
 
     AppContext *m_appContext;
+    GlyphManager *m_glyphManager;
     
-    QSharedPointer<GlyphMeta> m_glyphMeta;
-
     QLabel *m_fontLabel;
     QLabel *m_glyphSizeLabel;
     QLabel *m_gridSizeLabel;

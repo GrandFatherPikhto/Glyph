@@ -3,20 +3,24 @@
 #include "glyphwidget.h"
 #include "ui_glyphwidget.h"
 
+#include "glyphcontext.h"
+#include "appcontext.h"
+#include "glyphmanager.h"
+#include "appsettings.h"
 
 GlyphWidget::GlyphWidget(AppContext *appContext, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::GlyphWidget)
     , m_appContext(appContext)
-    , m_glyphMeta(QSharedPointer<GlyphMeta>())
-    , m_glyphRectEnable(false)
-    , m_templateLayerEnable(false)
-    , m_gridLayerEnable(false)
-    , m_previewLayerEnable(false)
-    , m_drawLayerEnable(false)
-    , m_baselineEnable(false)
-    , m_bitmapRectEnable(false)
-    , m_margins(QMargins(0,0,0,0))
+    , m_glyphContext(QSharedPointer<GlyphContext>())
+    // , m_glyphRectEnable(false)
+    // , m_templateLayerEnable(false)
+    // , m_gridLayerEnable(false)
+    // , m_previewLayerEnable(false)
+    // , m_drawLayerEnable(false)
+    // , m_baselineEnable(false)
+    // , m_bitmapRectEnable(false)
+    // , m_margins(QMargins(0,0,0,0))
     // , m_xGridCells(-1)
     // , m_yGridCells(-1)
     // , m_leftCells(0)
@@ -34,21 +38,22 @@ GlyphWidget::~GlyphWidget()
 
 void GlyphWidget::initValues()
 {
-    Q_ASSERT(m_appContext != nullptr);
-
-    m_glyphRectEnable = m_appContext->appSettings()->glyphRectLayerEnable();
-    m_templateLayerEnable = m_appContext->appSettings()->templateLayerEnable();
-    m_gridLayerEnable = m_appContext->appSettings()->gridLayerEnable();
-    m_previewLayerEnable = m_appContext->appSettings()->previewLayerEnable();
-    m_drawLayerEnable = m_appContext->appSettings()->drawLayerEnable();
-    m_baselineEnable = m_appContext->appSettings()->baselineLayerEnable();
-    m_bitmapRectEnable = m_appContext->appSettings()->bitmapRectLayerEnable();
-    m_gridDimensions.setPaddings(m_appContext->appSettings()->gridPaddings());
-    m_margins = m_appContext->appSettings()->glyphWidgetMargins();
+    Q_ASSERT(m_appContext != nullptr && m_appContext->glyphManager() != nullptr && m_appContext->appSettings() != nullptr);
+    m_glyphManager = m_appContext->glyphManager();
+    m_appSettings = m_appContext->appSettings();
+    m_margins = m_appSettings->glyphWidgetMargins();
+    // m_glyphRectEnable = m_appContext->appSettings()->glyphRectLayerEnable();
+    // m_templateLayerEnable = m_appContext->appSettings()->templateLayerEnable();
+    // m_gridLayerEnable = m_appContext->appSettings()->gridLayerEnable();
+    // m_previewLayerEnable = m_appContext->appSettings()->previewLayerEnable();
+    // m_drawLayerEnable = m_appContext->appSettings()->drawLayerEnable();
+    // m_baselineEnable = m_appContext->appSettings()->baselineLayerEnable();
+    // m_bitmapRectEnable = m_appContext->appSettings()->bitmapRectLayerEnable();
 }
 
 void GlyphWidget::setupSignals()
 {
+#if 0    
     QObject::connect(m_appContext->appSettings(), &AppSettings::gridPaddingsChanged, this, [=](const GridPaddings &paddings){
         m_gridDimensions.setPaddings(paddings);
         update ();
@@ -96,11 +101,12 @@ void GlyphWidget::setupSignals()
     QObject::connect(m_appContext, &AppContext::pasteTemplateToDrawLayer, this, [=](){
         update ();
     });
+#endif    
 }
 
 void GlyphWidget::initContext ()
 {
-    if (m_glyphMeta.isNull() || !m_glyphMeta->isValid())
+    if (m_glyphContext.isNull())
         return;
 /*
     m_leftCells = m_appContext->leftGridCells();
@@ -146,7 +152,7 @@ void GlyphWidget::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
 
-    if (m_glyphMeta.isNull())
+    if (m_glyphContext.isNull())
         return;
 
     QPainter painter(this);
@@ -155,67 +161,64 @@ void GlyphWidget::paintEvent(QPaintEvent *event)
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.setRenderHint(QPainter::Antialiasing, false);
 
-    if (m_drawLayerEnable)
+    if (m_appSettings->drawLayerEnable())
     {
         paintDrawGlyph(painter);
     }
 
-    if (m_templateLayerEnable) {
+    if (m_appSettings->templateLayerEnable()) {
         paintTemplateGlyph(painter);
     }
 
-    if (m_previewLayerEnable)
+    if (m_appSettings->previewLayerEnable())
     {
         paintPreviewGlyph(painter);
     }
 
-    if (m_glyphRectEnable)
+    if (m_appSettings->glyphRectLayerEnable())
     {
-        painter.setPen(Qt::black);
-        painter.fillRect(m_glyphRect, QColor(0x33, 0, 0, 0x11));
-        painter.drawRect(m_glyphRect);
+        // painter.setPen(Qt::black);
+        // painter.fillRect(m_glyphRect, QColor(0x33, 0, 0, 0x11));
+        // painter.drawRect(m_glyphRect);
     }
 
-    if (m_baselineEnable)
+    if (m_appSettings->baselineLayerEnable())
     {
         paintBaseLines(painter);
     }
 
-    if (m_bitmapRectEnable)
+    if (m_appSettings->bitmapRectLayerEnable())
     {
         paintBitmapRect(painter);
     }
 
-    if (m_gridLayerEnable)
+    if (m_appSettings->gridLayerEnable())
     {
         paintGrid(painter);
     }
-
-    m_glyphMeta->resetDirty();
-    m_glyphMeta->resetResized();
 
     painter.end();
 }
 
 void GlyphWidget::paintBitmapRect(QPainter &painter)
 {
-    if (m_glyphMeta.isNull() || !m_glyphMeta->isValid())
+    if (m_glyphContext.isNull())
         return;
     QPen pen(QColor(0x33, 0x33, 0x33, 0xEE));
     pen.setWidth(3);
     painter.setPen(pen);
-    painter.drawRect(m_gridDimensions.widgetBitmapRect(size()).translated(m_margins.left(), m_margins.top()));
+    // painter.drawRect(m_gridDimensions.widgetBitmapRect(size()).translated(m_margins.left(), m_margins.top()));
 }
 
 void GlyphWidget::paintGrid (QPainter &painter)
 {
-    if (m_glyphMeta.isNull())
+    if (m_glyphContext.isNull())
         return;
 
     QPen pen(Qt::black);
     pen.setWidth(1);
     painter.setPen(pen);
-
+#if 0
     int cellSize = m_gridDimensions.widgetCellSize(size());
 
     // Горизонтальные линии
@@ -237,10 +240,12 @@ void GlyphWidget::paintGrid (QPainter &painter)
             m_margins.top() + m_gridDimensions.rows() * cellSize
             );
     }
+#endif    
 }
 
 void GlyphWidget::paintBaseLines(QPainter &painter)
 {
+#if 0    
     if (m_glyphMeta.isNull())
         return;
 
@@ -272,10 +277,12 @@ void GlyphWidget::paintBaseLines(QPainter &painter)
         m_renderRect.left() - glyphRect.left() * m_gridCellSize,
         height()
         );
+#endif        
 }
 
 void GlyphWidget::paintTemplateGlyph(QPainter &painter)
 {
+#if 0    
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid() || m_glyphMeta->layerTemplate().isNull())
         return;
 
@@ -288,10 +295,12 @@ void GlyphWidget::paintTemplateGlyph(QPainter &painter)
         m_glyphRect.left(),
         m_glyphRect.top(),
         scaled);
+#endif        
 }
 
 void GlyphWidget::paintPreviewGlyph(QPainter &painter)
 {
+#if 0    
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid())
         return;
 
@@ -302,10 +311,12 @@ void GlyphWidget::paintPreviewGlyph(QPainter &painter)
         Qt::IgnoreAspectRatio,
         Qt::SmoothTransformation);
     painter.drawImage(m_glyphRect.left(), m_glyphRect.top(), scaled);
+#endif    
 }
 
 void GlyphWidget::paintDrawGlyph(QPainter &painter)
 {
+#if 0    
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid() || m_glyphMeta->layerDraw().isNull())
         return;
 
@@ -318,12 +329,14 @@ void GlyphWidget::paintDrawGlyph(QPainter &painter)
     painter.drawImage(
         m_renderRect.topLeft(),
         scaled);
+#endif        
 }
 
 
 void GlyphWidget::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event)
+#if 0    
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid())
         return;
 
@@ -331,10 +344,12 @@ void GlyphWidget::resizeEvent(QResizeEvent *event)
     m_appContext->renderGlyphLayers(m_glyphMeta, QSize(width(), height()));
 
     initContext();
+#endif    
 }
 
-void GlyphWidget::setGlyphMeta(QSharedPointer<GlyphMeta> newGlyphMeta)
+void GlyphWidget::setGlyphMeta(QSharedPointer<GlyphContext> newGlyphMeta)
 {
+#if 0    
     if (newGlyphMeta.isNull())
         return;
     if (m_glyphMeta.isNull() || m_glyphMeta != newGlyphMeta)
@@ -346,11 +361,13 @@ void GlyphWidget::setGlyphMeta(QSharedPointer<GlyphMeta> newGlyphMeta)
 
     initContext();
     update();
+#endif    
 }
 
 
 void GlyphWidget::mousePressEvent(QMouseEvent *event)
 {
+#if 0    
     if (m_glyphMeta.isNull() || !m_glyphMeta->isValid() || m_glyphMeta->layerTemplate().isNull() || m_glyphMeta->layerDraw().isNull())
         return;
 
@@ -382,5 +399,6 @@ void GlyphWidget::mousePressEvent(QMouseEvent *event)
 
         emit m_appContext->glyphDrawChanged(m_glyphMeta);
     }
+#endif    
 }
 

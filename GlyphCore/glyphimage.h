@@ -13,25 +13,27 @@
 
 class GlyphImage {
 public:
-    GlyphImage(QSharedPointer<GlyphContext> glyphContext, QSharedPointer<IGlyphRenderer> renderer);
-    ~GlyphImage();
+    GlyphImage(QSharedPointer<GlyphContext> glyphContext) : m_glyphContext(glyphContext), m_dirty(true) {}
+    ~GlyphImage() {};
 
+    void setDirty() { m_dirty; }
+    void resetDirty() { m_dirty; }
     bool isDirty() { return m_dirty; }
-    void setDirty() { m_dirty = true; }
-    void resetDirty() { m_dirty = false; }
-    const GlyphMarkup & glyphMarkup () { return m_glyphMarkup; }
 
-    void renderImage (const QColor &color, const QColor &bgColor, const QSize &size = QSize());
+    void renderImage(QSharedPointer<IGlyphRenderer> renderer, const QColor &color, const QColor &bgColor, const QSize &size = QSize())
+    { 
+        renderer->renderGlyph(m_glyphContext, m_image, m_glyphMarkup, color, bgColor, size); 
+    }
+
+    const GlyphMarkup & glyphMarkup () { return m_glyphMarkup; }
 
     QSharedPointer<QImage> image() { return m_image; }
 
 private:
     QSharedPointer<GlyphContext> m_glyphContext;
-    QSharedPointer<IGlyphRenderer> m_glyphRenderer;
     QSharedPointer<QImage> m_image;
-
-    bool m_dirty;
     GlyphMarkup m_glyphMarkup;
+    bool m_dirty;
 };
 
 #endif // GLYPHIMAGE_H_

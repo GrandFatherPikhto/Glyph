@@ -1,10 +1,17 @@
 #include "fontcharactermodel.h"
 #include "appcontext.h"
+#include "fontmanager.h"
+#include "glyphmanager.h"
+#include "unicodemetadata.h"
 
 FontCharacterModel::FontCharacterModel(AppContext *appContext, QObject *parent)
-    : QAbstractItemModel(parent)
+    : QAbstractItemModel{parent}
     , m_appContext(appContext)
 {
+    Q_ASSERT(m_appContext->glyphManager() != nullptr && m_appContext->unicodeMetadata() != nullptr);
+    m_fontManager = m_appContext->fontManager();
+    m_unicodeMetadata = m_appContext->unicodeMetadata();
+
     setupSignals ();
 }
 
@@ -15,13 +22,13 @@ FontCharacterModel::~FontCharacterModel()
 
 void FontCharacterModel::setupSignals()
 {
-    QObject::connect(m_appContext->fontManager(), &FontManager::filteredCharactersChanged, this, [=](const QVector<QChar> &items){
+    QObject::connect(m_fontManager, &FontManager::filteredCharactersChanged, this, [=](const QVector<QChar> &items){
         Q_UNUSED(items)
         // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Character List Changed";
         emit layoutChanged ();
     });
 
-    QObject::connect(m_appContext->fontManager(), &FontManager::glyphFontChanged, this, [=](const QFont &font){
+    QObject::connect(m_fontManager, &FontManager::glyphFontChanged, this, [=](const QFont &font){
         Q_UNUSED(font);
         emit layoutChanged();
     });
@@ -109,12 +116,12 @@ QVariant FontCharacterModel::data(const QModelIndex &index, int role) const
         case 2: // Язык
             if (role == Qt::DisplayRole)
             {
-                return ch.script() == QChar::Script_Unknown ? "Unknown" : m_appContext->unicodeScriptName(ch);
+                return ch.script() == QChar::Script_Unknown ? "Unknown" : m_unicodeMetadata->scriptName(ch);
             }
             break;
         case 3: // Категория символа
             if (role == Qt::DisplayRole)
-                return QChar::category(ch.unicode()) == QChar::Other_NotAssigned ? "N/A" : m_appContext->unicodeCategoryName(ch);
+                return QChar::category(ch.unicode()) == QChar::Other_NotAssigned ? "N/A" : m_unicodeMetadata->categoryName(ch);
             break;
 
         case 4:

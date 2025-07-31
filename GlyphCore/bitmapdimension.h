@@ -6,7 +6,7 @@
 class BitmapDimension
 {
 public:
-    BitmapDimension(int bitmapDimension = -1, const GridPaddings &paddings = GridPaddings())   
+    BitmapDimension(int bitmapDimension = -1, const GridPaddings &paddings = GridPaddings())
         : m_paddings(paddings)
         , m_bitmapDimension(bitmapDimension)
         , m_counter(0)
@@ -38,8 +38,9 @@ public:
         return m_bitmapDimension == bitmapDimension.m_bitmapDimension;
     }
 
-    void paddings(const GridPaddings &value) { m_paddings = value;  }
-    const GridPaddings & paddings() { return m_paddings; }
+    void paddings(const GridPaddings &value) { m_paddings = value; }
+    GridPaddings & paddings() { return m_paddings; }
+    const GridPaddings & paddings() const { return m_paddings; }
 
     int bitmapDimension() const { return m_bitmapDimension; }
     // void setBitmapDimension(int value) { m_bitmapDimension = value; }
@@ -59,20 +60,22 @@ private:
     int m_counter;
 };
 
-QDataStream & operator << (QDataStream &out, const BitmapDimension &dimension)
+#ifndef QT_NO_DATASTREAM
+inline QDataStream & operator << (QDataStream &out, const BitmapDimension &dimension)
 {
     out << dimension.m_bitmapDimension
         << dimension.m_paddings;
     return out;
 }
 
-QDataStream & operator >> (QDataStream &in, BitmapDimension &dimension)
+inline QDataStream & operator >> (QDataStream &in, BitmapDimension &dimension)
 {
     in  >> dimension.m_bitmapDimension
         >> dimension.m_paddings;
 
     return in;
 }
+#endif
 
 #ifndef QT_NO_DEBUG_OUTPUT
 inline QDebug operator<<(QDebug debug, const BitmapDimension &dimension)
@@ -80,6 +83,8 @@ inline QDebug operator<<(QDebug debug, const BitmapDimension &dimension)
     QDebugStateSaver saver(debug); // Для автоматического сохранения состояния
     debug.nospace() << "BitmapDimension("
         << dimension.bitmapDimension()
+        << ", "
+        << dimension.paddings()
         << ")";
     return debug;
 }

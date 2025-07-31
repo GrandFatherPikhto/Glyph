@@ -1,30 +1,40 @@
 #include "glyphpreview.h"
+#include "appcontext.h"
+#include "appsettings.h"
+#include "glyphmanager.h"
 
 GlyphPreview::GlyphPreview(AppContext *appContext, QWidget *parent)
     : QWidget{parent}
     , m_appContext(appContext)
-    , m_glyphMeta(nullptr)
+    , m_glyphManager(nullptr)
+    , m_appSettings(nullptr)
+    , m_glyphContext(QSharedPointer<GlyphContext>())
     , m_margins(QMargins(2,2,2,2))
 {
     setMinimumHeight(20);
+    initValues   ();
+    setupSignals ();
+}
 
-    QObject::connect(m_appContext, &AppContext::glyphDrawChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
-        m_glyphMeta = glyphMeta;
+void GlyphPreview::initValues ()
+{
+    Q_ASSERT(m_appContext != nullptr && m_appContext->appSettings() != nullptr && m_appContext->glyphManager() != nullptr);
+
+    m_glyphManager = m_appContext->glyphManager ();
+    m_appSettings = m_appContext->appSettings ();
+}
+
+void GlyphPreview::setupSignals ()
+{
+    QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, [=](QSharedPointer<GlyphContext> glyphContext){
+        m_glyphContext = glyphContext;
         update();
-    });
-
-    QObject::connect(m_appContext, &AppContext::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
-        if (!glyphMeta.isNull() && !glyphMeta->layerDraw().isNull())
-        {
-            m_glyphMeta = glyphMeta;
-            update();
-        }
     });
 }
 
 void GlyphPreview::paintEvent(QPaintEvent *event)
 {
-    if (!m_glyphMeta || m_glyphMeta->layerDraw().isNull())
+    if (m_glyphContext.isNull())
         return;
 
     initContext();
@@ -33,7 +43,7 @@ void GlyphPreview::paintEvent(QPaintEvent *event)
 
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
     painter.setRenderHint(QPainter::Antialiasing, false);
-
+#if 0
     if(!m_glyphMeta->layerDraw().isNull())
     {
         QSize scaleSize(m_glyphMeta->drawRect().size());
@@ -47,12 +57,13 @@ void GlyphPreview::paintEvent(QPaintEvent *event)
                 Qt::FastTransformation));
     }
     paintGrid(painter);
-
+#endif
     painter.end();
 }
 
 void GlyphPreview::initContext ()
 {
+#if 0    
     if (!m_glyphMeta && m_glyphMeta->bitmapDimension() > 6)
         return;
 
@@ -62,10 +73,12 @@ void GlyphPreview::initContext ()
     int top = (height() - m_glyphMeta->bitmapDimension()*m_cellSize) / 2;
     m_renderRect = QRect(QPoint(left, top), QSize(renderDimension, renderDimension));
     m_renderRect -= m_margins;
+#endif    
 }
 
 void GlyphPreview::paintGrid (QPainter &painter)
 {
+#if 0    
     painter.setPen(QColor(0x33, 0x33, 0x33, 0x33));
     if (!m_glyphMeta)
         return;
@@ -89,5 +102,6 @@ void GlyphPreview::paintGrid (QPainter &painter)
             m_renderRect.top() + m_glyphMeta->bitmapDimension() * m_cellSize
             );
     }
+#endif    
 }
 

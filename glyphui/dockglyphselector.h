@@ -6,14 +6,18 @@
 #include <QShowEvent>
 #include <QHideEvent>
 #include <QCloseEvent>
+#include <QItemSelection>
 
 #include "glyphui_global.h"
 
-#include "appcontext.h"
-#include "fontcharactermodel.h"
-#include "fontcategorymodel.h"
-#include "fontdecompositionmodel.h"
-#include "fontscriptmodel.h"
+class AppContext;
+class AppSettings;
+class FontManager;
+class GlyphManager;
+class FontCharacterModel;
+class FontScriptModel;
+class FontCategoryModel;
+class FontDecompositionModel;
 
 namespace Ui {
 class DockGlyphSelector;
@@ -49,7 +53,11 @@ private:
     void restoreDockGlyphSelectorState ();
 
     Ui::DockGlyphSelector *ui;
+
     AppContext *m_appContext;
+    AppSettings *m_appSettings;
+    FontManager *m_fontManager;
+    GlyphManager *m_glyphManager;
 
     FontCharacterModel *m_fontCharacterModel;
     FontScriptModel *m_scriptModel;

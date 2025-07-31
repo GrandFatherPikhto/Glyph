@@ -1,9 +1,11 @@
 #include <QDebug>
 
 #include "fontmanager.h"
+#include "appcontext.h"
 
-FontManager::FontManager(QObject *parent)
-    : QObject(parent)
+FontManager::FontManager(AppContext *appContext)
+    : QObject(appContext)
+    , m_appContext(appContext)
     , m_ftLibrary(0)
     , m_ftFace(0)
     , m_fontPath(QString())

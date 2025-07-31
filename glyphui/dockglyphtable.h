@@ -10,15 +10,22 @@
 
 #include "glyphui_global.h"
 
-// #include "glyphmanager.h"
-#include "glyphmeta.h"
-#include "glyphpreview.h"
-#include "glyphmodel.h"
-#include "appcontext.h"
+class GlyphModel;
+class GlyphManager;
+class GlyphContext;
+class GlyphPreview;
+class AppContext;
+class AppSettings;
 
 namespace Ui {
 class DockGlyphTable;
 }
+
+class AppContext;
+class AppSettings;
+class GlyphManager;
+class GlyphPreview;
+class GlyphModel;
 
 class GLYPHUI_EXPORT DockGlyphTable : public QDockWidget
 {
@@ -31,7 +38,7 @@ public:
 private slots:
 
 signals:
-    void glyphChanged(QSharedPointer<GlyphMeta> glyph);
+    void glyphChanged(QSharedPointer<GlyphContext> glyphContext);
     void bitmapDimensionChanged(int newSize);
     void gridDimensionChanged(int newValue);
     void glyphSizeChanged(int newSize);
@@ -50,22 +57,21 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-    void restoreData();
+    void setupValues ();
+    void restoreData ();
     void saveGeometryAndState();
     void restoreGeometryAndState();
     void connectSygnals ();
     void updateGlyph ();
 
     Ui::DockGlyphTable *ui;
+
     AppContext *m_appContext;
+    AppSettings *m_appSettings;
+    GlyphManager *m_glyphManager;
     GlyphPreview *m_glyphPreview;
-    // QTableView *m_glyphTable;
-
-    // QSharedPointer<GlyphMeta> m_glyphMeta;
-    
-    // QSplitter *m_mainSplitter;
-
     GlyphModel *m_glyphModel;
+    
 };
 
 #endif // DOCKGLYPH_H

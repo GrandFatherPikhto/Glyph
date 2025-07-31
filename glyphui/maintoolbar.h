@@ -15,7 +15,8 @@
 
 #include "glyphui_global.h"
 
-#include "appcontext.h"
+class AppContext;
+class AppSettings;
 
 class GLYPHUI_EXPORT MainToolbar : public QToolBar
 {
@@ -43,13 +44,15 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
-    void setupUI();
+    void setupValues ();
+    void setupUI ();
     void setupSignals();
     void initState ();
     void saveToolbarState();
     void restoreToolbarState();
 
     AppContext *m_appContext;
+    AppSettings *m_appSettings;
 
     QAction *m_gridEnable;
     QAction *m_templateLayerEnable;

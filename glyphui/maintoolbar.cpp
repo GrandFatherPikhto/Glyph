@@ -1,8 +1,11 @@
 #include "maintoolbar.h"
+#include "appcontext.h"
+#include "appsettings.h"
 
 MainToolbar::MainToolbar(AppContext *appContext, QWidget *parent)
     : QToolBar(parent)
     , m_appContext(appContext)
+    , m_appSettings(nullptr)
     , m_gridEnable(nullptr)
     , m_templateLayerEnable(nullptr)
     , m_userLayerEnable(nullptr)
@@ -19,6 +22,7 @@ MainToolbar::MainToolbar(AppContext *appContext, QWidget *parent)
 {
     setObjectName("GlyphToolbar");
 
+    setupValues ();
     setupUI();
     setupSignals();
     initState();
@@ -27,6 +31,12 @@ MainToolbar::MainToolbar(AppContext *appContext, QWidget *parent)
 MainToolbar::~MainToolbar ()
 {
 
+}
+
+void MainToolbar::setupValues ()
+{
+    Q_ASSERT(m_appContext != nullptr && m_appContext->appSettings() != nullptr);
+    m_appSettings = m_appContext->appSettings();
 }
 
 void MainToolbar::setupUI()
@@ -95,13 +105,13 @@ void MainToolbar::initState ()
 {
     Q_ASSERT(m_appContext != nullptr);
 
-    m_gridEnable->setChecked(m_appContext->gridLayerEnable());
-    m_templateLayerEnable->setChecked(m_appContext->templateLayerEnable());
-    m_userLayerEnable->setChecked(m_appContext->drawLayerEnable());
-    m_previewLayerEnable->setChecked(m_appContext->previewLayerEnable());
-    m_glyphRectLayerEnable->setChecked(m_appContext->glyphRectLayerEnable());
-    m_baselineLayerEnable->setChecked(m_appContext->baselineLayerEnable());
-    m_bitmapRectLayerEnable->setChecked(m_appContext->bitmapRectLayerEnable());
+    m_gridEnable->setChecked(m_appSettings->gridLayerEnable());
+    m_templateLayerEnable->setChecked(m_appSettings->templateLayerEnable());
+    m_userLayerEnable->setChecked(m_appSettings->drawLayerEnable());
+    m_previewLayerEnable->setChecked(m_appSettings->previewLayerEnable());
+    m_glyphRectLayerEnable->setChecked(m_appSettings->glyphRectLayerEnable());
+    m_baselineLayerEnable->setChecked(m_appSettings->baselineLayerEnable());
+    m_bitmapRectLayerEnable->setChecked(m_appSettings->bitmapRectLayerEnable());
 #if 0
     m_addBottomCells->setValue(m_appContext->bottomGridCells());
     m_addLeftCells->setValue(m_appContext->leftGridCells());
@@ -111,41 +121,42 @@ void MainToolbar::initState ()
 void MainToolbar::setupSignals()
 {
     QObject::connect(m_templateLayerEnable, &QAction::toggled, this, [=](bool checked) {
-        m_appContext->setTemplateLayerEnable(checked);
+        m_appSettings->setTemplateLayerEnable(checked);
         emit templateLayerEnable(checked);
     });
 
     QObject::connect(m_gridEnable, &QAction::toggled, this, [=](bool checked) {
-        m_appContext->setGridLayerEnable(checked);
+        m_appSettings->setGridLayerEnable(checked);
         emit gridEnable(checked);
     });
 
     QObject::connect(m_userLayerEnable, &QAction::toggled, this, [=](bool checked) {
-        m_appContext->setDrawLayerEnable(checked);
+        m_appSettings->setDrawLayerEnable(checked);
         emit userLayerEnable(checked);
     });
 
     QObject::connect(m_previewLayerEnable, &QAction::toggled, this, [=](bool checked) {
-        m_appContext->setPreviewLayerEnable(checked);
+        m_appSettings->setPreviewLayerEnable(checked);
         emit previewLayerEnable(checked);
     });
 
     QObject::connect(m_glyphRectLayerEnable, &QAction::toggled, this, [=](bool checked) {
-        m_appContext->setGlyphRectLayerEnable(checked);
+        m_appSettings->setGlyphRectLayerEnable(checked);
         emit glyphRectLayerEnable(checked);
     });
 
     QObject::connect(m_bitmapRectLayerEnable, &QAction::toggled, this, [=](bool checked) {
-        m_appContext->setBitmapRectLayerEnable(checked);
+        m_appSettings->setBitmapRectLayerEnable(checked);
         emit bitmapRectLayerEnable(checked);
     });
 
     QObject::connect(m_baselineLayerEnable, &QAction::toggled, this, [=](bool checked) {
-        m_appContext->setBaselineLayerEnable(checked);
+        m_appSettings->setBaselineLayerEnable(checked);
         emit baselineLayerEnable(checked);
     });
 
-    QObject::connect(m_pasteGlyphToUserLayer, &QAction::triggered, m_appContext, [=](){
+/*    
+    QObject::connect(m_pasteGlyphToUserLayer, &QAction::triggered, m_appSettings, [=](){
         emit m_appContext->pasteTemplateToDrawLayer();
         emit pasteGlyphToUserLayer();
     });
@@ -154,7 +165,7 @@ void MainToolbar::setupSignals()
         emit m_appContext->clearDrawLayer();
         emit clearUserLayer();
     });
-
+*/
 #if 0
     QObject::connect(m_addLeftCells, &QSpinBox::valueChanged, this, [=](int value){
         m_appContext->setLeftGridCells(value);

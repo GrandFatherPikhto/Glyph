@@ -1,33 +1,37 @@
 #include "drawglyphrenderer.h"
 
 DrawGlyphRenderer::DrawGlyphRenderer()
-    : m_targetSize(QSize())
-{
+{}
 
-}
-
-QSharedPointer<QImage> DrawGlyphRenderer::renderGlyph(
-    QSharedPointer<GlyphMeta> glyphMeta, 
-    const QColor &glyphColor, 
-    const QColor &bgColor,
-    const QSize &targetSize 
+bool DrawGlyphRenderer::renderGlyph(
+        QSharedPointer<GlyphContext> context,
+        QSharedPointer<QImage> image,
+        GlyphMarkup &glyphMarkup,
+        const QColor &color,
+        const QColor &bgColor,
+        const QSize &size
     )
 {
     Q_UNUSED(bgColor)
-    m_glyphMeta = glyphMeta;
-    m_targetSize = targetSize;
+
+    QSize targetSize = size;
 
     if (targetSize == QSize())
     {
-        m_targetSize = QSize(m_glyphMeta->bitmapDimension(), m_glyphMeta->bitmapDimension());
+        targetSize = QSize(context->dimension(), context->dimension());
     }
 
-    QImage image = QImage(m_targetSize, QImage::Format_ARGB32);
-    image.fill(bgColor);
+    image = QSharedPointer<QImage>::create(targetSize, QImage::Format_ARGB32);
+    image->fill(bgColor);
 
-    m_renderRect = image.rect();
+    glyphMarkup.setLeft(0);
+    glyphMarkup.setTop(0);
+    // glyphMarkup.setOffsetX(0);
+    // glyphMarkup.setOffsetY(0);
+    glyphMarkup.setWidth(targetSize.width());
+    glyphMarkup.setHeight(targetSize.height());
 
-    return QSharedPointer<QImage>::create(image);
+    return true;
 }
 
 QString DrawGlyphRenderer::rendererName() const

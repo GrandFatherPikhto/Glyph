@@ -1,10 +1,13 @@
 #include "bitmapdimensionmodel.h"
+#include "glyphmanager.h"
+#include "bitmapdimensions.h"
 
 BitmapDimensionModel::BitmapDimensionModel(AppContext *appContext, QObject *parent)
     : QAbstractListModel(parent)
     , m_appContext(appContext)
 {
-    QObject::connect(m_appContext->glyphManager()->bitmapDimensions(), BitmapDimensions::bitmapDimensionsChanged, this, [=](){
+    GlyphManager *glyphManager = appContext->glyphManager();
+    QObject::connect(glyphManager->bitmapDimensions(), BitmapDimensions::bitmapDimensionsChanged, this, [=](){
         emit layoutChanged();
     });
 }

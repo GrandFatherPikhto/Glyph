@@ -37,10 +37,6 @@ MainWindow::~MainWindow()
 void MainWindow::setupSignals ()
 {
     QObject::connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::slotActionQuitTriggered);
-    QObject::connect(m_appContext, &AppContext::glyphChanged, m_glyphWidget, &GlyphWidget::setGlyphMeta);
-    QObject::connect(m_appContext, &AppContext::glyphChanged, this, [=](QSharedPointer<GlyphMeta> glyphMeta){
-        // qDebug() << __FILE__ << __LINE__ << glyphMeta->toString();
-    });
 }
 
 void MainWindow::setupGlyphWidget ()

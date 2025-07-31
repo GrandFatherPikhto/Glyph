@@ -1,11 +1,21 @@
+#include "appcontext.h"
+#include "fontmanager.h"
+#include "unicodemetadata.h"
 #include "fontdecompositionmodel.h"
+
 
 FontDecompositionModel::FontDecompositionModel(AppContext *appContext, QObject *parent)
     : QAbstractListModel{parent}
     , m_appContext(appContext)
+    , m_fontManager(nullptr)
+    , m_unicodeMetadata(nullptr)
 {
-    initNames();
-    QObject::connect(m_appContext->fontManager(), &FontManager::glyphFontChanged, this, [=](const QFont &font){
+    Q_ASSERT(m_appContext->fontManager() != nullptr && m_appContext->unicodeMetadata() != nullptr);
+
+    m_fontManager = appContext->fontManager();
+    m_unicodeMetadata = appContext->unicodeMetadata();
+
+    QObject::connect(m_fontManager, &FontManager::glyphFontChanged, this, [=](const QFont &font){
         Q_UNUSED(font);
         emit layoutChanged();
     });
@@ -21,14 +31,8 @@ QVariant FontDecompositionModel::data(const QModelIndex &index, int role) const
     if (!index.isValid() || index.row() >= m_appContext->fontManager()->fontDecompositionSize())
         return QVariant();
 
-    QString name = QString("Unknown Script");
     QChar::Decomposition item = m_appContext->fontManager()->fontDecompositionAt(index.row());
-    auto it = m_names.find(static_cast<QChar::Decomposition>(item));
-    if (it != m_names.end())
-    {
-        name = it.value();
-    }
-
+    QString name = m_unicodeMetadata->decompositionName(static_cast<QChar::Decomposition>(item));
     switch(role) {
         case Qt::DisplayRole:
             return name;   // Название
@@ -39,30 +43,5 @@ QVariant FontDecompositionModel::data(const QModelIndex &index, int role) const
         default:
             return QVariant();
     }
-}
-
-void FontDecompositionModel::initNames ()
-{
-    m_names.clear ();
-    m_names = {
-        {QChar::NoDecomposition, "NoDecomposition"},
-        {QChar::Canonical, "Canonical"},
-        {QChar::Circle, "Circle"},
-        {QChar::Compat, "Compat"},
-        {QChar::Final, "Final"},
-        {QChar::Font, "Font"},
-        {QChar::Fraction, "Fraction"},
-        {QChar::Initial, "Initial"},
-        {QChar::Isolated, "Isolated"},
-        {QChar::Medial, "Medial"},
-        {QChar::Narrow, "Narrow"},
-        {QChar::NoBreak, "NoBreak"},
-        {QChar::Small, "Small"},
-        {QChar::Square, "Square"},
-        {QChar::Sub, "Sub"},
-        {QChar::Super, "Super"},
-        {QChar::Vertical, "Vertical"},
-        {QChar::Wide, "Wide"},
-    };
 }
 

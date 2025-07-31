@@ -1,10 +1,21 @@
 #include "dockglyphselector.h"
+#include "appsettings.h"
+#include "appcontext.h"
+#include "glyphmanager.h"
+#include "fontmanager.h"
+#include "fontcharactermodel.h"
+#include "fontcategorymodel.h"
+#include "fontdecompositionmodel.h"
+#include "fontscriptmodel.h"
 #include "ui_dockglyphselector.h"
 
 DockGlyphSelector::DockGlyphSelector(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
     , ui(new Ui::DockGlyphSelector)
     , m_appContext(appContext)
+    , m_glyphManager(nullptr)
+    , m_fontManager(nullptr)
+    , m_appSettings(nullptr)
     , m_fontCharacterModel(nullptr)
     , m_scriptModel(nullptr)
     , m_categoryModel(nullptr)
@@ -28,6 +39,7 @@ void DockGlyphSelector::setupModels ()
     m_scriptModel = new FontScriptModel(m_appContext, this);
     m_categoryModel = new FontCategoryModel(m_appContext, this);
     m_decompositionModel = new FontDecompositionModel(m_appContext, this);
+
     ui->listCategories->setModel(m_categoryModel);
     ui->listScripts->setModel(m_scriptModel);
     ui->listDecompositions->setModel(m_decompositionModel);
@@ -36,11 +48,17 @@ void DockGlyphSelector::setupModels ()
 
 void DockGlyphSelector::setupValues ()
 {
-    ui->fontComboBox->setCurrentFont(m_appContext->fontManager()->glyphFont());
-    ui->spinBoxMSB->setValue(m_appContext->fontManager()->fontMSBFilter());
-    ui->spinBoxFrom->setValue(m_appContext->fontManager()->fromFilter());
-    ui->spinBoxTo->setValue(m_appContext->fontManager()->toFilter());
-    ui->textFilter->setText(m_appContext->fontManager()->charactersFilter());
+    Q_ASSERT(m_appContext != nullptr && m_appContext->fontManager() != nullptr && m_appContext->appSettings() != nullptr);
+
+    m_fontManager = m_appContext->fontManager();
+    m_appSettings = m_appContext->appSettings();
+    m_glyphManager = m_appContext->glyphManager();
+
+    ui->fontComboBox->setCurrentFont(m_fontManager->glyphFont());
+    ui->spinBoxMSB->setValue(m_fontManager->fontMSBFilter());
+    ui->spinBoxFrom->setValue(m_fontManager->fromFilter());
+    ui->spinBoxTo->setValue(m_fontManager->toFilter());
+    ui->textFilter->setText(m_fontManager->charactersFilter());
 }
 
 void DockGlyphSelector::setupSignals ()
@@ -70,13 +88,13 @@ void DockGlyphSelector::setupSignals ()
 void DockGlyphSelector::setCharacter(const QModelIndex &index)
 {
     QChar character = m_appContext->fontManager()->filteredCharacterAt(index.row());
-    emit m_appContext->glyphManager()->changeCharacter(character, false);
+    emit m_glyphManager->changeCharacter(character, false);
 }
 
 void DockGlyphSelector::selectCharacter(const QModelIndex &index)
 {
     QChar character = m_appContext->fontManager()->filteredCharacterAt(index.row());
-    emit m_appContext->glyphManager()->changeCharacter(character, true);
+    emit m_glyphManager->changeCharacter(character, true);
 }
 
 void DockGlyphSelector::setFontCategoryFilter(const QItemSelection &selected, const QItemSelection &deselected)

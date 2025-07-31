@@ -4,7 +4,9 @@
 #include <QAbstractListModel>
 #include <QObject>
 
-#include "appcontext.h"
+class AppContext;
+class FontManager;
+class UnicodeMetadata;
 
 class FontDecompositionModel : public QAbstractListModel
 {
@@ -17,10 +19,11 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
 private:
-    void initNames ();
-    void sortItems();
 
     AppContext *m_appContext;
+    FontManager *m_fontManager;
+    UnicodeMetadata *m_unicodeMetadata;
+
     QMap<QChar::Decomposition, QString> m_names;
 };
 

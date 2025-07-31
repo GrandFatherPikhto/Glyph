@@ -8,7 +8,8 @@
 #include <QMargins>
 
 #include "gridpaddings.h"
-#include "griddimensions.h"
+#include "bitmapdimension.h"
+#include "bitmapdimensions.h"
 
 int main(int argc, char *argv[])
 {
@@ -35,13 +36,13 @@ int main(int argc, char *argv[])
 #endif
 
     qRegisterMetaType<QMargins>("QMargins");
-    qRegisterMetaTypeStreamOperators<QMargins>("QMargins");
+    // qRegisterMetaTypeStreamOperators<QMargins>("QMargins");
 
     qRegisterMetaType<GridPaddings>("GridPaddings");
-    qRegisterMetaTypeStreamOperators<GridPaddings>("GridPaddings");
+    // qRegisterMetaTypeStreamOperators<GridPaddings>("GridPaddings");
 
-    qRegisterMetaType<GlyphDimensions>("GridDimensions");
-    qRegisterMetaTypeStreamOperators<GlyphDimensions>("GridDimensions");
+    qRegisterMetaType<BitmapDimensions>("BitmapDimensions");
+    // qRegisterMetaTypeStreamOperators<BitmapDimensions>("BitmapDimensions");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

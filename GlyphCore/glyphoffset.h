@@ -15,6 +15,12 @@ public:
     constexpr inline int offsetX () const noexcept { return m_offsetX; }
     constexpr inline int offsetY () const noexcept { return m_offsetY; }
 
+    constexpr inline void reset () noexcept { m_offsetX = 0; m_offsetY = 0; }
+    constexpr inline int  up ()    noexcept { return ++ m_offsetY; }
+    constexpr inline int  down ()  noexcept { return -- m_offsetY; }
+    constexpr inline int  left ()  noexcept { return -- m_offsetX; }
+    constexpr inline int  right () noexcept { return ++ m_offsetX; }
+
     constexpr bool operator==(const GlyphOffset& offset) const noexcept;
     constexpr bool operator!=(const GlyphOffset& offset) const noexcept;
 
@@ -101,6 +107,5 @@ inline QDebug operator<<(QDebug debug, const GlyphOffset &offset)
     return debug;
 }
 #endif
-
 
 #endif // GLYPHOFFSET_H_

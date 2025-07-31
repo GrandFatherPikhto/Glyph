@@ -5,30 +5,28 @@
 #include <QRect>
 #include <QImage>
 
-#include "glyphmeta.h"
+#include "glyphcontext.h"
+#include "glyphmarkup.h"
 #include "iglyphrenderer.h"
 
 class DrawGlyphRenderer : public IGlyphRenderer
 {
 public:
     DrawGlyphRenderer();
-    QSharedPointer<QImage> renderGlyph(
-        QSharedPointer<GlyphMeta> glyphMeta,
-        const QColor &glyphColor,
-        const QColor &bgColor,
-        const QSize &targetSize
+    bool renderGlyph(
+            QSharedPointer<GlyphContext> context,
+            QSharedPointer<QImage> image,
+            GlyphMarkup &glyphMarkup,
+            const QColor &color,
+            const QColor &bgColor,
+            const QSize &size
         ) override;
 
     // В freetyperender.h добавьте объявление:
     QString rendererName() const override;
-    QRect renderRect() const override {
-        return m_renderRect;
-    }
 
 private:
-    QSize m_targetSize;
-    QRect m_renderRect;
-    QSharedPointer<GlyphMeta> m_glyphMeta;
+
 };
 
 #endif // USERGLYPHRENDER_H

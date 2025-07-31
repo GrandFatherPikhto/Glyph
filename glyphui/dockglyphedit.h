@@ -10,14 +10,14 @@
 
 #include <QModelIndex>
 
-#include "appcontext.h"
 #include "glyphui_global.h"
 
-#include "glyphpreview.h"
-#include "glyphmodel.h"
-#include "bitmapdimensionmodel.h"
-#include "bitmapdimension.h"
-#include "bitmapdimensions.h"
+class AppContext;
+class AppSettings;
+class GlyphManager;
+class GlyphPreview;
+class GlyphModel;
+class BitmapDimensionModel;
 
 namespace Ui {
 class DockGlyphEdit;
@@ -37,6 +37,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;    
 
 private:
+    void setupVariables ();
     void restoreDefaultValues ();
     void setupDockGlyphEditModels ();
     void setupDockGlyphEditUI();
@@ -48,7 +49,10 @@ private:
     void syncInBitmapDimensions  (const QModelIndex &current, const QModelIndex &previous);
 
     Ui::DockGlyphEdit *ui;
+
     AppContext *m_appContext;
+    AppSettings *m_appSettings;
+    GlyphManager *m_glyphManager;
     GlyphPreview *m_glyphPreview;
     GlyphModel *m_glyphModel;
     BitmapDimensionModel *m_bitmapDimensionModel;
