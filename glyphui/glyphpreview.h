@@ -37,13 +37,11 @@ private:
     void paintGrid (QPainter &painter);
 
     AppContext *m_appContext;
-    GlyphManager *m_glyphManager;
-    AppSettings *m_appSettings;
+    
+    GlyphManager * m_glyphManager;
+    AppSettings * m_appSettings;
 
     QSharedPointer<GlyphContext> m_glyphContext;
-
-    // QRect m_glyphRect;
-    // QRect m_renderRect;
 
     QMargins m_margins;
 

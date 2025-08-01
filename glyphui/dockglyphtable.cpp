@@ -9,6 +9,7 @@
 #include "glyphmodel.h"
 #include "appcontext.h"
 #include "appsettings.h"
+#include "glyphfilter.h"
 
 DockGlyphTable::DockGlyphTable(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
@@ -43,6 +44,7 @@ void DockGlyphTable::setupValues ()
     Q_ASSERT(m_appContext != nullptr && m_appContext->glyphManager() != nullptr && m_appContext->appSettings() != nullptr);
     m_glyphManager = m_appContext->glyphManager();
     m_appSettings = m_appContext->appSettings ();
+    m_glyphFilter = m_appContext->glyphFilter ();
 }
 
 void DockGlyphTable::restoreData()
@@ -66,8 +68,8 @@ void DockGlyphTable::connectSygnals()
 
     QObject::connect(ui->tableViewGlyphs, &QTableView::clicked, this, [=](const QModelIndex &index){
         // QChar character = m_fontCharacterModel->characterAt(index);
-        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_glyphManager->filteredAt(index.row());
-        m_glyphManager->changeCurrentGlyphByFilteredPos(index.row());
+        // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << m_glyphManager->filteredAt(index.row());
+        // m_glyphManager->changeCurrentGlyphByFilteredPos(index.row());
     });
 }
 

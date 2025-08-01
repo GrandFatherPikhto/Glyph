@@ -52,7 +52,7 @@ private:
     void restoreToolbarState();
 
     AppContext *m_appContext;
-    AppSettings *m_appSettings;
+    AppSettings * m_appSettings;
 
     QAction *m_gridEnable;
     QAction *m_templateLayerEnable;

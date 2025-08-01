@@ -7,9 +7,10 @@
 #include <QDebug>
 #include <QMargins>
 
+#include "glyphcontext.h"
 #include "gridpaddings.h"
 #include "bitmapdimension.h"
-#include "bitmapdimensions.h"
+#include "dimensionmanager.h"
 
 int main(int argc, char *argv[])
 {
@@ -38,11 +39,20 @@ int main(int argc, char *argv[])
     qRegisterMetaType<QMargins>("QMargins");
     // qRegisterMetaTypeStreamOperators<QMargins>("QMargins");
 
+    qRegisterMetaType<BitmapDimension>("BitmapDimension");
+    // qRegisterMetaTypeStreamOperators<BitmapDimension>("BitmapDimension");
+
+    qRegisterMetaType<DimensionManager>("DimensionManager");
+    // qRegisterMetaTypeStreamOperators<DimensionManager>("DimensionManager");
+
     qRegisterMetaType<GridPaddings>("GridPaddings");
     // qRegisterMetaTypeStreamOperators<GridPaddings>("GridPaddings");
 
-    qRegisterMetaType<BitmapDimensions>("BitmapDimensions");
-    // qRegisterMetaTypeStreamOperators<BitmapDimensions>("BitmapDimensions");
+    qRegisterMetaType<DimensionManager>("DimensionManager");
+    // qRegisterMetaTypeStreamOperators<DimensionManager>("DimensionManager");
+
+    qRegisterMetaType<GlyphContext>("GlyphContext");
+    // qRegisterMetaTypeStreamOperators<DimensionManager>("GlyphContext");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

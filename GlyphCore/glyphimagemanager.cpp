@@ -5,8 +5,8 @@
 #include "appsettings.h"
 #include "appcontext.h"
 
-GlyphImageManager::GlyphImageManager(AppContext *appContext)
-    : QObject(appContext)
+GlyphImageManager::GlyphImageManager(QObject *parent)
+    : QObject(parent)
     , m_ftRender(QSharedPointer<IGlyphRenderer>())
     , m_drawRender(QSharedPointer<IGlyphRenderer>())
 {
@@ -19,13 +19,17 @@ GlyphImageManager::~GlyphImageManager()
 
 }
 
+void GlyphImageManager::setAppSettings(AppSettings * appSettings)
+{
+    m_appSettings = appSettings;
+}
+
 QSharedPointer<GlyphImage> GlyphImageManager::findOrRenderImage(QSharedPointer<GlyphContext> glyphContext, ImageKey::ImageType type, const QSize &size)
 {
+    Q_ASSERT(m_appSettings != nullptr);
+    
     ImageKey key(glyphContext->character(), glyphContext->dimension(), type);
     QSharedPointer<GlyphImage> image = find(key);
-
-    AppContext *appContext = dynamic_cast<AppContext*>(parent());
-    AppSettings *appSettings = appContext->appSettings();
 
     if (image.isNull())
     {
@@ -38,15 +42,15 @@ QSharedPointer<GlyphImage> GlyphImageManager::findOrRenderImage(QSharedPointer<G
         switch (type)
         {
         case ImageKey::ImageTemplate:
-            image->renderImage(m_ftRender, appSettings->templateColor(), appSettings->templateBgColor());
+            image->renderImage(m_ftRender, m_appSettings->templateColor(), m_appSettings->templateBgColor());
             break;
 
         case ImageKey::ImagePreview:            
-            image->renderImage(m_ftRender, appSettings->previewColor(), appSettings->previewBgColor(), size);
+            image->renderImage(m_ftRender, m_appSettings->previewColor(), m_appSettings->previewBgColor(), size);
             break;
         
         case ImageKey::ImageDraw:
-            image->renderImage(m_drawRender, appSettings->previewColor(), appSettings->previewBgColor(), size);
+            image->renderImage(m_drawRender, m_appSettings->previewColor(), m_appSettings->previewBgColor(), size);
             break;
         default:
             break;

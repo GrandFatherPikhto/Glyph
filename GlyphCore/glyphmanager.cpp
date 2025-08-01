@@ -1,16 +1,21 @@
 #include "appcontext.h"
 #include "glyphmanager.h"
-#include "freetypeglyphrenderer.h"
-#include "drawglyphrenderer.h"
+#include "glyphfilter.h"
+#include "appsettings.h"
+#include "glyphcontext.h"
+#include "glyphkey.h"
+#include "fontmanager.h"
+#include "bitmapdimension.h"
+#include "dimensionmanager.h"
 
 GlyphManager::GlyphManager(AppContext *appContext)
     : QObject{appContext}
-    , m_appSettings(appContext->appSettings())
-    , m_fontManager(appContext->fontManager())
+    , m_appSettings(nullptr)
+    , m_fontManager(nullptr)
     , m_glyph(QSharedPointer<GlyphContext>())
-    , m_bitmapDimensions(nullptr)
+    , m_dimensionManager(nullptr)
 {
-    m_bitmapDimensions = new BitmapDimensions(this);
+    m_glyphs = std::make_shared<QVector<QSharedPointer<GlyphContext>>>();
     setupSignals();
 }
 
@@ -21,14 +26,34 @@ GlyphManager::~GlyphManager()
 
 void GlyphManager::resetHash ()
 {
-    m_glyphs.clear();
     m_index.clear ();
+}
+
+void GlyphManager::setDimensionManager(DimensionManager * dimensionManager)
+{
+    m_dimensionManager = dimensionManager;
+}
+
+void GlyphManager::setFontManager(FontManager * fontManager)
+{
+    m_fontManager = fontManager;
+}
+
+void GlyphManager::setGlyphFilter(GlyphFilter * glyphFilter)
+{
+    m_glyphFilter = glyphFilter;
+}
+
+void GlyphManager::setAppSettings(AppSettings * appSettings)
+{
+    m_appSettings = appSettings;
 }
 
 void GlyphManager::setupSignals ()
 {
     QObject::connect(this, &GlyphManager::changeCharacter, this, [=](const QChar &character, bool temporary){
-        findOrCreate(character, m_appSettings->bitmapDimension(), m_appSettings->glyphSize(), temporary);
+        changeGlyph(character, temporary);
+        // qDebug() << __FILE__ << __LINE__ << m_glyph;
     });
 
     QObject::connect(this, &GlyphManager::glyphOffsetReset, this, [=](){
@@ -72,17 +97,18 @@ void GlyphManager::setupSignals ()
     });
 }
 
-QSharedPointer<GlyphContext> GlyphManager::findOrCreate(const QChar &character, int bitmapDimension, int glyphSize, bool temporary)
+QSharedPointer<GlyphContext> GlyphManager::findOrCreate(const QChar &character, int dimension, int size, bool temporary)
 {
-    QMutexLocker locker(&m_mutex);
+    int bitmapDimension = dimension <= 0 ? m_appSettings->bitmapDimension() : bitmapDimension;
+    int glyphSize = size <= 0 ? m_appSettings->glyphSize() : size;
 
-    if (character == QChar() || bitmapDimension < 6 || glyphSize < 6)
+    if (character == QChar())
     {
         return m_glyph;
     }
 
-    GlyphKey key = GlyphKey(character, bitmapDimension);
-
+    GlyphKey key = GlyphKey(character, bitmapDimension <= 0 ? m_appSettings->bitmapDimension() : bitmapDimension);
+    // qDebug() << __FILE__ << __LINE__ << key;
     if (!m_glyph.isNull() && m_glyph->key() == key)
     {
         return m_glyph;
@@ -92,29 +118,28 @@ QSharedPointer<GlyphContext> GlyphManager::findOrCreate(const QChar &character, 
 
     if (m_glyph.isNull())
     {
-        QSharedPointer<BitmapDimension> dimension = m_bitmapDimensions->registerBitmapDimension(bitmapDimension);
-        QSharedPointer<GlyphEntry> entry = QSharedPointer<GlyphEntry>::create(dimension, character, glyphSize, temporary, m_fontManager->glyphFont(), m_fontManager->glyphFontPath());
-        m_glyph = QSharedPointer<GlyphContext>::create(dimension, entry);
+        QSharedPointer<BitmapDimension> dimension = m_dimensionManager->registerBitmapDimension(bitmapDimension);
+        m_glyph = QSharedPointer<GlyphContext>::create(dimension, character, glyphSize, temporary, m_fontManager->glyphFont(), m_fontManager->glyphFontPath());
         append(m_glyph);
         emit glyphCreated (m_glyph);
     }
 
     emit glyphChanged(m_glyph);
+
+    // qDebug() << __FILE__ << __LINE__ << m_glyph;
     
     return m_glyph;
 }
 
 QSharedPointer<GlyphContext> GlyphManager::find(const GlyphKey &key)
 {
-    QChar ch(key.character());
     auto it = m_index.find(key);
     if (it != m_index.end()) {
-        return m_glyphs.at(it.value());
+        return m_glyphs->at(it.value());
     }
 
     return QSharedPointer<GlyphContext>();
 }
-
 
 bool GlyphManager::remove(const GlyphKey &key)
 {
@@ -125,13 +150,14 @@ bool GlyphManager::remove(const GlyphKey &key)
         return false;
 
     // Получаем метаданные глифа перед удалением
-    if (it.value() >= 0 && it.value() < m_glyphs.size())
+    if (it.value() >= 0 && it.value() < m_glyphs->size())
     {
-        auto glyphMeta = m_glyphs.at(it.value());
-        m_bitmapDimensions->releaseBitmapDimension(key.bitmapDimension());
+        auto glyphContext = m_glyphs->at(it.value());
+        // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << *(glyphContext.data());
+        m_dimensionManager->releaseBitmapDimension(key.bitmapDimension());
     }
 
-    m_glyphs.removeAt(it.value());
+    m_glyphs->removeAt(it.value());
     m_index.remove(key);
     
     updateHash();
@@ -141,7 +167,7 @@ bool GlyphManager::remove(const GlyphKey &key)
 
 bool GlyphManager::append(QSharedPointer<GlyphContext> glyph)
 {
-    if (glyph.isNull())
+    if (glyph.isNull() || m_glyphs == nullptr)
         return false;
 
     QMutexLocker locker(&m_mutex);
@@ -151,8 +177,15 @@ bool GlyphManager::append(QSharedPointer<GlyphContext> glyph)
     if (m_index.contains(key))
         return false;
 
-    m_glyphs.append(glyph);
-    m_index.insert(key, m_glyphs.size() - 1);
+    // auto &vec = *m_glyphs;
+    try {
+        m_glyphs->append(glyph);
+    } catch (const std::exception &e)
+    {
+        qCritical() << "Append failed:" << e.what();
+    }
+
+    m_index.insert(key, m_glyphs->size() - 1);
 
     updateHash();
  
@@ -162,15 +195,15 @@ bool GlyphManager::append(QSharedPointer<GlyphContext> glyph)
 void GlyphManager::sortHash ()
 {
     // 1. Сортируем вектор умных указателей
-    std::sort(m_glyphs.begin(), m_glyphs.end(),
+    std::sort(m_glyphs->begin(), m_glyphs->end(),
               [](const QSharedPointer<GlyphContext>& a, const QSharedPointer<GlyphContext>& b) {
-                  return a->glyphEntry()->character().unicode() < b->glyphEntry()->character().unicode();
+                  return a->character().unicode() < b->character().unicode();
               });
 
     // 2. Перестраиваем хеш
     m_index.clear();
-    for (int i = 0; i < m_glyphs.size(); ++i) {
-        const auto& glyph = m_glyphs.at(i);
+    for (int i = 0; i < m_glyphs->size(); ++i) {
+        const auto& glyph = m_glyphs->at(i);
         m_index.insert(glyph->key(), i);
     }
 }
@@ -178,57 +211,52 @@ void GlyphManager::sortHash ()
 void GlyphManager::updateHash ()
 {
     sortHash();
-    filterGlyphs ();
     emit glyphsHashChanged ();
-}
-
-void GlyphManager::filterGlyphs ()
-{
-    m_filtered.clear();
-    for (const auto &glyphPtr : m_glyphs)
-    {
-        if (m_characterFilter.isEmpty() || m_characterFilter.contains(glyphPtr->character()))
-        {
-            m_filtered.append(glyphPtr);
-        }
-    }
-
-    std::sort(m_filtered.begin(), m_filtered.end(),
-        [](const QSharedPointer<GlyphContext>& a, const QSharedPointer<GlyphContext>& b) {
-            return a->glyphEntry()->character().unicode() < b->glyphEntry()->character().unicode();
-        });
 }
 
 const QChar GlyphManager::character()
 {
     if (m_glyph.isNull())
         return QChar();
-    return m_glyph->glyphEntry()->character();
-}
-
-void GlyphManager::setCharacterFilter(const QString &filter)
-{
-    m_characterFilter = filter;
-    filterGlyphs();
-}
-
-int GlyphManager::filteredSize ()
-{
-    return m_filtered.size();
+    return m_glyph->character();
 }
 
 QSharedPointer<GlyphContext> GlyphManager::glyphAt(int pos)
 {
-    if (pos >= m_glyphs.size())
+    if (pos >= m_glyphs->size())
         return QSharedPointer<GlyphContext>();
 
-    return m_glyphs.at(pos);
+    return m_glyphs->at(pos);
 }
 
-QSharedPointer<GlyphContext> GlyphManager::filteredAt(int pos)
-{
-    if (pos >= m_filtered.size())
-        return QSharedPointer<GlyphContext>();
+void GlyphManager::removeGlyphsByCharacter(const QChar &ch) {
+    if (m_glyphs == nullptr || m_index.isEmpty()) return;
+    
+    auto& vec = *m_glyphs;
+    auto it = std::remove_if(vec.begin(), vec.end(),
+        [&, ch](const auto& glyph) {
+            if (glyph->character() == ch) {
+                m_index.remove(glyph->key());  // Удаляем из хеша
+                return true;                   // Удаляем из вектора
+            }
+            return false;
+        });
+    
+    vec.erase(it, vec.end());
+}
 
-    return m_filtered.at(pos);
+bool GlyphManager::changeGlyph(const QChar &ch, bool temporary)
+{
+    findOrCreate(ch);
+    if (m_glyph.isNull())
+        return false;
+
+    m_glyph->setTemporaryValue(temporary);
+
+    qDebug() << __FILE__ << __LINE__ << m_glyph;
+
+    emit glyphChanged(m_glyph);
+    emit m_glyphFilter->sourceGlyphChanged(m_glyph);
+
+    return true;
 }

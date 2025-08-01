@@ -16,6 +16,7 @@ class GlyphContext;
 class GlyphPreview;
 class AppContext;
 class AppSettings;
+class GlyphFilter;
 
 namespace Ui {
 class DockGlyphTable;
@@ -67,11 +68,12 @@ private:
     Ui::DockGlyphTable *ui;
 
     AppContext *m_appContext;
-    AppSettings *m_appSettings;
-    GlyphManager *m_glyphManager;
     GlyphPreview *m_glyphPreview;
     GlyphModel *m_glyphModel;
-    
+
+    GlyphManager * m_glyphManager;
+    AppSettings * m_appSettings;
+    GlyphFilter * m_glyphFilter;
 };
 
 #endif // DOCKGLYPH_H

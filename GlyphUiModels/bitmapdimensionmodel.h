@@ -5,6 +5,9 @@
 
 #include "appcontext.h"
 
+class GlyphManager;
+class AppContext;
+
 class BitmapDimensionModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -17,6 +20,8 @@ public:
 
 private:
     AppContext *m_appContext;
+    GlyphManager * m_glyphManager;
+    DimensionManager * m_dimensionManager;
 };
 
 #endif // BITMAPDIMENSIONMODEL_H

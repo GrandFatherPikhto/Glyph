@@ -25,7 +25,7 @@ MainStatusbar::~MainStatusbar()
 
 void MainStatusbar::setupSignals ()
 {
-    QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, MainStatusbar::setGlyph);
+    // QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, MainStatusbar::setGlyph);
 }
 
 void MainStatusbar::initValues()
@@ -67,6 +67,6 @@ void MainStatusbar::setGlyph(QSharedPointer<GlyphContext> glyphContext)
     QString fontFamily = glyphContext->glyphFont() != QFont() ? glyphContext->glyphFont().family() : "Unknown Font";
     m_fontLabel->setText(QString("Font family: %1").arg(fontFamily));
     m_charLabel->setText(QString("Character: '%1'").arg(glyphContext->character()));
-    m_glyphSizeLabel->setText(QString("Glyph Size: %1 px").arg(QString::number(glyphContext->glyphEntry()->glyphSize())));
+    m_glyphSizeLabel->setText(QString("Glyph Size: %1 px").arg(QString::number(glyphContext->glyphSize())));
     m_gridSizeLabel->setText(QString("Bitmap Size: %1x%1 px").arg(QString::number(glyphContext->dimension())));
 }

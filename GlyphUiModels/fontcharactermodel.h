@@ -13,7 +13,7 @@
 
 #include "appcontext.h"
 
-class BitmapDimensions;
+class DimensionManager;
 class FontManager;
 class UnicodeMetadata;
 
@@ -51,8 +51,8 @@ private:
     QFont m_font;
 
     AppContext *m_appContext;
-    FontManager *m_fontManager;
-    UnicodeMetadata *m_unicodeMetadata;
+    FontManager * m_fontManager;
+    UnicodeMetadata * m_unicodeMetadata;
 };
 
 #endif // FONTCHARACTERSMODEL_H

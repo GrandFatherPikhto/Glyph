@@ -73,21 +73,21 @@ void FreeTypeGlyphRenderer::createImage(const QColor &color, const QColor &bgCol
 void FreeTypeGlyphRenderer::loadFontFace()
 {
     doneFace();
-    m_ftError = FT_New_Face(m_ftLibrary, m_glyph->glyphEntry()->fontPath().toStdString().c_str(), 0, &m_ftFace);
+    m_ftError = FT_New_Face(m_ftLibrary, m_glyph->fontPath().toStdString().c_str(), 0, &m_ftFace);
     if (m_ftError)
     {
-        throw std::runtime_error("Failed to load font: " + m_glyph->glyphEntry()->fontPath().toStdString());
+        throw std::runtime_error("Failed to load font: " + m_glyph->fontPath().toStdString());
     }
 }
 
 void FreeTypeGlyphRenderer::loadGlyph ()
 {
-    FT_UInt glyphIndex = FT_Get_Char_Index(m_ftFace, m_glyph->glyphEntry()->character().unicode());
+    FT_UInt glyphIndex = FT_Get_Char_Index(m_ftFace, m_glyph->character().unicode());
     m_ftError = FT_Load_Glyph(m_ftFace, glyphIndex, FT_LOAD_RENDER | FT_LOAD_TARGET_MONO);
 
     if (m_ftError)
     {
-        throw std::runtime_error("Failed to load glyph: " + QString(m_glyph->glyphEntry()->character()).toStdString());
+        throw std::runtime_error("Failed to load glyph: " + QString(m_glyph->character()).toStdString());
     }
 
     // Get the glyph slot
@@ -114,8 +114,8 @@ void FreeTypeGlyphRenderer::doneLibrary()
 
 void FreeTypeGlyphRenderer::setTargetSize(const QSize &targetSize)
 {
-    int sizeX = m_glyph->glyphEntry()->glyphSize();
-    int sizeY = m_glyph->glyphEntry()->glyphSize();
+    int sizeX = m_glyph->glyphSize();
+    int sizeY = m_glyph->glyphSize();
     
     if (targetSize != QSize())
     {
@@ -128,8 +128,8 @@ void FreeTypeGlyphRenderer::setTargetSize(const QSize &targetSize)
     if (m_ftError)
     {
         throw std::runtime_error(QString("Can't set %1 to size %2").arg(
-            m_glyph->glyphEntry()->character(), 
-            QString::number(m_glyph->glyphEntry()->glyphSize())
+            m_glyph->character(), 
+            QString::number(m_glyph->glyphSize())
         ).toStdString());
     }
 }

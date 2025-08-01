@@ -17,7 +17,9 @@ class AppSettings;
 class GlyphManager;
 class GlyphPreview;
 class GlyphModel;
+class GlyphFilter;
 class BitmapDimensionModel;
+class DimensionManager;
 
 namespace Ui {
 class DockGlyphEdit;
@@ -45,17 +47,23 @@ private:
 
     void saveGeometryAndState();
     void restoreGeometryAndState ();
-    void syncOutBitmapDimensions (int value = -1);
-    void syncInBitmapDimensions  (const QModelIndex &current, const QModelIndex &previous);
+    void syncOutDimensionManager (int value = -1);
+    void syncInDimensionManager  (const QModelIndex &current, const QModelIndex &previous);
+
+    void doubleClickGlyph (const QModelIndex &index);
+    void clickGlyph (const QModelIndex &index);
 
     Ui::DockGlyphEdit *ui;
-
-    AppContext *m_appContext;
-    AppSettings *m_appSettings;
-    GlyphManager *m_glyphManager;
+    BitmapDimensionModel *m_bitmapDimensionModel;
     GlyphPreview *m_glyphPreview;
     GlyphModel *m_glyphModel;
-    BitmapDimensionModel *m_bitmapDimensionModel;
+
+    AppContext *m_appContext;
+
+    AppSettings * m_appSettings;
+    GlyphManager * m_glyphManager;
+    DimensionManager * m_dimensionManager;
+    GlyphFilter * m_glyphFilter;
 };
 
 #endif // DOCKGLYPHEDIT_H

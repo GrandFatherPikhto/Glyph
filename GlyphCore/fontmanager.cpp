@@ -66,7 +66,7 @@ bool FontManager::setGlyphFont(const QFont &font)
     initFontContext();
     filterCharacters ();
 
-    qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << font << m_supportedChars.size() << m_fontPath << m_filteredChars.size() << ", MSB: " << m_fontMSBFilter;
+    // qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << font << m_supportedChars.size() << m_fontPath << m_filteredChars.size() << ", MSB: " << m_fontMSBFilter;
 
     emit glyphFontChanged (m_font);
 

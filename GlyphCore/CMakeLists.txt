@@ -33,14 +33,13 @@ qt_add_library(GlyphCore STATIC
     fontmanager.cpp
 
     glyphkey.h
-    glyphkey.cpp
-
+    
     glyphcontext.h
     
     imagekey.h
     glyphimage.h
 
-    glyphentry.h
+    glyphfilter.h
 
     glyphmanager.h
     glyphmanager.cpp
@@ -61,8 +60,7 @@ qt_add_library(GlyphCore STATIC
 
     bitmapdimension.h
     
-    bitmapdimensions.h 
-    bitmapdimensions.cpp
+    dimensionmanager.h 
     
     appsettings.h
     appsettings.cpp

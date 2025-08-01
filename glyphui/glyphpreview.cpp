@@ -20,15 +20,16 @@ void GlyphPreview::initValues ()
 {
     Q_ASSERT(m_appContext != nullptr && m_appContext->appSettings() != nullptr && m_appContext->glyphManager() != nullptr);
 
-    m_glyphManager = m_appContext->glyphManager ();
-    m_appSettings = m_appContext->appSettings ();
+    m_glyphManager = m_appContext->glyphManager();
+    m_appSettings = m_appContext->appSettings();
 }
 
 void GlyphPreview::setupSignals ()
 {
     QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, [=](QSharedPointer<GlyphContext> glyphContext){
-        m_glyphContext = glyphContext;
-        update();
+        qDebug() << __FILE__ << __LINE__ << glyphContext;
+        // m_glyphContext = glyphContext;
+        // update();
     });
 }
 

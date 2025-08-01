@@ -63,17 +63,27 @@ public:
                || m_bitmapDimension != glyphKey.m_bitmapDimension;
     }
 
+    const GlyphKey & operator= (const GlyphKey &key)
+    {
+        m_unicode = key.m_unicode;
+        m_bitmapDimension = key.m_bitmapDimension;
+
+        return *this;
+    }
+
     bool isValid ()
     {
         return (m_bitmapDimension > 0 && m_unicode > 0);
     }
 
     // Сеттеры
-    void setCharacter(int newCharacter) {m_unicode = newCharacter;}
+    void setUnicode(int newCharacter) {m_unicode = newCharacter;}
+    void setCharacter(const QChar &character) { m_unicode = character.unicode(); }
     void setBitmapDimension(int newGridSize) { m_bitmapDimension = newGridSize; }
 
     // Геттеры
-    int character() const { return m_unicode; }
+    int unicode() const { return m_unicode; }
+    QChar character () const { return QChar(m_unicode); }
     int bitmapDimension() const { return m_bitmapDimension; }
 
     QChar getQChar ()
@@ -81,9 +91,14 @@ public:
         return QChar(m_unicode);
     }
 
+#ifndef QT_NO_DATASTREAM
+    friend inline QDataStream & operator<<(QDataStream &out, const GlyphKey &key);
+    friend inline QDataStream & operator>>(QDataStream &in, GlyphKey &key);
+#endif
+
 
 private:
-    char16_t m_unicode;
+    quint32 m_unicode;
     int m_bitmapDimension;
 };
 
@@ -91,12 +106,54 @@ private:
 inline uint qHash(const GlyphKey &key, uint seed) {
     QtPrivate::QHashCombine hash;
     
-    seed = hash(seed, key.character());
+    seed = hash(seed, key.unicode());
     seed = hash(seed, key.bitmapDimension());
     // seed = hash(seed, key.fontFamily());
 
     return seed;
 }
 
+#ifndef QT_NO_DATASTREAM
+inline QDataStream & operator<<(QDataStream &out, const GlyphKey &key)
+{
+    out << key.m_unicode
+        << key.m_bitmapDimension;
+
+    return out;
+}
+
+inline QDataStream & operator>>(QDataStream &in, GlyphKey &key)
+{
+    in >> key.m_unicode
+       >> key.m_bitmapDimension;
+       
+    return in;
+}
+#endif
+
+
+#ifndef QT_NO_DEBUG_OUTPUT
+inline QDebug operator<<(QDebug debug, const GlyphKey &key)
+{
+    QDebugStateSaver saver(debug); // Для автоматического сохранения состояния
+    debug.nospace() 
+        << "GlyphKey(character: "
+        << key.character()
+        << ", dimension: "
+        << key.bitmapDimension()
+        << ")";
+
+    return debug;
+}
+
+inline QDebug operator<<(QDebug debug, const GlyphKey* pKey) {
+    if (!pKey) return debug << "GlyphContext(nullptr)";
+    return debug << *pKey;
+}
+
+#endif
+
+
+Q_DECLARE_METATYPE(GlyphKey)
 
 #endif // GLYPHKEY_H

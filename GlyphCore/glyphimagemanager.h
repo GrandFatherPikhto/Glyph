@@ -6,17 +6,18 @@
 #include "iglyphrenderer.h"
 #include "imagekey.h"
 
-class AppContext;
+class AppSettings;
 class GlyphImage;
 
 class GlyphImageManager : public QObject {
     Q_OBJECT
 public:
 
-    GlyphImageManager (AppContext *appContext);
+    GlyphImageManager (QObject *parent = nullptr);
     ~GlyphImageManager ();
 
     QSharedPointer<GlyphImage> findOrRenderImage(QSharedPointer<GlyphContext> glyphContext, ImageKey::ImageType type, const QSize &size = QSize());
+    void setAppSettings(AppSettings * appSettings);
     
 private:
 
@@ -28,6 +29,8 @@ private:
     QSharedPointer<IGlyphRenderer> m_drawRender; //< QImage renderer for draw layer
 
     QHash<ImageKey, QSharedPointer<GlyphImage>> m_images;
+
+    AppSettings * m_appSettings;
 };
 
 #endif // IMAGEMANAGER_H_

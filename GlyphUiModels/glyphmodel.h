@@ -7,6 +7,7 @@
 class AppContext;
 class GlyphManager;
 class UnicodeMetadata;
+class GlyphFilter;
 
 class GlyphModel : public QAbstractItemModel
 {
@@ -32,9 +33,10 @@ public:
 private:
     void initHeaders ();
 
-    AppContext *m_appContext;
-    GlyphManager *m_glyphManager;
-    UnicodeMetadata *m_unicodeMetadata;
+    AppContext * m_appContext;
+    GlyphManager * m_glyphManager;
+    UnicodeMetadata * m_unicodeMetadata;
+    GlyphFilter * m_glyphFilter;
 
     QStringList m_headers;
 };

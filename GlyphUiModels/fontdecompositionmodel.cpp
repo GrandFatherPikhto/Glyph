@@ -28,10 +28,10 @@ int FontDecompositionModel::rowCount(const QModelIndex &parent) const
 
 QVariant FontDecompositionModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() >= m_appContext->fontManager()->fontDecompositionSize())
+    if (!index.isValid() || index.row() >= m_fontManager->fontDecompositionSize())
         return QVariant();
 
-    QChar::Decomposition item = m_appContext->fontManager()->fontDecompositionAt(index.row());
+    QChar::Decomposition item = m_fontManager->fontDecompositionAt(index.row());
     QString name = m_unicodeMetadata->decompositionName(static_cast<QChar::Decomposition>(item));
     switch(role) {
         case Qt::DisplayRole:

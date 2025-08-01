@@ -64,8 +64,9 @@ private:
     Ui::GlyphWidget *ui;
 
     AppContext *m_appContext;
-    GlyphManager *m_glyphManager;
-    AppSettings *m_appSettings;
+    
+    GlyphManager * m_glyphManager;
+    AppSettings * m_appSettings;
 
     QMargins m_margins;
 

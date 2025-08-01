@@ -33,7 +33,8 @@ private:
     void restoreToolbarState();
 
     AppContext *m_appContext;
-    GlyphManager *m_glyphManager;
+    
+    GlyphManager * m_glyphManager;
     
     QLabel *m_fontLabel;
     QLabel *m_glyphSizeLabel;

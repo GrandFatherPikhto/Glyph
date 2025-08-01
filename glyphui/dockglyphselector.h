@@ -42,8 +42,8 @@ private:
     void setupSignals ();
 
     void setFromToFilter ();
-    void selectCharacter(const QModelIndex &index);
-    void setCharacter(const QModelIndex &index);
+    void clickCharacter(const QModelIndex &index);
+    void doubleClickCharacter(const QModelIndex &index);
 
     void setFontCategoryFilter(const QItemSelection &selected, const QItemSelection &deselected);
     void setFontScriptFilter(const QItemSelection &selected, const QItemSelection &deselected);
@@ -55,9 +55,10 @@ private:
     Ui::DockGlyphSelector *ui;
 
     AppContext *m_appContext;
-    AppSettings *m_appSettings;
-    FontManager *m_fontManager;
-    GlyphManager *m_glyphManager;
+    
+    AppSettings * m_appSettings;
+    FontManager * m_fontManager;
+    GlyphManager * m_glyphManager;
 
     FontCharacterModel *m_fontCharacterModel;
     FontScriptModel *m_scriptModel;

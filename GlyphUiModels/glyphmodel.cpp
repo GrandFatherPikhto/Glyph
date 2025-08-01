@@ -4,6 +4,7 @@
 #include "appcontext.h"
 #include "glyphmanager.h"
 #include "unicodemetadata.h"
+#include "glyphfilter.h"
 
 GlyphModel::GlyphModel(AppContext *appContext, QObject *parent)
     : QAbstractItemModel(parent)
@@ -12,20 +13,25 @@ GlyphModel::GlyphModel(AppContext *appContext, QObject *parent)
     , m_unicodeMetadata(nullptr)
 {
     Q_ASSERT(m_appContext->glyphManager() != nullptr && m_appContext->unicodeMetadata() != nullptr);
+
     initHeaders ();
+
     m_glyphManager = m_appContext->glyphManager();
     m_unicodeMetadata = m_appContext->unicodeMetadata();
-
-    QObject::connect(m_glyphManager, &GlyphManager::glyphCreated, this, [=](QSharedPointer<GlyphContext> glyphContext) {
-        Q_UNUSED(glyphContext);
-        qDebug() << __FILE__ << __LINE__ << __FUNCTION__ << "Glyph Data Changed";
-    });
+    m_glyphFilter = m_appContext->glyphFilter();
 
     QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, [=](QSharedPointer<GlyphContext> glyphContext) {
         Q_UNUSED(glyphContext);
-        layoutChanged();
+        // emit layoutChanged();
     });
 
+    QObject::connect(m_glyphManager, &GlyphManager::glyphsHashChanged, this, [=](){
+
+    });
+
+    QObject::connect(m_glyphFilter, &GlyphFilter::glyphsFiltered, this, [=](){
+        emit layoutChanged();
+    });
 }
 
 void GlyphModel::initHeaders ()
@@ -71,7 +77,7 @@ int GlyphModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    return m_glyphManager->filteredSize();
+    return m_glyphFilter->size();
 }
 
 int GlyphModel::columnCount(const QModelIndex &parent) const
@@ -88,8 +94,7 @@ QVariant GlyphModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     int idx = index.row();
-
-    QSharedPointer<GlyphContext> glyphContext =  m_glyphManager->filteredAt(idx);
+    QSharedPointer<GlyphContext> glyphContext =  m_glyphFilter->at(idx);
     if (glyphContext.isNull())
         return QVariant();
 

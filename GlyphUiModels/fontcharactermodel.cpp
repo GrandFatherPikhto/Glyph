@@ -9,6 +9,7 @@ FontCharacterModel::FontCharacterModel(AppContext *appContext, QObject *parent)
     , m_appContext(appContext)
 {
     Q_ASSERT(m_appContext->glyphManager() != nullptr && m_appContext->unicodeMetadata() != nullptr);
+
     m_fontManager = m_appContext->fontManager();
     m_unicodeMetadata = m_appContext->unicodeMetadata();
 
@@ -87,12 +88,14 @@ int FontCharacterModel::columnCount(const QModelIndex &parent) const
 
 QVariant FontCharacterModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.row() >= m_appContext->fontManager()->filteredSize())
+    Q_ASSERT(m_fontManager != nullptr);
+
+    if (!index.isValid() || index.row() >= m_fontManager->filteredSize())
         return QVariant();
 
     int idx = index.row();
 
-    const QChar ch = m_appContext->fontManager()->filteredCharacterAt(idx);
+    const QChar ch = m_fontManager->filteredCharacterAt(idx);
 
     switch (index.column()) {
         case 0: // Unicode код
@@ -107,7 +110,7 @@ QVariant FontCharacterModel::data(const QModelIndex &index, int role) const
                 return QString(ch);
             if (role == Qt::FontRole)
             {
-                return QFont(m_font.family(), m_appContext->fontManager()->fontSize());
+                return QFont(m_font.family(), m_fontManager->fontSize());
             }
             if (role == Qt::TextAlignmentRole)
                 return Qt::AlignCenter;

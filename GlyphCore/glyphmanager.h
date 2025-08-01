@@ -7,17 +7,14 @@
 #include <QObject>
 #include <QSharedPointer>
 
-#include <algorithm>
-
-#include "appsettings.h"
-#include "glyphcontext.h"
-#include "appsettings.h"
-#include "glyphkey.h"
-#include "fontmanager.h"
-#include "bitmapdimension.h"
-#include "bitmapdimensions.h"
-
 class AppContext;
+class AppSettings;
+class GlyphContext;
+class GlyphKey;
+class GlyphFilter;
+class FontManager;
+class BitmapDimension;
+class DimensionManager;
 
 class GlyphManager : public QObject
 {
@@ -28,17 +25,16 @@ public:
 
     QSharedPointer<GlyphContext> findOrCreate(const QChar &character = QChar(), int bitmapDimension = -1, int glyphSize = -1, bool temporary = true);
 
-    BitmapDimensions * bitmapDimensions() { return m_bitmapDimensions; }
+    void setDimensionManager(DimensionManager * dimensionManager);
+    void setFontManager(FontManager * fontManager);
+    void setGlyphFilter(GlyphFilter * glyphFilter);
+    void setAppSettings(AppSettings * appSettings);
 
     // Геттеры-обёртки
     const QChar character ();
 
     QSharedPointer<GlyphContext> glyphAt(int pos);
-    QSharedPointer<GlyphContext> filteredAt(int pos);
-
-    void setCharacterFilter (const QString &filter);
-
-    int filteredSize ();
+    void removeGlyphsByCharacter(const QChar &ch);
 
 signals:
     void glyphsHashChanged ();
@@ -48,7 +44,6 @@ signals:
 
     void changeCharacter(const QChar &character, bool temporary);
     void changeGlyphSize(int glyphSize);
-    void changeCurrentGlyphByFilteredPos(int pos);
 
     void glyphOffsetReset ();
     void glyphOffsetLeft  ();
@@ -57,27 +52,27 @@ signals:
     void glyphOffsetDown  ();
     
 private:
+
     void setupSignals ();
     void resetHash    ();
     void updateHash   ();
     void sortHash     ();
-    void filterGlyphs ();
+
     
     bool append(QSharedPointer<GlyphContext> glyph);
     bool remove(const GlyphKey &key);
     QSharedPointer<GlyphContext> find(const GlyphKey &key);
 
+    bool changeGlyph(const QChar &ch, bool temporary);
+
     // DIs
-    AppSettings *m_appSettings;
-    FontManager *m_fontManager;
+    AppSettings * m_appSettings;
+    FontManager * m_fontManager;
+    DimensionManager * m_dimensionManager; //< Все размерности глифов
+    GlyphFilter * m_glyphFilter;
 
-    QVector<QSharedPointer<GlyphContext>> m_glyphs;
-    QVector<QSharedPointer<GlyphContext>> m_filtered;
+    std::shared_ptr<QVector<QSharedPointer<GlyphContext>>> m_glyphs;
     QHash<GlyphKey, int> m_index;
-
-    QString m_characterFilter;
-
-    BitmapDimensions *m_bitmapDimensions; //< Все размерности глифов
 
     QSharedPointer<GlyphContext> m_glyph; //< Текущий глиф. Используется, чтобы в findOrCreate не дёргать лишний раз хэш
 

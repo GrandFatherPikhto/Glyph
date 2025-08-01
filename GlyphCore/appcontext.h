@@ -16,6 +16,8 @@ class FontManager;
 class GlyphImageManager;
 class UnicodeMetadata;
 class AppSettings;
+class GlyphFilter;
+class DimensionManager;
 
 class AppContext : public QObject
 {
@@ -29,7 +31,10 @@ public:
     GlyphManager * glyphManager() { return m_glyphManager; }
     FontManager * fontManager() { return m_fontManager; }
     AppSettings * appSettings() { return m_appSettings; }
-    UnicodeMetadata *unicodeMetadata () { return m_unicodeMetadata; }
+    UnicodeMetadata * unicodeMetadata () { return m_unicodeMetadata; }
+    DimensionManager * dimensionManager () { return m_dimensionManager; }
+    GlyphImageManager * glyphImageManager () { return m_imageManager; }
+    GlyphFilter * glyphFilter () { return m_glyphFilter; }
 
     // Методы
     void saveAppContext ();
@@ -56,9 +61,13 @@ private:
     
     GlyphManager *m_glyphManager;
     FontManager *m_fontManager;
+    DimensionManager *m_dimensionManager;
     GlyphImageManager *m_imageManager;
     UnicodeMetadata *m_unicodeMetadata;
     AppSettings *m_appSettings;
+    GlyphFilter *m_glyphFilter;
 };
+
+Q_DECLARE_METATYPE(AppContext)
 
 #endif // APPCONTEXT_H

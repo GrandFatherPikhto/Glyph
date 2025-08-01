@@ -21,8 +21,8 @@ public:
 private:
 
     AppContext *m_appContext;
-    FontManager *m_fontManager;
-    UnicodeMetadata *m_unicodeMetadata;
+    FontManager * m_fontManager;
+    UnicodeMetadata * m_unicodeMetadata;
 
     QMap<QChar::Decomposition, QString> m_names;
 };
