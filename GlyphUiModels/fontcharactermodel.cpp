@@ -13,6 +13,14 @@ FontCharacterModel::FontCharacterModel(AppContext *appContext, QObject *parent)
     m_fontManager = m_appContext->fontManager();
     m_unicodeMetadata = m_appContext->unicodeMetadata();
 
+    m_headers.append("Selected");
+    m_headers.append("Unicode");
+    m_headers.append("Character");
+    m_headers.append("Script");
+    m_headers.append("Category");
+    m_headers.append("Decomposition");
+    m_headers.append("HTML");
+
     setupSignals ();
 }
 
@@ -40,16 +48,8 @@ QVariant FontCharacterModel::headerData(int section, Qt::Orientation orientation
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    if (orientation == Qt::Horizontal) {
-        switch (section) {
-            case 1: return "Unicode";
-            case 2: return "Character";
-            case 3: return "Script";
-            case 4: return "Category";
-            case 5: return "Decomposition";
-            case 6: return "HTML";
-        }
-    }
+    if (orientation == Qt::Horizontal && section >= 0 && section < m_headers.size())
+        return m_headers.at(section);
 
     return QVariant();
 }
@@ -86,6 +86,17 @@ int FontCharacterModel::columnCount(const QModelIndex &parent) const
     return 6;
 }
 
+bool FontCharacterModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (index.column() == 0 && role == Qt::CheckStateRole) {
+        // m_characters[index.row()].setSelected(value.toBool());
+        const QChar ch = m_fontManager->filteredCharacterAt(index.row());
+        emit dataChanged(index, index, {Qt::CheckStateRole});
+        return true;
+    }
+    return false;
+}
+
 QVariant FontCharacterModel::data(const QModelIndex &index, int role) const
 {
     Q_ASSERT(m_fontManager != nullptr);
@@ -96,16 +107,23 @@ QVariant FontCharacterModel::data(const QModelIndex &index, int role) const
     int idx = index.row();
 
     const QChar ch = m_fontManager->filteredCharacterAt(idx);
+    bool selected = false;
 
     switch (index.column()) {
-        case 0: // Unicode код
+        case 0: // Выбрать символ для обработки
+            if (role == Qt::DisplayRole || role == Qt::EditRole)
+                return QVariant(); // Пустое значение для чекбокса
+            if (role == Qt::CheckStateRole)
+                return  selected ? Qt::Checked :  Qt::Unchecked;
+            break;
+        case 1: // Unicode код
             if (role == Qt::DisplayRole)
             {
                 return QString("U+%1").arg(int(ch.unicode()), 4, 16, QLatin1Char('0')).toUpper();
             }
             break;
 
-        case 1: // Символ
+        case 2: // Символ
             if (role == Qt::DisplayRole || role == Qt::EditRole)
                 return QString(ch);
             if (role == Qt::FontRole)
@@ -116,25 +134,25 @@ QVariant FontCharacterModel::data(const QModelIndex &index, int role) const
                 return Qt::AlignCenter;
             break;
 
-        case 2: // Язык
+        case 3: // Язык
             if (role == Qt::DisplayRole)
             {
                 return ch.script() == QChar::Script_Unknown ? "Unknown" : m_unicodeMetadata->scriptName(ch);
             }
             break;
-        case 3: // Категория символа
+        case 4: // Категория символа
             if (role == Qt::DisplayRole)
                 return QChar::category(ch.unicode()) == QChar::Other_NotAssigned ? "N/A" : m_unicodeMetadata->categoryName(ch);
             break;
 
-        case 4:
+        case 5:
             if (role == Qt::DisplayRole)
             {
                 return QVariant(ch.decomposition());
             }
             break;
 
-        case 5: // HTML-код
+        case 6: // HTML-код
             if (role == Qt::DisplayRole)
                 return QString("&#%1;").arg(ch.unicode());
             break;

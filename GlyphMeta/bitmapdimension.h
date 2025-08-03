@@ -2,8 +2,9 @@
 #define BITMAPDIMENSION_H
 
 #include "gridpaddings.h"
+#include "GlyphMeta_global.h"
 
-class BitmapDimension
+class GLYPHMETA_EXPORT BitmapDimension
 {
 public:
     BitmapDimension(int bitmapDimension = -1, bool temporary = true, const GridPaddings &paddings = GridPaddings())

@@ -35,6 +35,10 @@ set(PROJECT_SOURCES
     dockglyphtable.cpp
     dockglyphtable.ui
 
+    dockglyphprofiles.h
+    dockglyphprofiles.cpp
+    dockglyphprofiles.ui
+
     dockglyphselector.h
     dockglyphselector.cpp
     dockglyphselector.ui
@@ -87,11 +91,13 @@ message(STATUS "Add User Libraries")
 target_link_libraries(GlyphUI PRIVATE
     GlyphCore
     GlyphModels
+    GlyphMeta
 )
 
 # Указываем пути для include-файлов
 target_include_directories(GlyphUI PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${GlyphMeta_INCLUDE_DIR}
 )
 
 target_compile_definitions(GlyphUI PRIVATE GLYPHUI_LIBRARY)

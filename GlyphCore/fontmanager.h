@@ -21,9 +21,11 @@
 #include FT_OUTLINE_H
 #include FT_RENDER_H
 
+#include "GlyphCore_global.h"
+
 class AppContext;
 
-class FontManager : public QObject {
+class GLYPHCORE_EXPORT FontManager : public QObject {
     Q_OBJECT
 public:
     FontManager(AppContext *appContext);

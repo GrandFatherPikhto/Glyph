@@ -1,11 +1,24 @@
 #include <QSettings>
 #include <QSharedPointer>
 #include <QToolButton>
+#include <QFileDialog>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QPushButton>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "glyphwidget.h"
-
+#include "dockglyphtable.h"
+#include "dockglyphselector.h"
+#include "dockglyphprofiles.h"
+#include "appcontext.h"
+#include "appproject.h"
+#include "glyphwidget.h"
+#include "maintoolbar.h"
+#include "mainstatusbar.h"
+#include "dockglyphedit.h"
+#include "appsettings.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     m_appContext = new AppContext(this);
+    m_appSettings = m_appContext->appSettings();
 
     setupMainToolbar ();
     setupGlyphWidget();
@@ -37,6 +51,10 @@ MainWindow::~MainWindow()
 void MainWindow::setupSignals ()
 {
     QObject::connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::slotActionQuitTriggered);
+    QObject::connect(ui->action_New_Project, &QAction::triggered, this, [=](bool triggered){
+        QString projectPath = createNewProject();
+        qDebug() << projectPath;
+    });
 }
 
 void MainWindow::setupGlyphWidget ()
@@ -55,6 +73,8 @@ void MainWindow::setupDockPanels ()
     addDockWidget(Qt::RightDockWidgetArea, m_dockGlyphEdit);
     // emit tabifyDockWidget(m_dockGlyphTable, m_dockGlyphEdit);
     // emit tabifiedDockWidgetActivated(m_dockGlyphTable);
+    m_dockGlyphProfiles = new DockGlyphProfiles(m_appContext, this);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockGlyphProfiles);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -98,4 +118,32 @@ void MainWindow::restoreGeometryAndState() {
 void MainWindow::showEvent(QShowEvent *event)
 {
     restoreGeometryAndState();
+}
+
+QString MainWindow::createNewProject()
+{
+    // Используем getSaveFileName для возможности ввода нового пути
+    QFileDialog dialog(this);
+    dialog.setOptions(QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    QString dirPath = QFileDialog::getSaveFileName(
+        this,
+        "Select new Project Path",
+        m_appSettings->defaultProjectPath(),
+        "",
+        nullptr,
+        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
+        );
+
+    if (dirPath.isEmpty())
+        return QString ();
+
+    QDir dir(dirPath);
+    QString projectDirectoryName = dir.dirName();
+    if (!dir.exists())
+    {
+        AppProject *appProject = m_appContext->appProject();
+        appProject->createProject(dirPath);
+    }
+
+    return dirPath;
 }

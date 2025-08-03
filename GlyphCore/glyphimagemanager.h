@@ -6,14 +6,17 @@
 #include "iglyphrenderer.h"
 #include "imagekey.h"
 
+#include "GlyphCore_global.h"
+
+class AppContext;
 class AppSettings;
 class GlyphImage;
 
-class GlyphImageManager : public QObject {
+class GLYPHCORE_EXPORT GlyphImageManager : public QObject {
     Q_OBJECT
 public:
 
-    GlyphImageManager (QObject *parent = nullptr);
+    GlyphImageManager (AppContext *appContext);
     ~GlyphImageManager ();
 
     QSharedPointer<GlyphImage> findOrRenderImage(QSharedPointer<GlyphContext> glyphContext, ImageKey::ImageType type, const QSize &size = QSize());
@@ -30,6 +33,7 @@ private:
 
     QHash<ImageKey, QSharedPointer<GlyphImage>> m_images;
 
+    AppContext *m_appContext;
     AppSettings * m_appSettings;
 };
 

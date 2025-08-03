@@ -18,8 +18,13 @@ class UnicodeMetadata;
 class AppSettings;
 class GlyphFilter;
 class DimensionManager;
+class AppData;
+class DbCore;
+class AppProject;
 
-class AppContext : public QObject
+#include "GlyphCore_global.h"
+
+class GLYPHCORE_EXPORT AppContext : public QObject
 {
     Q_OBJECT
 public:
@@ -35,6 +40,9 @@ public:
     DimensionManager * dimensionManager () { return m_dimensionManager; }
     GlyphImageManager * glyphImageManager () { return m_imageManager; }
     GlyphFilter * glyphFilter () { return m_glyphFilter; }
+    AppData * appData() { return m_appData; }
+    DbCore * dbCore() { return m_dbCore; }
+    AppProject * appProject() { return m_appProject; }
 
     // Методы
     void saveAppContext ();
@@ -66,6 +74,9 @@ private:
     UnicodeMetadata *m_unicodeMetadata;
     AppSettings *m_appSettings;
     GlyphFilter *m_glyphFilter;
+    DbCore *m_dbCore;
+    AppData *m_appData;
+    AppProject *m_appProject;
 };
 
 Q_DECLARE_METATYPE(AppContext)

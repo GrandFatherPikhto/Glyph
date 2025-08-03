@@ -1,7 +1,11 @@
+#include <QStandardPaths>
+
+#include "appcontext.h"
 #include "appsettings.h"
 
-AppSettings::AppSettings(QObject *parent) 
-    : QObject(parent)
+AppSettings::AppSettings(AppContext *appContext) 
+    : QObject{appContext}
+    , m_appContext(appContext)
     , m_templateColor(QColor(0x00, 0x00, 0x55, 0x55))
     , m_templateBgColor(Qt::white)
     , m_previewColor(QColor(0x66, 0x22, 0x00, 0x33))
@@ -34,7 +38,8 @@ AppSettings::~AppSettings()
 
 void AppSettings::saveAppSettings()
 {
-    QSettings settings;
+    QSettings settings(this);
+
     settings.beginGroup("Glyph");
     settings.setValue("templateColor", m_templateColor);
     settings.setValue("templateBgColor", m_templateBgColor);
@@ -66,11 +71,18 @@ void AppSettings::saveAppSettings()
     settings.setValue("baselineLayerEnable", m_baselineLayerEnable);
     settings.setValue("bitmapRectLayerEnable", m_bitmapRectLayerEnable);
     settings.endGroup();
+
+    settings.beginGroup("Projects");
+    settings.setValue("defaultProjectPath", m_defaultProjectPath);
+    settings.endGroup();
+
+    settings.sync(); // Важно: синхронизируем с диском
 }
 
 void AppSettings::restoreAppSettings ()
 {
-    QSettings settings;
+    QSettings settings(this);
+
     settings.beginGroup("Glyph");
     QColor templateColor = settings.value("templateColor", QColor(0x00, 0x00, 0x55, 0x55)).value<QColor>();
     if (templateColor.isValid())
@@ -101,9 +113,10 @@ void AppSettings::restoreAppSettings ()
 
     m_character = settings.value("character", QChar('a')).value<QChar>();
     m_font = settings.value("font", QFont("Arial")).value<QFont>();
+    settings.endGroup();
 
     settings.beginGroup("GlyphWidget");
-    m_gridPaddings = settings.value("gridPaddings", QVariant::fromValue((0,0,0,0))).value<GridPaddings>();
+    m_gridPaddings = settings.value("gridPaddings", QVariant::fromValue(GridPaddings{0,0,0,0})).value<GridPaddings>();
     m_glyphWidgetMargins = settings.value("widgetMargins", QVariant::fromValue(QMargins(50,50,50,50))).value<QMargins>();
     settings.endGroup();
 
@@ -120,5 +133,9 @@ void AppSettings::restoreAppSettings ()
     m_glyphRectLayerEnable = settings.value("glyph/glyphRectLayerEnable").toBool();
     m_baselineLayerEnable = settings.value("glyph/baselineLayerEnable").toBool();
     m_bitmapRectLayerEnable = settings.value("glyph/bitmapRectLayerEnable").toBool();
+    settings.endGroup();
+
+    settings.beginGroup("Projects");
+    m_defaultProjectPath = settings.value("defaultProjectPath", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
     settings.endGroup();
 }

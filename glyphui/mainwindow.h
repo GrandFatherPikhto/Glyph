@@ -11,13 +11,14 @@
 
 #include "glyphui_global.h"
 
-#include "dockglyphtable.h"
-#include "dockglyphselector.h"
-#include "appcontext.h"
-#include "glyphwidget.h"
-#include "maintoolbar.h"
-#include "mainstatusbar.h"
-#include "dockglyphedit.h"
+class DockGlyphProfiles;
+class DockGlyphSelector;
+class DockGlyphEdit;
+class MainToolbar;
+class MainStatusbar;
+class GlyphWidget;
+class AppContext;
+class AppSettings;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -63,12 +64,14 @@ private:
     void setupStatusBar();
     void saveGeometryAndState();
     void restoreGeometryAndState();
+    QString createNewProject();
 
     Ui::MainWindow *ui;
 
     // DockGlyphTable *m_dockGlyphTable;
     DockGlyphSelector *m_dockGlyphSelector;
     DockGlyphEdit *m_dockGlyphEdit;
+    DockGlyphProfiles *m_dockGlyphProfiles;
 
     MainToolbar *m_mainToolbar;
     MainStatusbar *m_mainStatubar;
@@ -78,5 +81,6 @@ private:
     QGridLayout *m_centralLayout;
 
     AppContext *m_appContext;
+    AppSettings *m_appSettings;
 };
 #endif // MAINWINDOW_H

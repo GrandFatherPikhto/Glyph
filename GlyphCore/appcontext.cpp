@@ -6,6 +6,9 @@
 #include "unicodemetadata.h"
 #include "appsettings.h"
 #include "glyphfilter.h"
+#include "appdata.h"
+#include "dbcore.h"
+#include "appproject.h"
 
 AppContext::AppContext(QObject *parent)
     : QObject{parent}
@@ -29,20 +32,17 @@ AppContext::~AppContext()
 
 void AppContext::initValues ()
 {
-    m_glyphFilter = new GlyphFilter (this);
     m_appSettings = new AppSettings (this);
+    m_appData = new AppData(this);
+    m_dbCore = new DbCore(this);
     m_fontManager = new FontManager (this);
     m_imageManager = new GlyphImageManager (this);
     m_unicodeMetadata = new UnicodeMetadata (this);
     m_dimensionManager = new DimensionManager (this);
+    m_glyphFilter = new GlyphFilter (this);
     m_glyphManager = new GlyphManager (this);
-    
-    m_glyphManager->setDimensionManager(m_dimensionManager);
-    m_glyphManager->setFontManager(m_fontManager);
     m_glyphManager->setGlyphFilter(m_glyphFilter);
-    m_glyphManager->setAppSettings(m_appSettings);
-
-    m_imageManager->setAppSettings(m_appSettings);
+    m_appProject = new AppProject(this);
 }
 
 void AppContext::setupSignals()

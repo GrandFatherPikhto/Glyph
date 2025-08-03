@@ -7,6 +7,8 @@
 #include <QObject>
 #include <QSharedPointer>
 
+#include "GlyphCore_global.h"
+
 class AppContext;
 class AppSettings;
 class GlyphContext;
@@ -16,7 +18,7 @@ class FontManager;
 class BitmapDimension;
 class DimensionManager;
 
-class GlyphManager : public QObject
+class GLYPHCORE_EXPORT GlyphManager : public QObject
 {
     Q_OBJECT
 public:
@@ -36,6 +38,8 @@ public:
     QSharedPointer<GlyphContext> glyphAt(int pos);
     void removeGlyphsByCharacter(const QChar &ch);
 
+    std::shared_ptr<QVector<QSharedPointer<GlyphContext>>> glyphs();
+
 signals:
     void glyphsHashChanged ();
     void glyphFontChanged (const QFont &font); 
@@ -53,6 +57,7 @@ signals:
     
 private:
 
+    void setupDiValues  ();
     void setupSignals ();
     void resetHash    ();
     void updateHash   ();
@@ -66,6 +71,7 @@ private:
     bool changeGlyph(const QChar &ch, bool temporary);
 
     // DIs
+    AppContext *m_appContext;
     AppSettings * m_appSettings;
     FontManager * m_fontManager;
     DimensionManager * m_dimensionManager; //< Все размерности глифов

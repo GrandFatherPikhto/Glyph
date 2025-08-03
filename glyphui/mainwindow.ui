@@ -27,6 +27,8 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <addaction name="action_New_Project"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menu_View">
@@ -96,6 +98,11 @@
    </property>
    <property name="text">
     <string>Base&amp;line</string>
+   </property>
+  </action>
+  <action name="action_New_Project">
+   <property name="text">
+    <string>&amp;New Project</string>
    </property>
   </action>
  </widget>

@@ -11,7 +11,9 @@
 #include "iglyphrenderer.h"
 #include "glyphmarkup.h"
 
-class GlyphImage {
+#include "GlyphMeta_global.h"
+
+class GLYPHMETA_EXPORT GlyphImage {
 public:
     GlyphImage(QSharedPointer<GlyphContext> glyphContext) : m_glyphContext(glyphContext), m_dirty(true) {}
     ~GlyphImage() {};

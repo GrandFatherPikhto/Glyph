@@ -37,6 +37,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
@@ -53,6 +54,7 @@ private:
     AppContext *m_appContext;
     FontManager * m_fontManager;
     UnicodeMetadata * m_unicodeMetadata;
+    QStringList m_headers;
 };
 
 #endif // FONTCHARACTERSMODEL_H

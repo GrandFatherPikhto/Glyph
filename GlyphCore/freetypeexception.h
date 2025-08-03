@@ -4,7 +4,9 @@
 #include <QException>
 #include <QString>
 
-class FreetypeException : public QException
+#include "GlyphCore_global.h"
+
+class GLYPHCORE_EXPORT FreetypeException : public QException
 {
 public:
     explicit FreetypeException(const QString& message) 

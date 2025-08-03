@@ -3,6 +3,7 @@
 
 #include <QChar>
 #include <QFont>
+#include <QMetaType>
 
 #include "bitmapdimension.h"
 #include "glyphkey.h"

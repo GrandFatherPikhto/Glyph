@@ -8,7 +8,9 @@
 #include <QHash>
 #include <QDebug>
 
-class GlyphKey {
+#include "GlyphMeta_global.h"
+
+class GLYPHMETA_EXPORT GlyphKey {
 public:
     GlyphKey(int character = -1, int bitmapDimension = -1)
     : m_unicode(character)
@@ -126,7 +128,7 @@ inline QDataStream & operator>>(QDataStream &in, GlyphKey &key)
 {
     in >> key.m_unicode
        >> key.m_bitmapDimension;
-       
+
     return in;
 }
 #endif
@@ -152,7 +154,6 @@ inline QDebug operator<<(QDebug debug, const GlyphKey* pKey) {
 }
 
 #endif
-
 
 Q_DECLARE_METATYPE(GlyphKey)
 

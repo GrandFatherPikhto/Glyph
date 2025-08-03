@@ -7,7 +7,9 @@
 #include <QRect>
 #include <QDataStream>
 
-class GlyphMarkup
+#include "GlyphMeta_global.h"
+
+class GLYPHMETA_EXPORT GlyphMarkup
 {
 public:
     constexpr GlyphMarkup(int width = -1, int height = -1, int left = 0, int top = 0) 

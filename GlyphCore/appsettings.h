@@ -10,12 +10,16 @@
 
 #include "gridpaddings.h"
 
-class AppSettings : public QObject
+#include "GlyphCore_global.h"
+
+class AppContext;
+
+class GLYPHCORE_EXPORT AppSettings : public QObject
 {
     Q_OBJECT
 
 public:
-    AppSettings(QObject *parent = nullptr);
+    AppSettings(AppContext *appContext);
     ~AppSettings();
 
     void setTemplateColor(const QColor &color) { 
@@ -194,6 +198,10 @@ public:
         }
     }
 
+    void setDefaultProjectPath (const QString &value) { m_defaultProjectPath = value; }
+
+    const QString & defaultProjectPath() { return m_defaultProjectPath; }
+
     const QColor & templateColor() { return m_templateColor; }
     const QColor & templateBgColor() { return m_templateBgColor; }
     const QColor & previewColor () { return m_previewColor; }
@@ -274,6 +282,10 @@ private:
     QMargins m_glyphWidgetMargins;
 
     GridPaddings m_gridPaddings;
+
+    AppContext *m_appContext;
+
+    QString m_defaultProjectPath;
 };
 
 #endif // COLORS_H

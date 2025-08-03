@@ -5,11 +5,14 @@
 #include "appsettings.h"
 #include "appcontext.h"
 
-GlyphImageManager::GlyphImageManager(QObject *parent)
-    : QObject(parent)
+GlyphImageManager::GlyphImageManager(AppContext *appContext)
+    : QObject{appContext}
+    , m_appContext(appContext)
     , m_ftRender(QSharedPointer<IGlyphRenderer>())
     , m_drawRender(QSharedPointer<IGlyphRenderer>())
 {
+    Q_ASSERT(m_appContext->appSettings() != nullptr);
+    m_appSettings = m_appContext->appSettings();
     m_ftRender = QSharedPointer<FreeTypeGlyphRenderer>::create();
     m_drawRender = QSharedPointer<DrawGlyphRenderer>::create();
 }

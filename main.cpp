@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
         fprintf(stdout, "%s\n", msg.toLocal8Bit().constData());
     });
 #endif
+    system("chcp 65001");
+    setlocale(LC_ALL, "");
 
     qRegisterMetaType<QMargins>("QMargins");
     // qRegisterMetaTypeStreamOperators<QMargins>("QMargins");

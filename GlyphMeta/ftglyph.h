@@ -3,8 +3,11 @@
 
 #include <QPoint>
 #include <QRect>
+#include <QMetaType>
 
-class FTGlyph {
+#include "GlyphMeta_global.h"
+
+class GLYPHMETA_EXPORT FTGlyph {
 public:
     constexpr FTGlyph(int left, int top, int rows, int width) noexcept : m_left(left), m_top(top), m_rows(rows), m_width(width) { };
     
@@ -34,5 +37,7 @@ constexpr inline void FTGlyph::setWidth(int pos) noexcept
 { m_width = pos; }
 constexpr inline void FTGlyph::setRows(int pos) noexcept
 { m_rows = pos; }
+
+Q_DECLARE_METATYPE(FTGlyph)
 
 #endif // FTGLYPH_H_

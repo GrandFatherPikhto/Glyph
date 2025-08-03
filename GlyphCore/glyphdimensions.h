@@ -9,8 +9,10 @@
 
 #include "gridpaddings.h"
 #include "glyphmarkup.h"
+#include "GlyphCore_global.h"
 
-class GlyphDimensions {
+class GLYPHCORE_EXPORT GlyphDimensions {
+
 public:
     GlyphDimensions() 
         : m_gridRect(QRect())

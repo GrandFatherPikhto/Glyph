@@ -17,7 +17,9 @@
 #include FT_OUTLINE_H
 #include FT_RENDER_H
 
-class FreeTypeGlyphRenderer : public IGlyphRenderer {
+#include "GlyphCore_global.h"
+
+class GLYPHCORE_EXPORT FreeTypeGlyphRenderer : public IGlyphRenderer {
 public:
     explicit FreeTypeGlyphRenderer();
     ~FreeTypeGlyphRenderer();

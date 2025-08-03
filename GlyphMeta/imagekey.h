@@ -4,7 +4,9 @@
 #include <QChar>
 #include <QHash>
 
-class ImageKey {
+#include "GlyphMeta_global.h"
+
+class GLYPHMETA_EXPORT ImageKey {
 
 public:
     enum ImageType {

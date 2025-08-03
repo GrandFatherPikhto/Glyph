@@ -4,7 +4,9 @@
 #include <QDebug>
 #include <QDataStream>
 
-class GlyphOffset {
+#include "GlyphMeta_global.h"
+
+class GLYPHMETA_EXPORT GlyphOffset {
 public:
     constexpr GlyphOffset(int offsetX = 0, int offsetY = 0) : m_offsetX(offsetX), m_offsetY(offsetY) {}
     ~GlyphOffset() {}

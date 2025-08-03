@@ -1,8 +1,9 @@
+#include "appcontext.h"
 #include "unicodemetadata.h"
 
-
-UnicodeMetadata::UnicodeMetadata(QObject *parent)
-    : QObject(parent)
+UnicodeMetadata::UnicodeMetadata(AppContext *appContext)
+    : QObject{appContext}
+    , m_appContext(appContext)
 {
     loadScripts();
     loadCategories();

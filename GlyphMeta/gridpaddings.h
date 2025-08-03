@@ -6,7 +6,9 @@
 #include <QDataStream>
 #include <QVariant>
 
-class GridPaddings
+#include "GlyphMeta_global.h"
+
+class GLYPHMETA_EXPORT GridPaddings
 {
 public:
     constexpr GridPaddings(int left = 0, int top = 0, int right = 0, int bottom = 0) : m_left(left), m_top(top), m_right(right), m_bottom(bottom) {}

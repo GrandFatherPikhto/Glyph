@@ -10,8 +10,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
 
 set(CMAKE_PREFIX_PATH "D:/msys64/mingw64")  # Где лежат include/ и lib/
 find_package(Freetype REQUIRED)
@@ -65,9 +65,19 @@ target_include_directories(Glyph
     ${FREETYPE_INCLUDE_DIRS}
 )
 
-target_link_libraries(Glyph PRIVATE Qt${QT_VERSION_MAJOR}::Core)
-target_link_libraries(Glyph PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(Glyph PRIVATE ${FREETYPE_LIBRARIES})
+target_link_libraries(Glyph PRIVATE
+    Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Widgets
+)
+target_link_libraries(Glyph PRIVATE
+    Qt6::Gui
+    Qt6::Core
+    Qt6::Widgets
+)
+
+target_link_libraries(Glyph PRIVATE Freetype::Freetype)
+
 
 message(STATUS "Add User Libraries")
 
@@ -75,6 +85,7 @@ target_link_libraries(Glyph PRIVATE
     GlyphUI
     GlyphCore
     GlyphModels
+    GlyphMeta
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -106,3 +117,4 @@ endif()
 add_subdirectory(GlyphCore)
 add_subdirectory(GlyphUiModels)
 add_subdirectory(GlyphUI)
+add_subdirectory(GlyphMeta)

@@ -6,25 +6,26 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
-
 set(CMAKE_PREFIX_PATH "D:/msys64/mingw64")  # Где лежат include/ и lib/
-find_package(Freetype REQUIRED)
 
-if(Freetype_FOUND)
-    message(STATUS "FreeType найден: ${FREETYPE_INCLUDE_DIRS}, ${FREETYPE_LIBRARIES}")
-    # target_link_libraries(Glyph PRIVATE Freetype::Freetype)
-else()
-    message(FATAL_ERROR "FreeType не найден!")
-endif()
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Sql Widgets LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Sql Widgets LinguistTools)
+find_package(SQLite3 REQUIRED)
+find_package(Freetype REQUIRED)
 
 set(TS_FILES GlyphCore_ru_RU.ts)
 
-# Создаем библиотеку для компонентов главного окна
-qt_add_library(GlyphCore STATIC
+find_package(Qt6 REQUIRED COMPONENTS Core)
+
+qt_add_library(GlyphCore SHARED
     appcontext.h
     appcontext.cpp
+
+    appdata.h
+    appdata.cpp
+
+    dbcore.h
+    dbcore.cpp
 
     freetypeexception.h
     freetypeexception.cpp
@@ -32,17 +33,13 @@ qt_add_library(GlyphCore STATIC
     fontmanager.h
     fontmanager.cpp
 
-    glyphkey.h
-    
-    glyphcontext.h
-    
-    imagekey.h
-    glyphimage.h
-
     glyphfilter.h
+    glyphfilter.cpp
 
     glyphmanager.h
     glyphmanager.cpp
+
+    glyphdimensions.h
 
     glyphimagemanager.h
     glyphimagemanager.cpp
@@ -57,34 +54,57 @@ qt_add_library(GlyphCore STATIC
 
     drawglyphrenderer.h
     drawglyphrenderer.cpp
-
-    bitmapdimension.h
     
-    dimensionmanager.h 
+    dimensionmanager.h
+    dimensionmanager.cpp
     
     appsettings.h
     appsettings.cpp
 
-    gridpaddings.h 
-    glyphdimensions.h
-    glyphoffset.h
-    glyphmarkup.h
-    ftglyph.h
+    profilemanager.h
+    profilemanager.cpp
 
     ${TS_FILES}
+    appproject.h appproject.cpp
 )
 
-# Подключаем зависимости
 target_link_libraries(GlyphCore PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
+    Qt6::Core
     Qt${QT_VERSION_MAJOR}::Widgets
-    ${FREETYPE_LIBRARIES}
+    Qt6::Widgets
+    Qt${QT_VERSION_MAJOR}::Sql
+    Qt6::Sql
 )
+
+target_link_libraries(GlyphCore PRIVATE GlyphMeta)
+
+if(Freetype_FOUND)
+    message(STATUS "FreeType fount in: ${FREETYPE_INCLUDE_DIRS}, ${FREETYPE_LIBRARIES}")
+    target_link_libraries(GlyphCore PRIVATE Freetype::Freetype)
+else()
+    message(FATAL_ERROR "FreeType not found")
+endif()
+
+if(SQLite3_FOUND)
+    # Вариант 1: с системной SQLite3
+    target_link_libraries(GlyphCore PRIVATE SQLite::SQLite3)
+    target_link_libraries(GlyphCore PRIVATE Qt6::Core)
+    target_compile_definitions(GlyphCore PRIVATE -DUSE_SYSTEM_SQLITE)
+    message(STATUS "Using system SQLite3 v${SQLite3_VERSION} in ${SQLite3_LIBRARIES}")
+else()
+    # Вариант 2: только Qt SQL
+    message(STATUS "Using SQLite3 bundled with Qt")
+endif()
+
+message(STATUS "GlyphMeta include dirs: ${GLYPHMETA_INCLUDE_DIRS}")
 
 # Указываем пути для include-файлов
 target_include_directories(GlyphCore PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
+    ${Qt6Sql_INCLUDE_DIRS}
+    ${GlyphMeta_INCLUDE_DIRS}
 )
 
 target_compile_definitions(GlyphCore PRIVATE GLYPHCORE_LIBRARY)

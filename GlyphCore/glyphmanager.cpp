@@ -10,18 +10,30 @@
 
 GlyphManager::GlyphManager(AppContext *appContext)
     : QObject{appContext}
+    , m_appContext(appContext)
     , m_appSettings(nullptr)
     , m_fontManager(nullptr)
     , m_glyph(QSharedPointer<GlyphContext>())
     , m_dimensionManager(nullptr)
 {
     m_glyphs = std::make_shared<QVector<QSharedPointer<GlyphContext>>>();
+    setupDiValues ();
     setupSignals();
 }
 
 GlyphManager::~GlyphManager()
 {
 
+}
+
+void GlyphManager::setupDiValues()
+{
+    Q_ASSERT(m_appContext->appSettings() != nullptr && m_appContext->fontManager() != nullptr && m_appContext->dimensionManager() != nullptr);
+    
+    m_appSettings = m_appContext->appSettings();
+    m_fontManager = m_appContext->fontManager();
+    m_dimensionManager = m_appContext->dimensionManager();
+    // m_glyphFilter = m_appContext->glyphFilter();
 }
 
 void GlyphManager::resetHash ()
@@ -259,4 +271,9 @@ bool GlyphManager::changeGlyph(const QChar &ch, bool temporary)
     emit m_glyphFilter->sourceGlyphChanged(m_glyph);
 
     return true;
+}
+
+std::shared_ptr<QVector<QSharedPointer<GlyphContext>>> GlyphManager::glyphs()
+{
+    return m_glyphs;
 }

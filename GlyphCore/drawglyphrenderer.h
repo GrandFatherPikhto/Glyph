@@ -9,7 +9,11 @@
 #include "glyphmarkup.h"
 #include "iglyphrenderer.h"
 
-class DrawGlyphRenderer : public IGlyphRenderer
+#include "GlyphCore_global.h"
+
+class AppContext;
+
+class GLYPHCORE_EXPORT DrawGlyphRenderer : public IGlyphRenderer
 {
 public:
     DrawGlyphRenderer();
