@@ -9,33 +9,52 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# set(CMAKE_PREFIX_PATH "D:/Qt/6.9.1/mingw_64")
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Sql LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Sql LinguistTools)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
-
-set(CMAKE_PREFIX_PATH "D:/msys64/mingw64")  # Где лежат include/ и lib/
+set(CMAKE_PREFIX_PATH "D:/msys64/mingw64")
+find_package(SQLite3 REQUIRED)
 find_package(Freetype REQUIRED)
 
-if(Freetype_FOUND)
-    message(STATUS "FreeType найден: ${FREETYPE_INCLUDE_DIRS}, ${FREETYPE_LIBRARIES}")
-    # target_link_libraries(Glyph PRIVATE Freetype::Freetype)
-else()
-    message(FATAL_ERROR "FreeType не найден!")
-endif()
+set(TS_FILES Glyph_ru_RU.ts)
 
+set(PROJECT_SOURCES
 
-set(PROJECT_SOURCES 
     main.cpp
-    main.qrc
+
+    mainwindow.cpp
+    mainwindow.h
+    mainwindow.ui
+
+    ${TS_FILES}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-   find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+    qt_add_executable(Glyph
+        MANUAL_FINALIZATION
+        ${PROJECT_SOURCES}
 
-qt_add_executable(Glyph
-    MANUAL_FINALIZATION
-    ${PROJECT_SOURCES}
-)
+        dockprofiles.h
+        dockprofiles.cpp
+        dockprofiles.ui
+
+        dockcharmap.h
+        dockcharmap.cpp
+        dockcharmap.ui
+
+        dockglyphs.h 
+        dockglyphs.cpp 
+        dockglyphs.ui
+        
+        icons.qrc
+    )
+
+# target_include_directories(Glyph PRIVATE 
+#     ${CMAKE_CURRENT_SOURCE_DIR}
+#     ${CMAKE_CURRENT_SOURCE_DIR}/GlyphCore
+# )
+
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Glyph APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
@@ -58,35 +77,33 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-
-target_include_directories(Glyph
-    PRIVATE 
-    ${CMAKE_SOURCE_DIR}
-    ${FREETYPE_INCLUDE_DIRS}
-)
-
 target_link_libraries(Glyph PRIVATE
-    Qt${QT_VERSION_MAJOR}::Gui
-    Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Widgets
-)
-target_link_libraries(Glyph PRIVATE
-    Qt6::Gui
-    Qt6::Core
-    Qt6::Widgets
-)
-
-target_link_libraries(Glyph PRIVATE Freetype::Freetype)
-
-
-message(STATUS "Add User Libraries")
-
-target_link_libraries(Glyph PRIVATE
-    GlyphUI
+    Qt${QT_VERSION_MAJOR}::Sql
     GlyphCore
     GlyphModels
     GlyphMeta
 )
+
+if(SQLite3_FOUND)
+    # Вариант 1: с системной SQLite3
+    target_link_libraries(Glyph PRIVATE
+        SQLite::SQLite3
+    )
+    target_compile_definitions(Glyph PRIVATE -DUSE_SYSTEM_SQLITE)
+    message(STATUS "Using system SQLite3 v${SQLite3_VERSION}")
+else()
+    # Вариант 2: только Qt SQL
+    message(STATUS "Using SQLite3 bundled with Qt")
+endif()
+
+if(Freetype_FOUND)
+    message(STATUS "FreeType найден: ${FREETYPE_INCLUDE_DIRS}, ${FREETYPE_LIBRARIES}")
+    target_link_libraries(Glyph PRIVATE Freetype::Freetype)
+else()
+    message(FATAL_ERROR "FreeType не найден!")
+endif()
+
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
@@ -113,8 +130,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(Glyph)
 endif()
 
-# Подключаем модули
 add_subdirectory(GlyphCore)
-add_subdirectory(GlyphUiModels)
-add_subdirectory(GlyphUI)
+add_subdirectory(GlyphModels)
 add_subdirectory(GlyphMeta)

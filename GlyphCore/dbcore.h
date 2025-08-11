@@ -12,7 +12,7 @@
 
 #include "GlyphCore_global.h"
 
-class AppData;
+class AppSettings;
 class AppContext;
 
 class GLYPHCORE_EXPORT DbCore : public QObject
@@ -22,18 +22,25 @@ public:
     DbCore(AppContext *appContext);
     ~DbCore();
 
-    void setAppData(AppData *appData);
+    bool createDatabase(const QString &dbPath);
+    bool resetTable(const QString &tableName);
 
-    bool createDatabase(const QString &dbPathName);
+signals:
+    
 
 private:
-    void initValues();
+    QString getAppDataDbPath();
+
+    void setupValues();
+    void setupSignals ();
+    
+    void releaseDb ();
+    bool createTables();
 
     QString m_dbPath;
-
     QSqlDatabase m_db;
 
-    AppData *m_appData;
+    AppSettings *m_appSettings;
     AppContext *m_appContext;
 };
 

@@ -1,111 +1,262 @@
-#ifndef GLYPHPROFILE_H
-#define GLYPHPROFILE_H
+#ifndef GLYPHPROFILE_H_
+#define GLYPHPROFILE_H_
 
-#include <QObject>
-#include <QFont>
 #include <QString>
+#include <QFont>
 #include <QSharedPointer>
-#include <QDataStream>
-#include <QDebug>
+#include <QVariant>
 
-#include "gridpaddings.h"
-#include "profilekey.h"
+class GlyphProfile {
 
-#include "GlyphMeta_global.h"
-
-class GLYPHMETA_EXPORT GlyphProfile
-{
 public:
-    explicit GlyphProfile(const ProfileKey &key, int glyphSize = -1, bool fixedFont = false, const QFont &font = QFont(), const QString &fontPath = QString())
-        : m_key(key)
-        , m_glyphSize(glyphSize)
-        , m_fixedFont(fixedFont)
+    explicit GlyphProfile(const QString &name = QString(), int bitmapDimension = -1, const QFont &font = QFont(), const QString &fontPath = QString(), int id = -1, bool temporary = true)
+        : m_id(id)
+        , m_name(name)
         , m_font(font)
         , m_fontPath(fontPath)
-        , m_gridPaddings(GridPaddings())
-    {}
-
-    ~GlyphProfile(){}
-
-    void setFont(const QFont &newFont) { m_font = newFont; }
-    const QFont & font() const { return m_font; }
-
-    void setFontPath(const QString &newPath) { m_fontPath = newPath; }
-    const QString & fontPath () { return m_fontPath; }
-
-    const QString & name() const { return m_key.name(); }
-
-    void setGlyphSize (int newSize ) { m_glyphSize = newSize; }
-    int glyphSize() { return m_glyphSize; }
-
-    void setFixedFont() { m_fixedFont = true; }
-    void resetFixedFont() { m_fixedFont = false; }
-    void setFixedFontValue(bool value) { m_fixedFont = value; }
-    bool fixedFont() {return m_fixedFont; }
-
-    const GridPaddings & gridPaddings() {return m_gridPaddings; }
-    void setGridPaddings(const GridPaddings &paddings) { m_gridPaddings = paddings; }
-
-    bool operator= (const GlyphProfile &profile)
+        , m_temporary(temporary)
+        , m_bitmapDimension(bitmapDimension)
+        , m_paddingLeft(0)
+        , m_paddingTop(0)
+        , m_paddingRight(0)
+        , m_paddingBottom(0)
     {
-        return m_key == profile.m_key;
     }
 
-    const GlyphProfile & operator== (const GlyphProfile &profile)
+    GlyphProfile(const GlyphProfile &profile)
+        : m_id(profile.m_id)
+        , m_name(profile.m_name)
+        , m_bitmapDimension(profile.m_bitmapDimension)
+        , m_font(profile.m_font)
+        , m_fontPath(profile.m_fontPath)
+        , m_temporary(profile.m_temporary)
+        , m_paddingLeft(profile.m_paddingLeft)
+        , m_paddingTop(profile.m_paddingTop)
+        , m_paddingRight(profile.m_paddingRight)
+        , m_paddingBottom(profile.m_paddingBottom)
+    {}
+
+    GlyphProfile(const GlyphProfile *profile)
+        : m_id(profile->m_id)
+        , m_name(profile->m_name)
+        , m_bitmapDimension(profile->m_bitmapDimension)
+        , m_font(profile->m_font)
+        , m_fontPath(profile->m_fontPath)
+        , m_temporary(profile->m_temporary)
+        , m_paddingLeft(profile->m_paddingLeft)
+        , m_paddingTop(profile->m_paddingTop)
+        , m_paddingRight(profile->m_paddingRight)
+        , m_paddingBottom(profile->m_paddingBottom)
+    {}
+
+    GlyphProfile(QSharedPointer<GlyphProfile> profile)
+        : m_id(profile->m_id)
+        , m_name(profile->m_name)
+        , m_bitmapDimension(profile->m_bitmapDimension)
+        , m_font(profile->m_font)
+        , m_fontPath(profile->m_fontPath)
+        , m_temporary(profile->m_temporary)
+        , m_paddingLeft(profile->m_paddingLeft)
+        , m_paddingTop(profile->m_paddingTop)
+        , m_paddingRight(profile->m_paddingRight)
+        , m_paddingBottom(profile->m_paddingBottom)
+    {}
+
+    ~GlyphProfile() {}
+
+
+
+    bool isValid() const 
     {
-        m_key = profile.m_key;
-        m_font = profile.m_font;
-        m_fontPath = profile.m_fontPath;
-        m_glyphSize = profile.m_glyphSize;
-        m_fixedFont = profile.m_fixedFont;
+        return (
+            !m_name.isEmpty()
+            && m_bitmapDimension > 0
+        );
+    }
+
+    int id() const { return m_id; }
+    int bitmapDimension() const {return m_bitmapDimension; }
+    const QFont & font() const { return m_font; }
+    const QString & fontPath() const { return m_fontPath; }
+    const QString & name() const { return m_name; }
+    bool temporary() const { return m_temporary; }
+
+    int paddingLeft() const { return m_paddingLeft; }
+    int paddingTop() const { return m_paddingTop; }
+    int paddingRight() const { return m_paddingRight; }
+    int paddingBottom() const { return m_paddingBottom; }
+
+    void setId(int value) { m_id = value; }
+    void setName(const QString &value) { m_name = value; }
+    void setBitmapDimension(int value) { m_bitmapDimension = value; }
+    void setFont(const QFont &value) { m_font = value; }
+    void setFontPath(const QString &value) { m_fontPath = value; }
+    void setTemporary (bool value = true) { m_temporary = value; }
+    void setPaddingLeft(int value) { m_paddingLeft = value; }
+    void setPaddingTop(int value) { m_paddingTop = value; }
+    void setPaddingRight(int value) { m_paddingRight = value; }
+    void setPaddingBottom(int value) { m_paddingBottom = value; }
+
+    bool operator== (const GlyphProfile &profile) const
+    {
+        return (
+               m_id == profile.m_id
+            && m_bitmapDimension == profile.m_bitmapDimension
+            && m_name == profile.m_name
+            && m_font == profile.m_font
+            && m_temporary == profile.m_temporary
+            && m_paddingLeft == profile.m_paddingLeft
+            && m_paddingTop == profile.m_paddingTop
+            && m_paddingRight == profile.m_paddingRight
+            && m_paddingBottom == profile.m_paddingBottom
+        );
+    }
+
+    bool operator!= (const GlyphProfile &profile) const
+    {
+        return (
+               m_id != profile.m_id
+            || m_bitmapDimension != profile.m_bitmapDimension
+            || m_name != profile.m_name
+            || m_font != profile.m_font
+            || m_temporary != profile.m_temporary
+            || m_paddingLeft != profile.m_paddingLeft
+            || m_paddingTop != profile.m_paddingTop
+            || m_paddingRight != profile.m_paddingRight
+            || m_paddingBottom != profile.m_paddingBottom
+        );
+    }
+
+    const GlyphProfile & operator= (const GlyphProfile &profile)
+    {
+        if (this != &profile)
+        {
+            m_id = profile.m_id;
+            m_name = profile.m_name;
+            m_font = profile.m_font;
+            m_fontPath = profile.m_fontPath;
+            m_bitmapDimension = profile.m_bitmapDimension;
+            m_temporary = profile.m_temporary;
+            m_paddingLeft = profile.m_paddingLeft;
+            m_paddingTop = profile.m_paddingTop;
+            m_paddingRight = profile.m_paddingRight;
+            m_paddingBottom = profile.m_paddingBottom;
+        }
 
         return *this;
     }
 
-    bool operator < (const GlyphProfile &profile)
-    {
-        return (m_key < profile.m_key);   
+    // Для QVariant/QSettings
+    operator QVariant() const {
+        if(QMetaType::fromName("GlyphProfile").isValid()) {
+            return QVariant::fromValue(*this);
+        } else {
+            // Fallback для случая, когда GridPaddings не зарегистрирован
+            QVariantMap map;
+
+            map["id"] = m_id;
+            map["bitmapDimension"] = m_bitmapDimension;
+            map["font"] = m_font;
+            map["name"] = m_name;
+            map["temporary"] = m_temporary;
+            map["paddingLeft"] = m_paddingLeft;
+            map["paddingTop"] = m_paddingTop;
+            map["paddingRight"] = m_paddingRight;
+            map["paddingBottom"] = m_paddingBottom;
+
+            return map;
+        }
     }
 
+
 #ifndef QT_NO_DATASTREAM
-    friend inline QDataStream & operator<<(QDataStream &out, const GlyphProfile &profile);
-    friend inline QDataStream & operator>>(QDataStream &in, GlyphProfile &profile);
+    friend QDataStream & operator << (QDataStream &out, const GlyphProfile &profile);
+    friend QDataStream & operator >> (QDataStream &in, GlyphProfile &profile);
 #endif
 
-
 private:
-    ProfileKey m_key;
+    int m_bitmapDimension;
+
     QFont m_font;
     QString m_fontPath;
-    GridPaddings m_gridPaddings;
-    int m_glyphSize;
-    bool m_fixedFont;
+    QString m_name;
+
+    bool m_temporary;
+
+    int m_paddingLeft;
+    int m_paddingTop;
+    int m_paddingRight;
+    int m_paddingBottom;
+    int m_id;
 };
 
 #ifndef QT_NO_DATASTREAM
-inline QDataStream & operator<<(QDataStream &out, const GlyphProfile &profile)
+inline QDataStream & operator << (QDataStream &out, const GlyphProfile &profile)
 {
-    out << profile.m_key
-        << profile.m_glyphSize
-        << profile.m_fixedFont
+    out << profile.m_id
+        << profile.m_name
+        << profile.m_bitmapDimension
         << profile.m_font
         << profile.m_fontPath
-        << profile.m_gridPaddings;
+        << profile.m_temporary
+        << profile.m_paddingLeft
+        << profile.m_paddingTop
+        << profile.m_paddingRight
+        << profile.m_paddingBottom;
 
     return out;
 }
 
-inline QDataStream & operator>>(QDataStream &in, GlyphProfile &profile)
+inline QDataStream & operator >> (QDataStream &in, GlyphProfile &profile)
 {
-    in >> profile.m_key
-       >> profile.m_glyphSize
-       >> profile.m_fixedFont
-       >> profile.m_font
-       >> profile.m_fontPath
-       >> profile.m_gridPaddings;
+    in  >> profile.m_id
+        >> profile.m_name
+        >> profile.m_bitmapDimension
+        >> profile.m_font
+        >> profile.m_fontPath
+        >> profile.m_temporary
+        >> profile.m_paddingLeft
+        >> profile.m_paddingTop
+        >> profile.m_paddingRight
+        >> profile.m_paddingBottom;
+
     return in;
+}
+
+#endif
+
+#ifndef QT_NO_DEBUG_OUTPUT
+inline QDebug operator <<(QDebug debug, const GlyphProfile &profile)
+{
+    QDebugStateSaver saver(debug); // Для автоматического сохранения состояния
+    debug.nospace() << "GlyphProfile(Id: "
+        << profile.id()
+        << ", Name: "
+        << profile.name()
+        << ", temporary: "
+        << profile.temporary ()
+        << ", Dimension: "
+        << profile.bitmapDimension()
+        << ", Font: "
+        << profile.font()
+        << ", Font path: "
+        << profile.fontPath ()
+        << ", Valid: "
+        << profile.isValid ()
+        << ", Padding: ("
+        << profile.paddingLeft()
+        << ", "
+        << profile.paddingTop()
+        << ", "
+        << profile.paddingRight()
+        << ", "
+        << profile.paddingBottom()
+        << "))";
+
+    return debug;
 }
 #endif
 
+Q_DECLARE_METATYPE(GlyphProfile)
 
-#endif // GLYPHPROFILE_H
+#endif // GLYPHPROFILE_H_

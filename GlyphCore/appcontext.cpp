@@ -1,69 +1,39 @@
 #include "appcontext.h"
-#include "glyphmanager.h"
-#include "fontmanager.h"
-#include "glyphimagemanager.h"
-#include "dimensionmanager.h"
-#include "unicodemetadata.h"
-#include "appsettings.h"
-#include "glyphfilter.h"
-#include "appdata.h"
 #include "dbcore.h"
-#include "appproject.h"
+#include "fontmanager.h"
+#include "charmapmanager.h"
+#include "unicodemetadata.h"
+#include "profilemanager.h"
+#include "appsettings.h"
+#include "glyphmanager.h"
 
 AppContext::AppContext(QObject *parent)
     : QObject{parent}
-    , m_glyphManager(nullptr)
-    , m_imageManager(nullptr)
+    , m_dbCore(nullptr)
     , m_fontManager(nullptr)
+    , m_charmapManager(nullptr)
     , m_unicodeMetadata(nullptr)
+    , m_profileManager(nullptr)
     , m_appSettings(nullptr)
-    , m_glyphFilter(nullptr)
-    , m_dimensionManager(nullptr)
+    , m_glyphManager(nullptr)
 {
-    initValues ();
-    restoreAppContext();
-    setupSignals();
+    setupVariables();
 }
 
 AppContext::~AppContext()
 {
-    saveAppContext();
+    // qDebug() << __FILE__ << __LINE__ << "Destroy AppContext class";
 }
 
-void AppContext::initValues ()
+void AppContext::setupVariables()
 {
-    m_appSettings = new AppSettings (this);
-    m_appData = new AppData(this);
+    m_appSettings = new AppSettings(this);
     m_dbCore = new DbCore(this);
-    m_fontManager = new FontManager (this);
-    m_imageManager = new GlyphImageManager (this);
-    m_unicodeMetadata = new UnicodeMetadata (this);
-    m_dimensionManager = new DimensionManager (this);
-    m_glyphFilter = new GlyphFilter (this);
-    m_glyphManager = new GlyphManager (this);
-    m_glyphManager->setGlyphFilter(m_glyphFilter);
-    m_appProject = new AppProject(this);
+    m_profileManager = new ProfileManager(this);
+    m_fontManager = new FontManager(this);
+    m_charmapManager = new CharmapManager(this);
+    m_unicodeMetadata = new UnicodeMetadata(this);
+    m_glyphManager = new GlyphManager(this);
+
+    emit valuesInited ();
 }
-
-void AppContext::setupSignals()
-{
-}
-
-void AppContext::saveAppContext()
-{
-    QSettings settings;
-
-    settings.beginGroup("ApplicationSettings");
-    
-    settings.endGroup();
-}
-
-void AppContext::restoreAppContext()
-{
-    QSettings settings;
-
-    settings.beginGroup("ApplicationSettings");
-
-    settings.endGroup();
-}
-

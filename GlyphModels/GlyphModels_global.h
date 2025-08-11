@@ -1,0 +1,12 @@
+#ifndef GLYPHMODELS_GLOBAL_H
+#define GLYPHMODELS_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(GLYPHMODELS_LIBRARY)
+#define GLYPHMODELS_EXPORT Q_DECL_EXPORT
+#else
+#define GLYPHMODELS_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // GLYPHMODELS_GLOBAL_H

@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/app">
+        <file alias="icon">images/icon.png</file>
+        <file alias="appIcon">images/app_icon.png</file>
+    </qresource>
+    <qresource prefix="/baseline">
+        <file alias="moveLeft">images/left.png</file>
+        <file alias="moveUp">images/top.png</file>
+        <file alias="moveRight">images/right.png</file>
+        <file alias="moveDown">images/bottom.png</file>
+        <file alias="center">images/center.png</file>
+    </qresource>
+    <qresource prefix="/toolbar">
+        <file alias="baseline">images/baseline.png</file>
+        <file alias="bitmapRect">images/bitmapRect.png</file>
+        <file alias="clear">images/clear.png</file>
+        <file alias="edit">images/edit.png</file>
+        <file alias="preview">images/preview.png</file>
+        <file alias="paste">images/paste.png</file>
+        <file alias="template">images/center.png</file>
+        <file alias="glyphRect">images/rect.png</file>
+        <file alias="grid">images/grid.png</file>
+        <file alias="draw">images/draw.png</file>
+    </qresource>
+</RCC>

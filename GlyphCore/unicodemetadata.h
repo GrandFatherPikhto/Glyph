@@ -4,6 +4,7 @@
 #include <QMap>
 #include <QString>
 #include <QObject>
+#include <QSqlQuery>
 
 #include "GlyphCore_global.h"
 
@@ -13,6 +14,12 @@ class GLYPHCORE_EXPORT UnicodeMetadata : public QObject
 {
     Q_OBJECT
 public:
+    typedef enum {
+        ScriptType = 0x01,
+        CategoryType = 0x02,
+        DecompositionType = 0x03
+    } UnicodeMetadataType;
+
     explicit UnicodeMetadata (AppContext *appContext) ;
 
     // Получение названий
@@ -28,8 +35,17 @@ public:
     const QMap<QChar::Category, QString>& allCategories() const;
     const QMap<QChar::Decomposition, QString>& allDecompositions() const;
 
-private:
+signals:
+    
 
+private:
+    void setupValues ();
+    void setupSignals ();
+    
+    bool initTable (const QString &tableName);
+    bool fillScriptTable();
+    bool fillCategoryTable();
+    bool fillDecompositionTable();
     void loadScripts();
     void loadCategories();
     void loadDecompositions();
@@ -40,6 +56,10 @@ private:
     QMap<QChar::Script, QString> m_scripts;
     QMap<QChar::Category, QString> m_categories;
     QMap<QChar::Decomposition, QString> m_decompositions;
+
+    QString m_scriptTable;
+    QString m_categoryTable;
+    QString m_decompositionTable;
 };
 
 #endif // UNICODEMETADATAMANAGER_H

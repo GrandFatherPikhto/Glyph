@@ -1,141 +1,216 @@
-#ifndef GLYPHCONTEXT_H
-#define GLYPHCONTEXT_H
+#ifndef GLYPHCONTEXT_H_
+#define GLYPHCONTEXT_H_
 
 #include <QChar>
-#include <QFont>
+#include <QSharedPointer>
+#include <QImage>
 #include <QMetaType>
+#include <QVariant>
 
-#include "bitmapdimension.h"
-#include "glyphkey.h"
-#include "glyphoffset.h"
+#include "GlyphMeta_global.h"
 
-class GlyphContext {
-
-public:
-    GlyphContext(QSharedPointer<BitmapDimension> bitmapDimension, const QChar &character, int glyphSize, bool temporary = true, const QFont &font = QFont(), const QString &fontPath = QString()) 
-        : m_bitmapDimension(bitmapDimension)
-        , m_character(character)
-        , m_glyphSize(glyphSize)
-        , m_glyphFont(font)
-        , m_fontPath(fontPath)
+class GLYPHMETA_EXPORT GlyphContext {
+public:    
+    explicit GlyphContext(int glyphId = -1, const QChar &character = QChar(), int glyphSize = -1, int profile = -1, int offsetLeft = 0, int baseline = 0, bool temporary = true) 
+        : m_glyphId(glyphId)
+        , m_character(character) 
+        , m_glyphSize(glyphSize) 
+        , m_profile(profile)
+        , m_offsetLeft(offsetLeft)
+        , m_baseline(baseline)
         , m_temporary(temporary)
-        , m_glyphOffset{0,0}   
+        {};
+        
+    GlyphContext(const GlyphContext &glyph)
+        : m_glyphId(glyph.m_glyphId)
+        , m_character(glyph.m_character)
+        , m_glyphSize(glyph.m_glyphSize)
+        , m_profile(glyph.m_profile)
+        , m_offsetLeft(glyph.m_offsetLeft)
+        , m_baseline(glyph.m_baseline)
+        , m_temporary(glyph.m_temporary)
+        , m_template(glyph.m_template)
+        , m_preview(glyph.m_preview)
+        , m_draw(glyph.m_draw)
+        {}
+
+    GlyphContext(GlyphContext *glyph)
+        : m_glyphId(glyph->m_glyphId)
+        , m_character(glyph->m_character)
+        , m_glyphSize(glyph->m_glyphSize)
+        , m_profile(glyph->m_profile)
+        , m_offsetLeft(glyph->m_offsetLeft)
+        , m_baseline(glyph->m_baseline)
+        , m_temporary(glyph->m_temporary)
+        , m_template(glyph->m_template)
+        , m_preview(glyph->m_preview)
+        , m_draw(glyph->m_draw)
+        {}
+
+    ~GlyphContext() {}
+
+    const GlyphContext & operator= (const GlyphContext &glyph)
     {
-        m_key = GlyphKey(character, bitmapDimension->bitmapDimension());
+        m_glyphId = glyph.m_glyphId;
+        m_character = glyph.m_character;
+        m_glyphSize = glyph.m_glyphSize;
+        m_profile = glyph.m_profile;
+        m_temporary = glyph.m_temporary;
+        m_offsetLeft = glyph.m_offsetLeft;
+        m_baseline = glyph.m_baseline;
+
+        m_template = glyph.m_template;
+        m_preview = glyph.m_preview;
+        m_draw = glyph.m_draw;
+
+        return *this;
     }
 
-    const GlyphKey & key() { return m_key; }
-
-    QSharedPointer<BitmapDimension> bitmapDimension() const { return m_bitmapDimension; }
-
-    bool temporary () const { return m_temporary; }
-    bool setTemporary () { m_temporary = true; return m_temporary; }
-    bool resetTemporary () { m_temporary = false; return m_temporary; }
-    void setTemporaryValue (bool value) { m_temporary = value; }
-
-    const QString &fontPath () const { return m_fontPath; }
-    const QFont & glyphFont() const { return m_glyphFont; }
-    const QChar & character() const { return m_character; }
-    int glyphSize () const { return m_glyphSize; }
-    const GlyphOffset & glyphOffset() const { return m_glyphOffset; }
-    GlyphOffset & glyphOffset() { return m_glyphOffset; }
-
-    GlyphKey & glyphKey() { return m_key; }
-
-    void setGlyphOffset(const GlyphOffset &offset)
+    bool operator== (const GlyphContext &glyph) const
     {
-        m_glyphOffset = offset;
+        return (
+               m_glyphId == glyph.m_glyphId
+            && m_character == glyph.m_character
+            && m_glyphSize == glyph.m_glyphSize
+            && m_profile == glyph.m_profile
+            && m_temporary == glyph.m_temporary
+            && m_offsetLeft == glyph.m_offsetLeft
+            && m_baseline == glyph.m_baseline
+        );
     }
 
-    void resetGlyphOffset ()
+    bool operator!= (const GlyphContext &glyph) const
     {
-        m_glyphOffset = GlyphOffset{0, 0};
+        return (
+               m_glyphId != glyph.m_glyphId
+            || m_character != glyph.m_character
+            || m_glyphSize != glyph.m_glyphSize
+            || m_profile != glyph.m_profile
+            || m_temporary != glyph.m_temporary
+            || m_offsetLeft == glyph.m_offsetLeft
+            || m_baseline == glyph.m_baseline
+        );
     }
 
-    // Обёртки
-    int dimension () const
-    {
-        return m_bitmapDimension->bitmapDimension();
-    }
+    bool isValid() const { return (m_character != QChar() && m_glyphSize > 0 && m_profile >= 0); }
+    
+    int glyphId() const { return m_glyphId; }
+    const QChar & character() const { return m_character; };
+    int glyphSize() const { return m_glyphSize; }
+    int profile() const { return m_profile; }
+    int temporary() const { return m_temporary; }
+    int offsetLeft() const { return m_offsetLeft; }
+    int baseline() const { return m_baseline; }
 
-    void offsetReset () { m_glyphOffset.reset (); }
-    int offsetLeft() { return m_glyphOffset.left(); }
-    int offsetUp() { return m_glyphOffset.up(); }
-    int offsetRight() { return m_glyphOffset.right(); }
-    int offsetDown() { return m_glyphOffset.down(); }
+    void setCharacter(const QChar &value) { m_character = value; }
+    void setGlyphSize(int value) { m_glyphSize = value; }
+    void setProfile(int value) { m_profile = value; }
+    void setGlyphId(int value) { m_glyphId = value; }
+    void setTemporary(bool value = true) { m_temporary = value; }
+    void setOffsetLeft(int value) { m_offsetLeft = value; }
+    void setBaseline(int value) { m_baseline = value; }
+
+    // Для QVariant/QSettings
+    operator QVariant() const {
+        if(QMetaType::fromName("GlyphContext").isValid()) {
+            return QVariant::fromValue(*this);
+        } else {
+            // Fallback для случая, когда GridOffsets не зарегистрирован
+            QVariantMap map;
+
+            map["id"] = m_glyphId;
+            map["character"] = m_character;
+            map["glyph_size"] = m_glyphSize;
+            map["profile"] = m_profile;
+            map["offset_left"] = m_offsetLeft;
+            map["baseline"] = m_baseline;
+            map["temporary"] = m_temporary;
+            map["template"] = m_template;
+            map["preview"] = m_preview;
+            map["draw"] = m_draw;
+
+            return map;
+        }
+    }
 
 #ifndef QT_NO_DATASTREAM
-    friend inline QDataStream & operator<<(QDataStream &out, const GlyphContext &context);
-    friend inline QDataStream & operator>>(QDataStream &in, GlyphContext &context);
+    friend QDataStream & operator << (QDataStream &out, const GlyphContext &profile);
+    friend QDataStream & operator >> (QDataStream &in, GlyphContext &profile);
 #endif
 
+
 private:
-    QSharedPointer<BitmapDimension> m_bitmapDimension;
+    int m_glyphId;
+    QChar m_character;
     int m_glyphSize;
+    int m_profile;
+    int m_offsetLeft;
+    int m_baseline;
     bool m_temporary;
 
-    QChar m_character;
-    QFont m_glyphFont;
-    QString m_fontPath;
-
-    GlyphKey m_key;
-
-    GlyphOffset m_glyphOffset;
+    QImage m_template;
+    QImage m_preview;
+    QImage m_draw;
 };
 
 #ifndef QT_NO_DATASTREAM
-inline QDataStream & operator<<(QDataStream &out, const GlyphContext &context)
-{
-    out << context.m_character
-        << context.m_glyphSize
-        << context.m_glyphFont
-        << context.m_fontPath
-        << context.m_temporary
-        << *(context.m_bitmapDimension.data());
+    inline QDataStream & operator << (QDataStream &out, const GlyphContext &profile)
+    {
+        out << profile.m_glyphId
+            << profile.m_character
+            << profile.m_glyphSize
+            << profile.m_profile
+            << profile.m_offsetLeft
+            << profile.m_baseline
+            << profile.m_temporary
+            << profile.m_template
+            << profile.m_preview
+            << profile.m_draw;
 
-    return out;
-}
+        return out;
+    }
 
-inline QDataStream & operator>>(QDataStream &in, GlyphContext &context)
-{
-    in >> context.m_character
-       >> context.m_glyphSize
-       >> context.m_glyphFont
-       >> context.m_fontPath
-       >> context.m_temporary
-       >> *(context.m_bitmapDimension.data());
+    inline QDataStream & operator >> (QDataStream &in, GlyphContext &profile)
+    {
+        in  >> profile.m_glyphId
+            >> profile.m_character
+            >> profile.m_glyphSize
+            >> profile.m_profile
+            >> profile.m_offsetLeft
+            >> profile.m_baseline
+            >> profile.m_temporary
+            >> profile.m_template
+            >> profile.m_preview
+            >> profile.m_draw;
 
-    return in;
-}
+        return in;
+    }
 #endif
 
 #ifndef QT_NO_DEBUG_OUTPUT
-inline QDebug operator<<(QDebug debug, const GlyphContext &context)
+inline QDebug operator <<(QDebug debug, const GlyphContext &glyph)
 {
     QDebugStateSaver saver(debug); // Для автоматического сохранения состояния
-    debug.nospace() << "GlyphContext(character: "
-        << context.character()
-        << ", size: "
-        << context.glyphSize()
-        << ", font path: "
-        << context.fontPath()
-        << ", font: "
-        << context.glyphFont().family()
-        << ", temporary: " << context.temporary()
-        << ", "
-        << *(context.bitmapDimension().data())
+    debug.nospace() << "GlyphContext(Id: "
+        << glyph.glyphId()
+        << ", Size: "
+        << glyph.glyphSize()
+        << ", Character: "
+        << glyph.character()
+        << ", temporary: "
+        << glyph.temporary ()
+        << ", offset left: "
+        << glyph.offsetLeft()
+        << ", baseline: "
+        << glyph.baseline()
+        << ", Valid: "
+        << glyph.isValid ()
         << ")";
 
     return debug;
 }
-
-inline QDebug operator<<(QDebug debug, const GlyphContext* context) {
-    if (!context) return debug << "GlyphContext(nullptr)";
-    return debug << *context;
-}
-
 #endif
 
 Q_DECLARE_METATYPE(GlyphContext)
 
-#endif // GLYPHCONTEXT_H
+#endif // GLYPHCONTEXT_H_

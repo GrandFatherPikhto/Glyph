@@ -1,16 +1,29 @@
 #include "mainwindow.h"
 
+#include <QtCore>
 #include <QApplication>
-#include <QCoreApplication>
 #include <QLocale>
 #include <QTranslator>
-#include <QDebug>
-#include <QMargins>
+#include <QCoreApplication>
+#include <QMetaType>
 
-#include "glyphcontext.h"
+#include "glyphprofile.h"
 #include "gridpaddings.h"
-#include "bitmapdimension.h"
-#include "dimensionmanager.h"
+#include "glyphcontext.h"
+
+void registerMetaTypes ()
+{
+    qRegisterMetaType<GridPaddings>("GridPaddings");
+    QMetaType::registerConverter<GridPaddings, QVariant>();
+
+    qRegisterMetaType<GlyphProfile>("GlyphProfile");
+    // qRegisterMetaTypeStreamOperators<GlyphProfile>("GlyphProfile");    
+    QMetaType::registerConverter<GlyphProfile, QVariant>();
+
+    qRegisterMetaType<GlyphContext>("GlyphContext");
+    // qRegisterMetaTypeStreamOperators<GlyphProfile>("GlyphProfile");    
+    QMetaType::registerConverter<GlyphContext, QVariant>();
+}
 
 int main(int argc, char *argv[])
 {
@@ -19,46 +32,10 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("DAE");
     QCoreApplication::setApplicationName("Glyph");
 
-    Q_INIT_RESOURCE(main); //< Нужно, если ресурс добавлен в виде библиотеки (main.qrc)
-
-#if 0
-    qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-        if (msg.startsWith("qt.text.font.db"))
-            return; // подавляем
-        if (msg.startsWith("OpenType support missing for"))
-            return; // подавляем
-        if (msg.startsWith("OpenType support missing for"))
-            return; // подавляем
-        if (msg.startsWith("Adding font:"))
-            return;
-
-        fprintf(stdout, "%s\n", msg.toLocal8Bit().constData());
-    });
-#endif
-    system("chcp 65001");
-    setlocale(LC_ALL, "");
-
-    qRegisterMetaType<QMargins>("QMargins");
-    // qRegisterMetaTypeStreamOperators<QMargins>("QMargins");
-
-    qRegisterMetaType<BitmapDimension>("BitmapDimension");
-    // qRegisterMetaTypeStreamOperators<BitmapDimension>("BitmapDimension");
-
-    qRegisterMetaType<DimensionManager>("DimensionManager");
-    // qRegisterMetaTypeStreamOperators<DimensionManager>("DimensionManager");
-
-    qRegisterMetaType<GridPaddings>("GridPaddings");
-    // qRegisterMetaTypeStreamOperators<GridPaddings>("GridPaddings");
-
-    qRegisterMetaType<DimensionManager>("DimensionManager");
-    // qRegisterMetaTypeStreamOperators<DimensionManager>("DimensionManager");
-
-    qRegisterMetaType<GlyphContext>("GlyphContext");
-    // qRegisterMetaTypeStreamOperators<DimensionManager>("GlyphContext");
+    registerMetaTypes ();
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
-
     for (const QString &locale : uiLanguages) {
         const QString baseName = "Glyph_" + QLocale(locale).name();
         if (translator.load(":/i18n/" + baseName)) {
@@ -66,8 +43,9 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    MainWindow window;
-    window.setWindowIcon(QIcon(":/app/icons/app_icon")); // Из ресурсов
-    window.show();
+
+    MainWindow w;
+    w.setWindowIcon(QIcon(":/app/appIcon")); // Из ресурсов
+    w.show();
     return a.exec();
 }
