@@ -47,10 +47,10 @@ void AppSettings::setGlyphProfile(const GlyphProfile &profile) {
     if (m_glyphProfile != profile)
     {
         m_glyphProfile = profile;
-        if (!profile.temporary())
-        {
-            m_profileManager->insertOrReplaceProfile(profile);
-        }
+        // if (!profile.temporary())
+        // {
+        //     m_profileManager->insertOrReplaceProfile(profile);
+        // }
         emit glyphProfileChanged(m_glyphProfile);
     }
 }
@@ -96,7 +96,7 @@ GlyphProfile AppSettings::defaultGlyphProfile()
 
     if(m_fontManager->loadFont(font))
     {
-        return GlyphProfile("", 12, font, m_fontManager->fontPath(), true);
+        return GlyphProfile("", 12, 10, font, m_fontManager->fontPath(), true);
     }
 
     return GlyphProfile();

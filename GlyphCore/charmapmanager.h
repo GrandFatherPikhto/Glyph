@@ -25,6 +25,7 @@ class FontManager;
 class SqlFilter;
 class DbCore;
 class UnicodeMetadataSelectionModel;
+class AppSettings;
 
 class GLYPHCORE_EXPORT CharmapManager : public QObject
 {
@@ -81,6 +82,7 @@ private:
 
     AppContext *m_appContext;
     FontManager *m_fontManager;
+    AppSettings *m_appSettings;
     SqlFilter *m_filter;
 
     QString m_tableName;

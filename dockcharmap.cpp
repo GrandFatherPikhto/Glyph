@@ -7,15 +7,18 @@
 #include "appcontext.h"
 #include "appsettings.h"
 #include "glyphprofile.h"
+#include "glyphcontext.h"
+#include "glyphmanager.h"
 #include "sqlfilter.h"
 #include "charmapmanager.h"
-#include "charmaptablemodel.h"
+#include "charmapmodel.h"
 #include "unicodemetadataselectionmodel.h"
 
 DockCharmap::DockCharmap(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
     , ui(new Ui::DockCharmap)
     , m_appContext(appContext)
+    , m_glyphManager(nullptr)
     , m_charmapModel(nullptr)
     , m_categoryModel(nullptr)
     , m_scriptModel(nullptr)
@@ -37,6 +40,10 @@ DockCharmap::~DockCharmap()
 
 void DockCharmap::setupSignals()
 {
+    QObject::connect(ui->tableViewCharmap, &QTableView::clicked, this, &DockCharmap::glyphClicked);
+
+    QObject::connect(ui->tableViewCharmap, &QTableView::doubleClicked, this, &DockCharmap::glyphDoubleClicked);
+
     QObject::connect(ui->fontComboBox, &QFontComboBox::currentFontChanged, this, [=](const QFont &font){
         QFont newFont(font);
         newFont.setPointSize(14);
@@ -123,10 +130,11 @@ void DockCharmap::setupSignals()
 
 void DockCharmap::setupValues ()
 {
-    Q_ASSERT(m_appContext->characterManager() != nullptr && m_appContext->appSettings() != nullptr);
+    Q_ASSERT(m_appContext->characterManager() != nullptr && m_appContext->appSettings() != nullptr && m_appContext->glyphManager() != nullptr);
 
     m_charmapManager = m_appContext->characterManager();
     m_appSettings = m_appContext->appSettings();
+    m_glyphManager = m_appContext->glyphManager();
     m_filter = m_charmapManager->filter();
 
     initFontComboBox();
@@ -147,7 +155,7 @@ void DockCharmap::initFontComboBox ()
 
 void DockCharmap::initCharmapTable()
 {
-    m_charmapModel = new CharmapTableModel(m_appContext, this);
+    m_charmapModel = new CharmapModel(m_appContext, this);
     refreshCharmapTable();
 
     ui->tableViewCharmap->setModel(m_charmapModel);
@@ -237,6 +245,34 @@ void DockCharmap::refreshDecompositionsList ()
     if (m_decompostionModel->lastError().isValid()) {
         qWarning() << __FILE__ << __LINE__ << m_charmapModel->lastError().text();
     }
+}
+
+void DockCharmap::glyphClicked(const QModelIndex &index)
+{
+    // qDebug() << __FILE__ << __LINE__ << index.row();
+    if (index.isValid() && index.column() == 0)
+    {
+        glyphByRow(index.row());
+    }
+}
+
+void DockCharmap::glyphDoubleClicked(const QModelIndex &index)
+{
+    if(index.isValid())
+    {
+        glyphByRow(index.row());
+    }
+}
+
+
+void DockCharmap::glyphByRow(int row)
+{
+    const QModelIndex &unicodeIdx = m_charmapModel->index(row, 1);
+    quint32 unicode = m_charmapModel->data(unicodeIdx).toUInt();
+    GlyphContext context;
+    context.setCharacter(QChar(unicode));
+    qDebug() << __FILE__ << __LINE__ << context;
+    m_glyphManager->appendGlyphIfNotExists(context);
 }
 
 void DockCharmap::closeEvent(QCloseEvent *event)

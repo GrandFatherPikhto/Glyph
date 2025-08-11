@@ -11,13 +11,13 @@
 
 class AppContext;
 
-class GLYPHMODELS_EXPORT CharmapTableModel : public QSqlQueryModel
+class GLYPHMODELS_EXPORT CharmapModel : public QSqlQueryModel
 {
     Q_OBJECT
 
 public:
-    explicit CharmapTableModel(AppContext *appContext, QObject *parent = nullptr);
-    ~CharmapTableModel();
+    explicit CharmapModel(AppContext *appContext, QObject *parent = nullptr);
+    ~CharmapModel();
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;

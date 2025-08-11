@@ -9,13 +9,14 @@
 class GlyphProfile {
 
 public:
-    explicit GlyphProfile(const QString &name = QString(), int bitmapDimension = -1, const QFont &font = QFont(), const QString &fontPath = QString(), int id = -1, bool temporary = true)
+    explicit GlyphProfile(const QString &name = QString(), int bitmapDimension = -1, int glyphSize=-1, const QFont &font = QFont(), const QString &fontPath = QString(), int id = -1, bool temporary = true)
         : m_id(id)
         , m_name(name)
         , m_font(font)
         , m_fontPath(fontPath)
         , m_temporary(temporary)
         , m_bitmapDimension(bitmapDimension)
+        , m_glyphSize(glyphSize)
         , m_paddingLeft(0)
         , m_paddingTop(0)
         , m_paddingRight(0)
@@ -27,6 +28,7 @@ public:
         : m_id(profile.m_id)
         , m_name(profile.m_name)
         , m_bitmapDimension(profile.m_bitmapDimension)
+        , m_glyphSize(profile.m_glyphSize)
         , m_font(profile.m_font)
         , m_fontPath(profile.m_fontPath)
         , m_temporary(profile.m_temporary)
@@ -40,6 +42,7 @@ public:
         : m_id(profile->m_id)
         , m_name(profile->m_name)
         , m_bitmapDimension(profile->m_bitmapDimension)
+        , m_glyphSize(profile->m_glyphSize)
         , m_font(profile->m_font)
         , m_fontPath(profile->m_fontPath)
         , m_temporary(profile->m_temporary)
@@ -52,6 +55,7 @@ public:
     GlyphProfile(QSharedPointer<GlyphProfile> profile)
         : m_id(profile->m_id)
         , m_name(profile->m_name)
+        , m_glyphSize(profile->m_glyphSize)
         , m_bitmapDimension(profile->m_bitmapDimension)
         , m_font(profile->m_font)
         , m_fontPath(profile->m_fontPath)
@@ -76,6 +80,7 @@ public:
 
     int id() const { return m_id; }
     int bitmapDimension() const {return m_bitmapDimension; }
+    int glyphSize() const { return m_glyphSize; }
     const QFont & font() const { return m_font; }
     const QString & fontPath() const { return m_fontPath; }
     const QString & name() const { return m_name; }
@@ -89,6 +94,7 @@ public:
     void setId(int value) { m_id = value; }
     void setName(const QString &value) { m_name = value; }
     void setBitmapDimension(int value) { m_bitmapDimension = value; }
+    void setGlyphSize(int value) { m_glyphSize = value; }
     void setFont(const QFont &value) { m_font = value; }
     void setFontPath(const QString &value) { m_fontPath = value; }
     void setTemporary (bool value = true) { m_temporary = value; }
@@ -102,6 +108,7 @@ public:
         return (
                m_id == profile.m_id
             && m_bitmapDimension == profile.m_bitmapDimension
+            && m_glyphSize == profile.m_glyphSize
             && m_name == profile.m_name
             && m_font == profile.m_font
             && m_temporary == profile.m_temporary
@@ -117,6 +124,7 @@ public:
         return (
                m_id != profile.m_id
             || m_bitmapDimension != profile.m_bitmapDimension
+            || m_glyphSize != profile.m_glyphSize
             || m_name != profile.m_name
             || m_font != profile.m_font
             || m_temporary != profile.m_temporary
@@ -136,6 +144,7 @@ public:
             m_font = profile.m_font;
             m_fontPath = profile.m_fontPath;
             m_bitmapDimension = profile.m_bitmapDimension;
+            m_glyphSize = profile.m_glyphSize;
             m_temporary = profile.m_temporary;
             m_paddingLeft = profile.m_paddingLeft;
             m_paddingTop = profile.m_paddingTop;
@@ -156,6 +165,7 @@ public:
 
             map["id"] = m_id;
             map["bitmapDimension"] = m_bitmapDimension;
+            map["glyphSize"] = m_glyphSize;
             map["font"] = m_font;
             map["name"] = m_name;
             map["temporary"] = m_temporary;
@@ -176,6 +186,7 @@ public:
 
 private:
     int m_bitmapDimension;
+    int m_glyphSize;
 
     QFont m_font;
     QString m_fontPath;
@@ -196,6 +207,7 @@ inline QDataStream & operator << (QDataStream &out, const GlyphProfile &profile)
     out << profile.m_id
         << profile.m_name
         << profile.m_bitmapDimension
+        << profile.m_glyphSize
         << profile.m_font
         << profile.m_fontPath
         << profile.m_temporary
@@ -212,6 +224,7 @@ inline QDataStream & operator >> (QDataStream &in, GlyphProfile &profile)
     in  >> profile.m_id
         >> profile.m_name
         >> profile.m_bitmapDimension
+        >> profile.m_glyphSize
         >> profile.m_font
         >> profile.m_fontPath
         >> profile.m_temporary
@@ -237,6 +250,8 @@ inline QDebug operator <<(QDebug debug, const GlyphProfile &profile)
         << profile.temporary ()
         << ", Dimension: "
         << profile.bitmapDimension()
+        << ", Size:"
+        << profile.glyphSize()
         << ", Font: "
         << profile.font()
         << ", Font path: "

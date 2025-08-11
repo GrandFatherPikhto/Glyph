@@ -1,19 +1,19 @@
-#include "charmaptablemodel.h"
+#include "charmapmodel.h"
 #include "appcontext.h"
 
-CharmapTableModel::CharmapTableModel(AppContext *appContext, QObject *parent)
+CharmapModel::CharmapModel(AppContext *appContext, QObject *parent)
     : QSqlQueryModel{parent}
     , m_appContext(appContext)
 {
 
 }
 
-CharmapTableModel::~CharmapTableModel()
+CharmapModel::~CharmapModel()
 {
 
 }
 
-QVariant CharmapTableModel::data(const QModelIndex &index, int role) const
+QVariant CharmapModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
@@ -37,7 +37,7 @@ QVariant CharmapTableModel::data(const QModelIndex &index, int role) const
 }
 
 // Переопределяем headerData для локализации заголовков
-QVariant CharmapTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant CharmapModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
@@ -63,7 +63,7 @@ QVariant CharmapTableModel::headerData(int section, Qt::Orientation orientation,
     return QSqlQueryModel::headerData(section, orientation, role);
 }
 
-Qt::ItemFlags CharmapTableModel::flags(const QModelIndex &index) const
+Qt::ItemFlags CharmapModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
         return Qt::NoItemFlags;
@@ -79,12 +79,12 @@ Qt::ItemFlags CharmapTableModel::flags(const QModelIndex &index) const
 }
 
 // Добавляем метод для получения данных по индексу
-QVariant CharmapTableModel::getData(int row, int column) const
+QVariant CharmapModel::getData(int row, int column) const
 {
     return data(index(row, column));
 }
 
-int CharmapTableModel::columnCount(const QModelIndex &parent) const
+int CharmapModel::columnCount(const QModelIndex &parent) const
 {
     // Добавляем 1 столбец для чекбоксов
     return QSqlQueryModel::columnCount(parent) + 1;

@@ -33,8 +33,8 @@ add_library(GlyphModels SHARED
   glyphmodels.cpp
   glyphmodels.h
 
-  charmaptablemodel.cpp
-  charmaptablemodel.h
+  charmapmodel.cpp
+  charmapmodel.h
 
   unicodemetadataselectionmodel.cpp
   unicodemetadataselectionmodel.h

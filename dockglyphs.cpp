@@ -66,6 +66,7 @@ void DockGlyphs::setCurrentProfile(int idx)
     int id = m_profilesModel->data(fieldIdx).toInt();
     GlyphProfile profile;
     m_profileManager->getProfileById(id, profile);
+    m_appSettings->setGlyphProfile(profile);
 
     qDebug() << __FILE__ << __LINE__ << profile;
 }

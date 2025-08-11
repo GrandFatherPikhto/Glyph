@@ -35,6 +35,7 @@ void DockProfiles::setupSignals()
         {
             m_glyphProfile = profile;
             loadGlyphProfile();
+            m_appSettings->setGlyphProfile(profile);
         }
     });
 
@@ -65,6 +66,11 @@ void DockProfiles::setupSignals()
 
     QObject::connect(ui->spinBoxPaddingBottom, &QSpinBox::valueChanged, this, [=](int value){
         m_glyphProfile.setPaddingBottom(value);
+        emit m_appSettings->changeGlyphProfile(m_glyphProfile);
+    });
+
+    QObject::connect(ui->spinBoxGlyphSize, &QSpinBox::valueChanged, this, [=](int value){
+        m_glyphProfile.setGlyphSize(value);
         emit m_appSettings->changeGlyphProfile(m_glyphProfile);
     });
 

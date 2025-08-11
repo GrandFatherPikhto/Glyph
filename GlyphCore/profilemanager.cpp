@@ -49,6 +49,7 @@ bool ProfileManager::createTable()
         "font_family TEXT, "
         "font_path TEXT, "
         "bitmap_dimension INTEGER NOT NULL, "
+        "glyph_size INTEGER NOT NULL, "
         "temporary BOOL, "
         "padding_left INTEGER, "
         "padding_top INTEGER, "
@@ -83,22 +84,19 @@ bool ProfileManager::insertOrReplaceProfile(const GlyphProfile &profile)
     db.transaction();
     // Явно указываем имена столбцов и параметры
     query.prepare(QString("INSERT OR REPLACE INTO %1 "
-                          "(name, font_family, font_path, bitmap_dimension, temporary, padding_left, padding_top, padding_right, padding_bottom) "
-                          "VALUES (:name, :font_family, :font_path, :bitmap_dimension, :temporary, :padding_left, :padding_top, :padding_right, :padding_bottom);").arg(m_tableName));
+                          "(name, font_family, font_path, bitmap_dimension, glyph_size, temporary, padding_left, padding_top, padding_right, padding_bottom) "
+                          "VALUES (:name, :font_family, :font_path, :bitmap_dimension, :glyph_size, :temporary, :padding_left, :padding_top, :padding_right, :padding_bottom);").arg(m_tableName));
 
     query.bindValue(":name", profile.name());
     query.bindValue(":font_family", profile.font().family());
     query.bindValue(":font_path", profile.fontPath());
     query.bindValue(":bitmap_dimension", profile.bitmapDimension());
+    query.bindValue(":glyph_size", profile.glyphSize());
     query.bindValue(":temporary", profile.temporary());
     query.bindValue(":padding_left", profile.paddingLeft());
     query.bindValue(":padding_top", profile.paddingTop());
     query.bindValue(":padding_right", profile.paddingRight());
     query.bindValue(":padding_bottom", profile.paddingBottom());
-
-    // INSERT OR REPLACE INTO profiles (
-    //      name,  font_family,  font_path,  bitmap_dimension,  temporary,  padding_left,  padding_top,  padding_right,  padding_bottom) VALUES (
-    //     :name, :font_family, :font_path, :bitmap_dimension, :temporary, :padding_left, :padding_top, :padding_right, :padding_bottom)
 
     if (!query.exec()) {
         qWarning() << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
@@ -157,7 +155,7 @@ bool ProfileManager::getProfileById(int id, GlyphProfile &profile)
     }
 
     QSqlQuery query(db);
-    query.prepare("SELECT id, name, bitmap_dimension, font_family, font_path, temporary, padding_left, padding_top, padding_right, padding_bottom FROM profiles WHERE id = :id");
+    query.prepare("SELECT id, name, bitmap_dimension, glyph_size, font_family, font_path, temporary, padding_left, padding_top, padding_right, padding_bottom FROM profiles WHERE id = :id");
     query.bindValue(":id", id);
 
     if(!query.exec())
@@ -178,6 +176,7 @@ bool ProfileManager::getProfileById(int id, GlyphProfile &profile)
         profile.setId(query.value("id").toInt());
         profile.setName(query.value("name").toString());
         profile.setBitmapDimension(query.value("bitmap_dimension").toInt());
+        profile.setGlyphSize(query.value("glyph_size").toInt());
 
         QFont font(query.value("font_family").toString());
         profile.setFont(font);

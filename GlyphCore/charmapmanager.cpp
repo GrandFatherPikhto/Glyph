@@ -9,6 +9,7 @@
 #include "fontmanager.h"
 #include "dbcore.h"
 #include "sqlfilter.h"
+#include "appsettings.h"
 
 CharmapManager::CharmapManager(AppContext *appContext)
     : QObject{appContext}
@@ -43,6 +44,8 @@ CharmapManager::~CharmapManager()
 void CharmapManager::setupValues ()
 {
     Q_ASSERT(m_appContext->fontManager() != nullptr);
+
+    m_appSettings = m_appContext->appSettings();
 
     m_filter = new SqlFilter(this);
 
@@ -246,15 +249,24 @@ void CharmapManager::releaseFontFace()
 }
 
 bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
-{    
+{
+    //< Здесь доделать: если !profile.isValid() поменять запрос!
+    GlyphProfile profile = m_appSettings->glyphProfile();
+
     QString sql = QString(
-        "SELECT c.unicode, c.character, cd.name AS category, "
+        "SELECT "
+        "EXISTS ("
+        "SELECT 1 FROM glyphs g "
+        "WHERE g.unicode = c.unicode AND g.profile_id = :profile_id"
+        ") AS has_glyph, "
+        "c.unicode, c.character, cd.name AS category, "
         "sd.name AS script, dd.name AS decomposition "
         "FROM %1 c "
         "JOIN category_data cd ON c.category = cd.id "
         "JOIN script_data sd ON c.script = sd.id "
         "JOIN decomposition_data dd ON c.decomposition = dd.id "
     ).arg(m_tableName);
+
 
     QSqlDatabase db = QSqlDatabase::database();
 
@@ -273,7 +285,7 @@ bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
 
     sql += " " + sqlSort;
 
-    // qDebug() << __FILE__ << __LINE__ << sql;
+    qDebug() << __FILE__ << __LINE__ << sql;
 
     if (!query.prepare(sql))
     {
@@ -282,6 +294,8 @@ bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
     }
 
     const QList<QPair<QString, QVariant>> &binds = m_filter->binds();
+
+    query.bindValue(":profile_id", profile.id());
 
     for (auto const &bind : binds)
     {

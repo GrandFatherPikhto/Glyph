@@ -84,6 +84,13 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="labelGlyphSize">
+         <property name="text">
+          <string>Glyph Size</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="0">
         <widget class="QLineEdit" name="lineEditProfileName"/>
        </item>
@@ -94,6 +101,16 @@
          </property>
          <property name="maximum">
           <number>512</number>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QSpinBox" name="spinBoxGlyphSize">
+         <property name="minimum">
+          <number>6</number>
+         </property>
+         <property name="maximum">
+          <number>1024</number>
          </property>
         </widget>
        </item>
@@ -111,10 +128,17 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="3" column="2">
         <widget class="QPushButton" name="pushButtonCreateProfile">
          <property name="text">
           <string>Create</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QPushButton" name="pushButtonSave">
+         <property name="text">
+          <string>Save</string>
          </property>
         </widget>
        </item>

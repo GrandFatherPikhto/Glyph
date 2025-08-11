@@ -21,9 +21,10 @@
 class AppContext;
 class CharmapManager;
 class AppSettings;
-class CharmapTableModel;
+class CharmapModel;
 class UnicodeMetadataSelectionModel;
 class SqlFilter;
+class GlyphManager;
 
 namespace Ui {
 class DockCharmap;
@@ -58,19 +59,24 @@ private:
     void refreshScriptsList ();
     void refreshDecompositionsList ();
 
+    void glyphClicked(const QModelIndex &index);
+    void glyphDoubleClicked(const QModelIndex &index);
+    void glyphByRow(int row);
+
     void saveDockCharmapState ();
     void restoreDockCharmapState ();
 
     AppContext *m_appContext;
     CharmapManager *m_charmapManager;
     AppSettings *m_appSettings;
+    GlyphManager *m_glyphManager;
     SqlFilter *m_filter;
 
     GlyphProfile m_glyphProfile;
 
     Ui::DockCharmap *ui;
 
-    CharmapTableModel *m_charmapModel;
+    CharmapModel *m_charmapModel;
 
     QFont m_font;
 
