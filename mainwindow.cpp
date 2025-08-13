@@ -2,12 +2,14 @@
 #include "./ui_mainwindow.h"
 
 #include <QFileDialog>
+#include <QLayout>
 #include <QDir>
 
 #include "dockcharmap.h"
 #include "dockglyphs.h"
 #include "appcontext.h"
 #include "dockprofiles.h"
+#include "glyphdraw.h"
 #include "dbcore.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -59,9 +61,12 @@ void MainWindow::createProject()
 void MainWindow::setupValues()
 {
     m_appContext = new AppContext(this);
+    ui->widgetGlyphDraw->setAppContext(m_appContext);
+
     m_dockCharmap = new DockCharmap(m_appContext, this);
     m_dockProfiles = new DockProfiles(m_appContext, this);
     m_dockGlyphs = new DockGlyphs(m_appContext, this);
+
     addDockWidget(Qt::LeftDockWidgetArea, m_dockCharmap);
     addDockWidget(Qt::RightDockWidgetArea, m_dockProfiles);
     addDockWidget(Qt::RightDockWidgetArea, m_dockGlyphs);

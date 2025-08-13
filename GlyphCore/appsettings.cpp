@@ -23,7 +23,6 @@ AppSettings::~AppSettings ()
 
 void AppSettings::setupSignals ()
 {
-    QObject::connect(this, &AppSettings::changeGlyphProfile, this, &AppSettings::setGlyphProfile);
 }
 
 void AppSettings::setupValues()
@@ -36,23 +35,6 @@ void AppSettings::setupValues()
     restoreAppSettings ();
     
     setupSignals ();
-}
-
-const GlyphProfile & AppSettings::glyphProfile() const
-{
-    return m_glyphProfile;
-}
-
-void AppSettings::setGlyphProfile(const GlyphProfile &profile) { 
-    if (m_glyphProfile != profile)
-    {
-        m_glyphProfile = profile;
-        // if (!profile.temporary())
-        // {
-        //     m_profileManager->insertOrReplaceProfile(profile);
-        // }
-        emit glyphProfileChanged(m_glyphProfile);
-    }
 }
 
 const QString & AppSettings::initAppDataCatalog()
@@ -78,26 +60,90 @@ const QString & AppSettings::appDataPath() const
 void AppSettings::saveAppSettings()
 {
     QSettings settings(this);
+    settings.beginGroup("Glyph");
+    settings.setValue("templateColor", m_templateColor);
+    settings.setValue("templateBgColor", m_templateBgColor);
+    settings.setValue("previewColor", m_previewColor);
+    settings.setValue("previewBgColor", m_previewBgColor);
+    settings.setValue("drawColor", m_drawColor);
+    settings.setValue("drawBgColor", m_drawBgColor);
+    settings.endGroup();
 
-    settings.setValue("glyphProfile", m_glyphProfile);
+    settings.beginGroup("GlyphWidget");
+    settings.setValue("widgetMargins", QVariant::fromValue(m_glyphWidgetMargins));
+    settings.endGroup();
+
+    settings.beginGroup("GlyphPreview");
+    settings.setValue("previewMargins", QVariant::fromValue(m_glyphPreviewMargins));
+    settings.endGroup();
+
+    settings.beginGroup("MainToolbar");
+    settings.setValue("gridLayerEnable", m_gridLayerEnable);
+    settings.setValue("templateLayerEnable", m_templateLayerEnable);
+    settings.setValue("previewLayerEnable", m_previewLayerEnable);
+    settings.setValue("drawLayerEnable", m_drawLayerEnable);
+    settings.setValue("glyphRectLayerEnable", m_glyphRectLayerEnable);
+    settings.setValue("baselineLayerEnable", m_baselineLayerEnable);
+    settings.setValue("bitmapRectLayerEnable", m_bitmapRectLayerEnable);
+    settings.endGroup();
+
+    settings.beginGroup("Projects");
+    settings.setValue("defaultProjectPath", m_defaultProjectPath);
+    settings.endGroup();
+
+    settings.sync();
 }
 
 void AppSettings::restoreAppSettings()
 {
     QSettings settings(this);
+    
+    settings.beginGroup("Glyph");
+    QColor templateColor = settings.value("templateColor", QColor(0x00, 0x00, 0x55, 0x55)).value<QColor>();
+    if (templateColor.isValid())
+        m_templateColor = templateColor;
 
-    m_glyphProfile = settings.value("glyphProfile", defaultGlyphProfile()).value<GlyphProfile>();
-    m_glyphProfile.setTemporary(true);
+    QColor templateBgColor = settings.value("templateBgColor", QColor(Qt::white)).value<QColor>();
+    if (templateBgColor.isValid())
+        m_templateBgColor = templateBgColor;
+
+    QColor previewColor = settings.value("previewColor", QColor(0x66, 0x22, 0x00, 0x33)).value<QColor>();
+    if (previewColor.isValid())
+       m_previewColor = previewColor;
+
+    QColor previewBgColor = settings.value("previewBgColor", QColor(Qt::white)).value<QColor>();
+    if (previewBgColor.isValid())
+        m_previewBgColor = previewBgColor;
+
+    QColor drawColor = settings.value("drawColor", QColor(Qt::gray)).value<QColor>();
+    if (drawColor.isValid())
+        m_drawColor = drawColor;
+
+    QColor drawBgColor = settings.value("drawBgColor", QColor(Qt::white)).value<QColor>();
+    if (drawBgColor.isValid())
+        m_drawBgColor = drawBgColor;
+    settings.endGroup();
+
+    settings.beginGroup("GlyphWidget");
+    m_glyphWidgetMargins = settings.value("widgetMargins", QVariant::fromValue(QMargins(50,50,50,50))).value<QMargins>();
+    settings.endGroup();
+
+    settings.beginGroup("GlyphPrevew");
+    m_glyphPreviewMargins = settings.value("previewMargins", QVariant::fromValue(QMargins(3,3,3,3))).value<QMargins>();
+    settings.endGroup();
+
+    settings.beginGroup("MainToolbar");
+    m_gridLayerEnable = settings.value("gridLayerEnable").toBool();
+    m_templateLayerEnable = settings.value("templateLayerEnable").toBool();
+    m_previewLayerEnable = settings.value("previewLayerEnable").toBool();
+    m_drawLayerEnable = settings.value("drawLayerEnable").toBool();
+    m_glyphRectLayerEnable = settings.value("glyphRectLayerEnable").toBool();
+    m_baselineLayerEnable = settings.value("baselineLayerEnable").toBool();
+    m_bitmapRectLayerEnable = settings.value("bitmapRectLayerEnable").toBool();
+    settings.endGroup();
+
+    settings.beginGroup("Projects");
+    m_defaultProjectPath = settings.value("defaultProjectPath", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
+    settings.endGroup();
 }
 
-GlyphProfile AppSettings::defaultGlyphProfile()
-{
-    QFont font("Arial");
-
-    if(m_fontManager->loadFont(font))
-    {
-        return GlyphProfile("", 12, 10, font, m_fontManager->fontPath(), true);
-    }
-
-    return GlyphProfile();
-}

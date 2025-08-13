@@ -1,9 +1,17 @@
+#include <QChar>
+
 #include "charmapmodel.h"
 #include "appcontext.h"
+#include "appsettings.h"
+#include "glyphmanager.h"
+#include "profilemanager.h"
 
 CharmapModel::CharmapModel(AppContext *appContext, QObject *parent)
     : QSqlQueryModel{parent}
     , m_appContext(appContext)
+    , m_profileManager(appContext->profileManager())
+    , m_appSettings(appContext->appSettings())
+    , m_glyphManager(appContext->glyphManager())
 {
 
 }
@@ -22,9 +30,13 @@ QVariant CharmapModel::data(const QModelIndex &index, int role) const
     if (index.column() == 0) {
         if (role == Qt::DisplayRole) {
             return QVariant(); // Пустое значение для отображения
-        }
-        else if (role == Qt::CheckStateRole) {
-            // return m_checkedRows.contains(index.row()) ? Qt::Checked : Qt::Unchecked;
+        } else if (role == Qt::CheckStateRole) {
+            QVariant dbValue = QSqlQueryModel::data(index, Qt::DisplayRole);
+            if (dbValue.isValid())
+            {
+                return dbValue.toBool() ? Qt::Checked : Qt::Unchecked;
+            }
+
             return Qt::Unchecked;
         }
     }
@@ -88,4 +100,60 @@ int CharmapModel::columnCount(const QModelIndex &parent) const
 {
     // Добавляем 1 столбец для чекбоксов
     return QSqlQueryModel::columnCount(parent) + 1;
+}
+
+int CharmapModel::unicode(int row)
+{
+    const QModelIndex & index = QSqlQueryModel::index(row, 1);
+    if (index.isValid())
+    {
+        return data(index, Qt::DisplayRole).toInt();
+    }
+
+    return -1;
+}
+
+int CharmapModel::checked(int row)
+{
+    const QModelIndex & index = QSqlQueryModel::index(row, 0);
+    if (index.isValid())
+    {
+        // qDebug() << __FILE__ << __LINE__ << "Index: " << index << ", Data: " << data(index, Qt::CheckStateRole);
+        return data(index, Qt::CheckStateRole).toInt();
+    }
+
+    return -1;
+}
+
+QChar CharmapModel::character(int row)
+{
+    const QModelIndex & index = QSqlQueryModel::index(row, 1);
+    if (index.isValid())
+    {
+        return QChar(data(index, Qt::DisplayRole).toUInt());
+    }
+
+    return QChar();
+}
+
+GlyphContext CharmapModel::glyphContext(int row)
+{
+    GlyphContext context;
+
+    QChar ch = character(row);
+
+    if(ch == QChar())
+        return context;
+
+    context.setCharacter(ch);
+    m_profileManager->defaultGlyphContext(context);
+
+    if (m_glyphManager->findGlyph(context))
+    {
+        return context;
+    }
+
+    context.setTemporary();
+
+    return context;
 }

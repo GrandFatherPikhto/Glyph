@@ -1,0 +1,1 @@
+SELECT EXISTS (SELECT 1 FROM glyphs g WHERE g.unicode = c.unicode AND g.profile_id = 9) AS has_glyph, c.unicode, c.character, cd.name AS category, sd.name AS script, dd.name AS decomposition FROM charmap c JOIN category_data cd ON c.category = cd.id JOIN script_data sd ON c.script = sd.id JOIN decomposition_data dd ON c.decomposition = dd.id  ORDER BY c.unicode ASC

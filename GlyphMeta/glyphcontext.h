@@ -94,18 +94,20 @@ public:
 
     bool isValid() const { return (m_character != QChar() && m_glyphSize > 0 && m_profile >= 0); }
     
-    int glyphId() const { return m_glyphId; }
+    int id() const { return m_glyphId; }
     const QChar & character() const { return m_character; };
-    int glyphSize() const { return m_glyphSize; }
+    int size() const { return m_glyphSize; }
     int profile() const { return m_profile; }
     int temporary() const { return m_temporary; }
     int offsetLeft() const { return m_offsetLeft; }
     int baseline() const { return m_baseline; }
 
+    void setId(int value) { m_glyphId = value; }
+    void resetId() { m_glyphId = -1; }
+    void resetProfile() { m_profile = -1; }
     void setCharacter(const QChar &value) { m_character = value; }
-    void setGlyphSize(int value) { m_glyphSize = value; }
-    void setProfile(int value) { m_profile = value; }
-    void setGlyphId(int value) { m_glyphId = value; }
+    void setSize(int value) { m_glyphSize = value; }
+    void setProfileId(int value) { m_profile = value; }
     void setTemporary(bool value = true) { m_temporary = value; }
     void setOffsetLeft(int value) { m_offsetLeft = value; }
     void setBaseline(int value) { m_baseline = value; }
@@ -192,19 +194,21 @@ inline QDebug operator <<(QDebug debug, const GlyphContext &glyph)
 {
     QDebugStateSaver saver(debug); // Для автоматического сохранения состояния
     debug.nospace() << "GlyphContext(Id: "
-        << glyph.glyphId()
+        << glyph.id()
         << ", Size: "
-        << glyph.glyphSize()
+        << glyph.size()
         << ", Character: "
         << glyph.character()
+        << ", profile: "
+        << glyph.profile()
         << ", temporary: "
         << glyph.temporary ()
+        << ", Valid: "
+        << glyph.isValid ()
         << ", offset left: "
         << glyph.offsetLeft()
         << ", baseline: "
         << glyph.baseline()
-        << ", Valid: "
-        << glyph.isValid ()
         << ")";
 
     return debug;

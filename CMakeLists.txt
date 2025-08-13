@@ -83,6 +83,7 @@ target_link_libraries(Glyph PRIVATE
     GlyphCore
     GlyphModels
     GlyphMeta
+    GlyphDraw
 )
 
 if(SQLite3_FOUND)
@@ -133,3 +134,4 @@ endif()
 add_subdirectory(GlyphCore)
 add_subdirectory(GlyphModels)
 add_subdirectory(GlyphMeta)
+add_subdirectory(GlyphDraw)

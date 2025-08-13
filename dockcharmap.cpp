@@ -4,13 +4,15 @@
 
 #include "dockcharmap.h"
 #include "ui_dockcharmap.h"
+
 #include "appcontext.h"
 #include "appsettings.h"
-#include "glyphprofile.h"
+#include "profilecontext.h"
 #include "glyphcontext.h"
 #include "glyphmanager.h"
 #include "sqlfilter.h"
 #include "charmapmanager.h"
+#include "profilemanager.h"
 #include "charmapmodel.h"
 #include "unicodemetadataselectionmodel.h"
 
@@ -19,6 +21,7 @@ DockCharmap::DockCharmap(AppContext *appContext, QWidget *parent)
     , ui(new Ui::DockCharmap)
     , m_appContext(appContext)
     , m_glyphManager(nullptr)
+    , m_profileManager(nullptr)
     , m_charmapModel(nullptr)
     , m_categoryModel(nullptr)
     , m_scriptModel(nullptr)
@@ -49,20 +52,18 @@ void DockCharmap::setupSignals()
         newFont.setPointSize(14);
         m_charmapManager->loadFont(newFont);
         refreshCharmapTable();
-        m_glyphProfile.setFont(newFont);
-        m_glyphProfile.setFontPath(m_charmapManager->fontPath());
-        m_appSettings->setGlyphProfile(m_glyphProfile);
+        m_profile.setFont(newFont);
+        m_profile.setFontPath(m_charmapManager->fontPath());
+        emit m_profileManager->changeProfile(m_profile);
     });
 
     QObject::connect(ui->listViewCategories->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=](const QItemSelection &selected, const QItemSelection &deselected){
-        // qDebug() << __FILE__ << __LINE__ << m_categoryCondition->prepareSql() << m_categoryCondition->binds();
         refreshCharmapTable();
     });
 
     QObject::connect(ui->listViewScripts->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=](const QItemSelection &selected, const QItemSelection &deselected){
         Q_UNUSED(selected);
         Q_UNUSED(deselected);
-        // qDebug() << __FILE__ << __LINE__ << m_scriptCondition->prepareSql() << m_scriptCondition->binds();
         refreshCharmapTable();
     });
 
@@ -95,8 +96,8 @@ void DockCharmap::setupSignals()
         {
             QVariantList characters;
             std::transform(
-                text.begin(), text.end(),                     // Исходный диапазон (символы строки)
-                std::back_inserter(characters),            // Куда записывать (в QVariantList)
+                text.begin(), text.end(),
+                std::back_inserter(characters),
                 [](const QChar &ch) { return QVariant(static_cast<quint32>(ch.unicode())); } // Лямбда: QChar → QVariant
                 );
             condition->appendValue(characters);
@@ -108,10 +109,11 @@ void DockCharmap::setupSignals()
         refreshCharmapTable();
     });
 
-    QObject::connect(m_appSettings, &AppSettings::glyphProfileChanged, this, [=](const GlyphProfile &profile){
-        if (m_glyphProfile != profile && !profile.temporary() && profile.font() != QFont())
+    QObject::connect(m_profileManager, &ProfileManager::profileChanged, this, [=](const ProfileContext &profile){
+        if (m_profile != profile && !profile.temporary() && profile.font() != QFont())
         {
             ui->fontComboBox->setCurrentFont(profile.font());
+            refreshCharmapTable();
         }
     });
 
@@ -126,6 +128,45 @@ void DockCharmap::setupSignals()
         m_filter->reset();
         refreshCharmapTable();
     });
+
+    QObject::connect(ui->spinBoxUnicodeFrom, &QSpinBox::valueChanged, this, [=](int value){
+        QSharedPointer<Condition> condition = m_filter->getCondition("from");
+        if (value > 0)
+        {
+            condition->setValue(QVariant(value));
+            refreshCharmapTable();
+        } else
+        {
+            condition->resetValue();
+            refreshCharmapTable();
+        }
+    });
+
+    QObject::connect(ui->spinBoxUnicodeTo, &QSpinBox::valueChanged, this, [=](int value){
+        QSharedPointer<Condition> condition = m_filter->getCondition("to");
+        if (value > 0)
+        {
+            condition->setValue(QVariant(value));
+            refreshCharmapTable();
+        } else
+        {
+            condition->resetValue();
+            refreshCharmapTable();
+        }
+    });
+
+    QObject::connect(ui->tableViewCharmap->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=](const QItemSelection &selected, const QItemSelection &deselected){
+        if (selected.indexes().size())
+        {
+            const QModelIndexList &selectedIdxs = selected.indexes();
+            const QModelIndex &selectedIdx = selected.indexes().at(0);
+            if (selectedIdx.isValid())
+            {
+                GlyphContext context = m_charmapModel->glyphContext(selectedIdx.row());
+                emit m_glyphManager->changeGlyph(context);
+            }
+        }
+    });
 }
 
 void DockCharmap::setupValues ()
@@ -135,7 +176,10 @@ void DockCharmap::setupValues ()
     m_charmapManager = m_appContext->characterManager();
     m_appSettings = m_appContext->appSettings();
     m_glyphManager = m_appContext->glyphManager();
+    m_profileManager = m_appContext->profileManager();
     m_filter = m_charmapManager->filter();
+
+    m_profile = m_profileManager->profile();
 
     initFontComboBox();
     initCategoriesList();
@@ -146,10 +190,9 @@ void DockCharmap::setupValues ()
 
 void DockCharmap::initFontComboBox ()
 {
-    m_glyphProfile = m_appSettings->glyphProfile();
-    if (m_glyphProfile.font() != QFont())
+    if (m_profile.font() != QFont())
     {
-        ui->fontComboBox->setCurrentFont(m_glyphProfile.font());
+        ui->fontComboBox->setCurrentFont(m_profile.font());
     }
 }
 
@@ -170,7 +213,7 @@ void DockCharmap::initCharmapTable()
         "    border: 1px solid #6060ff;"
         "}"
         );
-    ui->tableViewCharmap->setSelectionMode(QAbstractItemView::SelectionMode::MultiSelection);
+    ui->tableViewCharmap->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
 }
 
 void DockCharmap::refreshCharmapTable ()
@@ -249,10 +292,9 @@ void DockCharmap::refreshDecompositionsList ()
 
 void DockCharmap::glyphClicked(const QModelIndex &index)
 {
-    // qDebug() << __FILE__ << __LINE__ << index.row();
     if (index.isValid() && index.column() == 0)
     {
-        glyphByRow(index.row());
+        setResetGlyph(index.row());
     }
 }
 
@@ -260,19 +302,29 @@ void DockCharmap::glyphDoubleClicked(const QModelIndex &index)
 {
     if(index.isValid())
     {
-        glyphByRow(index.row());
+        setResetGlyph(index.row());
     }
 }
 
-
-void DockCharmap::glyphByRow(int row)
+void DockCharmap::setResetGlyph(int row)
 {
-    const QModelIndex &unicodeIdx = m_charmapModel->index(row, 1);
-    quint32 unicode = m_charmapModel->data(unicodeIdx).toUInt();
-    GlyphContext context;
-    context.setCharacter(QChar(unicode));
-    qDebug() << __FILE__ << __LINE__ << context;
-    m_glyphManager->appendGlyphIfNotExists(context);
+    GlyphContext context = m_charmapModel->glyphContext(row);
+    if(context.isValid())
+    {
+        if (context.id() < 0)
+        {
+            if (m_glyphManager->appendGlyphIfNotExists(context))
+            {
+                refreshCharmapTable();
+            }
+        } else
+        {
+            if (m_glyphManager->removeGlyphById(context.id()))
+            {
+                refreshCharmapTable();
+            }
+        }
+    }
 }
 
 void DockCharmap::closeEvent(QCloseEvent *event)
@@ -296,6 +348,7 @@ void DockCharmap::showEvent(QShowEvent *event)
 void DockCharmap::saveDockCharmapState()
 {
     QSettings settings(this);
+
     settings.beginGroup("DockCharmap");
 
     settings.setValue("geometry", saveGeometry());
@@ -311,6 +364,7 @@ void DockCharmap::saveDockCharmapState()
 void DockCharmap::restoreDockCharmapState ()
 {
     QSettings settings(this);
+
     settings.beginGroup("DockCharmap");
 
     restoreGeometry(settings.value("geometry").toByteArray());

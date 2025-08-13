@@ -28,9 +28,9 @@ AppContext::~AppContext()
 void AppContext::setupVariables()
 {
     m_appSettings = new AppSettings(this);
+    m_fontManager = new FontManager(this);
     m_dbCore = new DbCore(this);
     m_profileManager = new ProfileManager(this);
-    m_fontManager = new FontManager(this);
     m_charmapManager = new CharmapManager(this);
     m_unicodeMetadata = new UnicodeMetadata(this);
     m_glyphManager = new GlyphManager(this);

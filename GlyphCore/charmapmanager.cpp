@@ -10,10 +10,14 @@
 #include "dbcore.h"
 #include "sqlfilter.h"
 #include "appsettings.h"
+#include "profilecontext.h"
+#include "profilemanager.h"
 
 CharmapManager::CharmapManager(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
+    , m_appSettings(nullptr)
+    , m_profileManager(nullptr)
     , m_ftLibrary(0)
     , m_ftFace(0)
     , m_fontSize(12)
@@ -46,6 +50,8 @@ void CharmapManager::setupValues ()
     Q_ASSERT(m_appContext->fontManager() != nullptr);
 
     m_appSettings = m_appContext->appSettings();
+    m_profileManager = m_appContext->profileManager();
+    m_fontManager = m_appContext->fontManager();
 
     m_filter = new SqlFilter(this);
 
@@ -54,6 +60,8 @@ void CharmapManager::setupValues ()
     m_filter->addCondition("decomposition", QSharedPointer<Condition>::create("dd.id", "dd_id"));
     m_filter->addCondition("msb", QSharedPointer<Condition>::create("(c.unicode >> 8)", "msb"));
     m_filter->addCondition("character", QSharedPointer<Condition>::create("c.unicode", "cu"));
+    m_filter->addCondition("from", QSharedPointer<Condition>::create("c.unicode", "from", Condition::ConditionOperator::GE));
+    m_filter->addCondition("to", QSharedPointer<Condition>::create("c.unicode", "to", Condition::ConditionOperator::LE));
 
     m_fontManager = m_appContext->fontManager();
 
@@ -251,13 +259,13 @@ void CharmapManager::releaseFontFace()
 bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
 {
     //< Здесь доделать: если !profile.isValid() поменять запрос!
-    GlyphProfile profile = m_appSettings->glyphProfile();
+    ProfileContext profile = m_profileManager->profile();
 
     QString sql = QString(
         "SELECT "
         "EXISTS ("
-        "SELECT 1 FROM glyphs g "
-        "WHERE g.unicode = c.unicode AND g.profile_id = :profile_id"
+            "SELECT 1 FROM glyphs g "
+            "WHERE g.unicode = c.unicode AND g.profile_id = :profile_id"
         ") AS has_glyph, "
         "c.unicode, c.character, cd.name AS category, "
         "sd.name AS script, dd.name AS decomposition "
@@ -285,7 +293,7 @@ bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
 
     sql += " " + sqlSort;
 
-    qDebug() << __FILE__ << __LINE__ << sql;
+    // qDebug() << __FILE__ << __LINE__ << sql;
 
     if (!query.prepare(sql))
     {
@@ -306,6 +314,8 @@ bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
     {
         qWarning() << "Can't execute sql query " << sql << query.lastQuery();
     }
+
+    // qDebug() << __FILE__ << __LINE__ << query.lastQuery() << ", ProfileID: " << m_appSettings->glyphProfile().id() << ", Binds: " << binds << query.boundValues() << query.boundValueNames();
 
     return true;
 }

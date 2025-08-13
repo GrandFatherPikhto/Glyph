@@ -6,6 +6,7 @@ FontManager::FontManager(AppContext *appContext)
     , m_appContext(appContext)
     , m_fontPath(QString())
 {
+    initContext ();
     QObject::connect(m_appContext, &AppContext::valuesInited, this, &FontManager::setupValues);
 }
 
@@ -16,7 +17,6 @@ FontManager::~FontManager()
 
 void FontManager::setupValues ()
 {
-    initContext ();
     setupSignals ();
 }
 
@@ -57,7 +57,7 @@ bool FontManager::getRegisterFontFilePath()
 {
     HKEY hKey;
     for (const QString &registerPath : std::as_const(m_fontRegisterPaths)) {
-        // qDebug() << registerPath;
+        // qDebug() << __FILE__ << __LINE__ << registerPath;
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, registerPath.toStdWString().c_str(), 0, KEY_READ, &hKey) != ERROR_SUCCESS) {
             continue;
         }
@@ -67,6 +67,7 @@ bool FontManager::getRegisterFontFilePath()
         if (!fontPath.isEmpty())
         {
             m_fontPath = fontPath;
+            // qDebug() << __FILE__ << __LINE__ << m_fontPath;
             return true;
         }
     }

@@ -6,8 +6,9 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlQueryModel>
+#include <QSettings>
 
-#include "glyphprofile.h"
+#include "profilecontext.h"
 
 namespace Ui {
 class DockGlyphs;
@@ -17,6 +18,8 @@ class AppContext;
 class AppSettings;
 class ProfileManager;
 class CharmapManager;
+class GlyphManager;
+class GlyphModel;
 
 class DockGlyphs : public QDockWidget
 {
@@ -26,11 +29,17 @@ public:
     explicit DockGlyphs(AppContext *appContext, QWidget *parent = nullptr);
     ~DockGlyphs();
 
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
+
 private:
     void setupValues();
     void setupSignals();
-    void refreshProfilesComboBox ();
-    void setCurrentProfile(int idx);
+    void refreshGlyphsTable ();
+
+    void saveDockGlyphsSettings();
+    void restoreDockGlyphsSettings();
 
     Ui::DockGlyphs *ui;
 
@@ -38,10 +47,11 @@ private:
     AppSettings *m_appSettings;
     ProfileManager *m_profileManager;
     CharmapManager *m_charmapManager;
+    GlyphManager *m_glyphManager;
 
-    QSqlQueryModel *m_profilesModel;
+    GlyphModel *m_glyphsModel;
 
-    GlyphProfile m_glyphProfile;
+    ProfileContext m_profile;
 };
 
 #endif // DOCKGLYPHS_H

@@ -16,7 +16,7 @@
 #include <QShowEvent>
 #include <QHideEvent>
 
-#include "glyphprofile.h"
+#include "profilecontext.h"
 
 class AppContext;
 class CharmapManager;
@@ -25,6 +25,7 @@ class CharmapModel;
 class UnicodeMetadataSelectionModel;
 class SqlFilter;
 class GlyphManager;
+class ProfileManager;
 
 namespace Ui {
 class DockCharmap;
@@ -61,7 +62,7 @@ private:
 
     void glyphClicked(const QModelIndex &index);
     void glyphDoubleClicked(const QModelIndex &index);
-    void glyphByRow(int row);
+    void setResetGlyph(int row);
 
     void saveDockCharmapState ();
     void restoreDockCharmapState ();
@@ -70,9 +71,11 @@ private:
     CharmapManager *m_charmapManager;
     AppSettings *m_appSettings;
     GlyphManager *m_glyphManager;
+    ProfileManager *m_profileManager;
+
     SqlFilter *m_filter;
 
-    GlyphProfile m_glyphProfile;
+    ProfileContext m_profile;
 
     Ui::DockCharmap *ui;
 

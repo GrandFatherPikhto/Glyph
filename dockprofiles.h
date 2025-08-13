@@ -4,7 +4,7 @@
 #include <QDockWidget>
 #include <QSqlTableModel>
 
-#include "glyphprofile.h"
+#include "profilecontext.h"
 
 class AppContext;
 class AppSettings;
@@ -26,7 +26,7 @@ private:
     void updateProfilesTable();
     void setupValues ();
     void setupSignals ();
-    void loadGlyphProfile ();
+    void loadProfileContext ();
     
     Ui::DockProfiles *ui;
     AppContext *m_appContext;
@@ -35,7 +35,7 @@ private:
 
     QSqlTableModel *m_profilesModel;
 
-    GlyphProfile m_glyphProfile;
+    ProfileContext m_profile;
 };
 
 #endif // DOCKPROFILES_H

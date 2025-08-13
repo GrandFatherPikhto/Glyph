@@ -31,7 +31,7 @@ add_library(GlyphMeta SHARED
   GlyphMeta_global.h
 
   glyphcontext.h
-  glyphprofile.h
+  profilecontext.h
   gridpaddings.h
   
   ${TS_FILES}

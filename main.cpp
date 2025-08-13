@@ -7,7 +7,7 @@
 #include <QCoreApplication>
 #include <QMetaType>
 
-#include "glyphprofile.h"
+#include "profilecontext.h"
 #include "gridpaddings.h"
 #include "glyphcontext.h"
 
@@ -16,12 +16,12 @@ void registerMetaTypes ()
     qRegisterMetaType<GridPaddings>("GridPaddings");
     QMetaType::registerConverter<GridPaddings, QVariant>();
 
-    qRegisterMetaType<GlyphProfile>("GlyphProfile");
-    // qRegisterMetaTypeStreamOperators<GlyphProfile>("GlyphProfile");    
-    QMetaType::registerConverter<GlyphProfile, QVariant>();
+    qRegisterMetaType<ProfileContext>("ProfileContext");
+    // qRegisterMetaTypeStreamOperators<ProfileContext>("ProfileContext");    
+    QMetaType::registerConverter<ProfileContext, QVariant>();
 
     qRegisterMetaType<GlyphContext>("GlyphContext");
-    // qRegisterMetaTypeStreamOperators<GlyphProfile>("GlyphProfile");    
+    // qRegisterMetaTypeStreamOperators<ProfileContext>("ProfileContext");    
     QMetaType::registerConverter<GlyphContext, QVariant>();
 }
 

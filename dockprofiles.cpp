@@ -5,6 +5,7 @@
 #include "ui_dockprofiles.h"
 
 #include "appcontext.h"
+#include "profilemanager.h"
 #include "appsettings.h"
 #include "charmapmanager.h"
 #include "profilemanager.h"
@@ -29,58 +30,76 @@ DockProfiles::~DockProfiles()
 
 void DockProfiles::setupSignals()
 {
-    QObject::connect(m_appSettings, &AppSettings::glyphProfileChanged, this, [=](const GlyphProfile &profile){
+    QObject::connect(m_profileManager, &ProfileManager::profileChanged, this, [=](const ProfileContext &profile){
         // qDebug() << __FILE__ << __LINE__ << profile;
-        if (m_glyphProfile != profile)
+        if (m_profile != profile)
         {
-            m_glyphProfile = profile;
-            loadGlyphProfile();
-            m_appSettings->setGlyphProfile(profile);
+            m_profile = profile;
+            loadProfileContext();
+            emit m_profileManager->changeProfile(profile);
         }
     });
 
     QObject::connect(ui->spinBoxBitmapDimension, &QSpinBox::valueChanged, this, [=](int value){
-        m_glyphProfile.setBitmapDimension(value);
-        emit m_appSettings->changeGlyphProfile(m_glyphProfile);
+        m_profile.setBitmapDimension(value);
+        emit m_profileManager->changeProfile(m_profile);
     });
 
     QObject::connect(ui->lineEditProfileName, &QLineEdit::editingFinished, this, [=](){
-        m_glyphProfile.setName(ui->lineEditProfileName->text());
-        emit m_appSettings->changeGlyphProfile(m_glyphProfile);
+        m_profile.setName(ui->lineEditProfileName->text());
+        emit m_profileManager->changeProfile(m_profile);
     });
 
     QObject::connect(ui->spinBoxPaddingLeft, &QSpinBox::valueChanged, this, [=](int value){
-        m_glyphProfile.setPaddingLeft(value);
-        emit m_appSettings->changeGlyphProfile(m_glyphProfile);
+        m_profile.setPaddingLeft(value);
+        emit m_profileManager->changeProfile(m_profile);
     });
 
     QObject::connect(ui->spinBoxPaddingTop, &QSpinBox::valueChanged, this, [=](int value){
-        m_glyphProfile.setPaddingTop(value);
-        emit m_appSettings->changeGlyphProfile(m_glyphProfile);
+        m_profile.setPaddingTop(value);
+        emit m_profileManager->changeProfile(m_profile);
     });
 
     QObject::connect(ui->spinBoxPaddingRight, &QSpinBox::valueChanged, this, [=](int value){
-        m_glyphProfile.setPaddingRight(value);
-        emit m_appSettings->changeGlyphProfile(m_glyphProfile);
+        m_profile.setPaddingRight(value);
+        emit m_profileManager->changeProfile(m_profile);
     });
 
     QObject::connect(ui->spinBoxPaddingBottom, &QSpinBox::valueChanged, this, [=](int value){
-        m_glyphProfile.setPaddingBottom(value);
-        emit m_appSettings->changeGlyphProfile(m_glyphProfile);
+        m_profile.setPaddingBottom(value);
+        emit m_profileManager->changeProfile(m_profile);
     });
 
     QObject::connect(ui->spinBoxGlyphSize, &QSpinBox::valueChanged, this, [=](int value){
-        m_glyphProfile.setGlyphSize(value);
-        emit m_appSettings->changeGlyphProfile(m_glyphProfile);
+        m_profile.setGlyphSize(value);
+        emit m_profileManager->changeProfile(m_profile);
     });
 
     QObject::connect(ui->pushButtonCreateProfile, &QPushButton::clicked, this, [=](){
-        if (m_glyphProfile.isValid() && m_glyphProfile.temporary())
+        if (m_profile.isValid() && m_profile.temporary())
         {
-            // qDebug() << __FILE__ << __LINE__ << m_glyphProfile;
-            m_glyphProfile.setTemporary(false);
-            emit m_appSettings->changeGlyphProfile(m_glyphProfile);
-            updateProfilesTable();
+            // qDebug() << __FILE__ << __LINE__ << m_profile;
+            m_profile.setTemporary(false);
+            if (m_profileManager->insertOrReplaceProfile(m_profile))
+            {
+                emit m_profileManager->changeProfile(m_profile);
+                updateProfilesTable();
+            }
+        }
+    });
+
+    QObject::connect(ui->comboBoxProfiles, &QComboBox::currentIndexChanged, this, [=](int value){
+        QModelIndex idIdx = m_profilesModel->index(value, 0);
+        if (idIdx.isValid())
+        {
+            int id = m_profilesModel->data(idIdx, Qt::DisplayRole).toInt();
+            ProfileContext profile;
+            if (m_profileManager->getProfileById(id, profile))
+            {
+                // qDebug() << __FILE__ << __LINE__ << "Profile Id:" << id << ", Profile: " << profile;
+                m_profile = profile;
+                emit m_profileManager->changeProfile(profile);
+            }
         }
     });
 
@@ -94,57 +113,65 @@ void DockProfiles::setupValues()
     Q_ASSERT(m_appContext->appSettings());
 
     m_appSettings = m_appContext->appSettings();
-    m_glyphProfile = m_appSettings->glyphProfile();
     m_profileManager = m_appContext->profileManager();
+    
+    m_profile = m_profileManager->profile();
 
-    loadGlyphProfile();
+    loadProfileContext();
 
     m_profilesModel = new QSqlTableModel(this);
 
     updateProfilesTable();
     
-    m_profilesModel->setHeaderData(0, Qt::Horizontal, "Название");
-    m_profilesModel->setHeaderData(1, Qt::Horizontal, "Шрифт");
-    m_profilesModel->setHeaderData(2, Qt::Horizontal, "Размер");
+    // m_profilesModel->setHeaderData(0, Qt::Horizontal, "Название");
+    // m_profilesModel->setHeaderData(1, Qt::Horizontal, "Шрифт");
+    // m_profilesModel->setHeaderData(2, Qt::Horizontal, "Размер");
 
-    ui->tableViewProfiles->setModel(m_profilesModel);
-    ui->tableViewProfiles->resizeColumnsToContents();
-
+    // ui->tableViewProfiles->setModel(m_profilesModel);
+    // ui->tableViewProfiles->resizeColumnsToContents();
+    ui->comboBoxProfiles->setModel(m_profilesModel);
+    ui->comboBoxProfiles->setModelColumn(1);
 }
 
 void DockProfiles::updateProfilesTable()
 {
-    QString strSql = QString("SELECT name, font_family, bitmap_dimension FROM %1").arg(m_profileManager->tableName());
+    // QString strSql = QString("SELECT name, font_family, bitmap_dimension FROM %1").arg(m_profileManager->tableName());
+    QString strSql = "SELECT "
+                "id, "
+                "name || ' (' || font_family || ', ' || bitmap_dimension || 'px)' AS display_name, "
+                "name, bitmap_dimension, temporary, font_family, font_path, padding_left, padding_top, padding_right, padding_bottom "
+                "FROM profiles  "
+                "ORDER BY name, bitmap_dimension DESC";
     m_profilesModel->setQuery(strSql);
 }
 
-void DockProfiles::loadGlyphProfile()
+void DockProfiles::loadProfileContext()
 {
-    ui->labelFont->setText(QString("Font: %1").arg(m_glyphProfile.font().family()));
-    ui->spinBoxBitmapDimension->setValue(m_glyphProfile.bitmapDimension());
-    if (m_glyphProfile.paddingLeft() != ui->spinBoxPaddingLeft->value())
+    ui->labelFont->setText(QString("Font: %1").arg(m_profile.font().family()));
+    ui->spinBoxBitmapDimension->setValue(m_profile.bitmapDimension());
+    if (m_profile.paddingLeft() != ui->spinBoxPaddingLeft->value())
     {
-        ui->spinBoxPaddingLeft->setValue(m_glyphProfile.paddingLeft());
+        ui->spinBoxPaddingLeft->setValue(m_profile.paddingLeft());
     }
 
-    if (m_glyphProfile.paddingTop() != ui->spinBoxPaddingTop->value())
+    if (m_profile.paddingTop() != ui->spinBoxPaddingTop->value())
     {
-        ui->spinBoxPaddingTop->setValue(m_glyphProfile.paddingTop());
+        ui->spinBoxPaddingTop->setValue(m_profile.paddingTop());
     }
 
-    if (m_glyphProfile.paddingRight() != ui->spinBoxPaddingRight->value())
+    if (m_profile.paddingRight() != ui->spinBoxPaddingRight->value())
     {
-        ui->spinBoxPaddingRight->setValue(m_glyphProfile.paddingRight());
+        ui->spinBoxPaddingRight->setValue(m_profile.paddingRight());
     }
 
 
-    if (m_glyphProfile.paddingBottom() != ui->spinBoxPaddingBottom->value())
+    if (m_profile.paddingBottom() != ui->spinBoxPaddingBottom->value())
     {
-        ui->spinBoxPaddingBottom->setValue(m_glyphProfile.paddingBottom());
+        ui->spinBoxPaddingBottom->setValue(m_profile.paddingBottom());
     }
 
-    if (ui->lineEditProfileName->text() != m_glyphProfile.name())
+    if (ui->lineEditProfileName->text() != m_profile.name())
     {
-        ui->lineEditProfileName->setText(m_glyphProfile.name());
+        ui->lineEditProfileName->setText(m_profile.name());
     }
 }

@@ -30,8 +30,8 @@ set(TS_FILES GlyphModels_ru_RU.ts)
 add_library(GlyphModels SHARED
   GlyphModels_global.h
   
-  glyphmodels.cpp
-  glyphmodels.h
+  glyphmodel.cpp
+  glyphmodel.h
 
   charmapmodel.cpp
   charmapmodel.h

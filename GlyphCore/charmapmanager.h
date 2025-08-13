@@ -26,6 +26,7 @@ class SqlFilter;
 class DbCore;
 class UnicodeMetadataSelectionModel;
 class AppSettings;
+class ProfileManager;
 
 class GLYPHCORE_EXPORT CharmapManager : public QObject
 {
@@ -83,6 +84,8 @@ private:
     AppContext *m_appContext;
     FontManager *m_fontManager;
     AppSettings *m_appSettings;
+    ProfileManager *m_profileManager;
+
     SqlFilter *m_filter;
 
     QString m_tableName;

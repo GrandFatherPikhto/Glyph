@@ -156,6 +156,14 @@ public:
         {
         case ConditionOperator::EQ:
             return sqlEq();
+        case ConditionOperator::LE:
+            return sqlLeq();
+        case ConditionOperator::GE:
+            return sqlGeq();
+        case ConditionOperator::LT:
+            return sqlLt();
+        case ConditionOperator::GT:
+            return sqlGt();
         default:
             return QString();
         }
@@ -203,9 +211,57 @@ public:
     }
 
 private:
+
+    QString sqlLeq()
+    {
+        if (m_values.size() == 1)
+        {
+            QString placeholder = placeholderName();
+            m_binds.append({placeholder, m_values.at(0)});
+            return QString("%1 <= %2").arg(m_field, placeholder);
+        }
+
+        return QString();
+    }
+
+    QString sqlGeq()
+    {
+        if (m_values.size() == 1)
+        {
+            QString placeholder = placeholderName();
+            m_binds.append({placeholder, m_values.at(0)});
+            return QString("%1 >= %2").arg(m_field, placeholder);
+        }
+
+        return QString();
+    }
+
+    QString sqlLt()
+    {
+        if (m_values.size() == 1)
+        {
+            QString placeholder = placeholderName();
+            m_binds.append({placeholder, m_values.at(0)});
+            return QString("%1 < %2").arg(m_field, placeholder);
+        }
+
+        return QString();
+    }
+
+    QString sqlGt()
+    {
+        if (m_values.size() == 1)
+        {
+            QString placeholder = placeholderName();
+            m_binds.append({placeholder, m_values.at(0)});
+            return QString("%1 > %2").arg(m_field, placeholder);
+        }
+
+        return QString();
+    }
+
     QString sqlEq()
     {
-        m_binds.clear();
         QString sql;
         if (m_values.size() == 1)
         {

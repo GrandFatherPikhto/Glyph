@@ -1,3 +1,4 @@
+#include <QSettings>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QFont>
@@ -5,11 +6,14 @@
 #include "profilemanager.h"
 #include "appcontext.h"
 #include "appsettings.h"
-#include "glyphprofile.h"
+#include "profilecontext.h"
+#include "glyphcontext.h"
+#include "fontmanager.h"
 
 ProfileManager::ProfileManager(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
+    , m_fontManager(nullptr)
     , m_tableName("profiles")
 {
     QObject::connect(m_appContext, &AppContext::valuesInited, this, &ProfileManager::setupValues);
@@ -17,19 +21,55 @@ ProfileManager::ProfileManager(AppContext *appContext)
 
 ProfileManager::~ProfileManager()
 {
-
+    saveSettings();
 }
 
 void ProfileManager::setupValues()
 {
+    Q_ASSERT(m_appContext->fontManager() != nullptr);
+    m_fontManager = m_appContext->fontManager();
+    restoreSettings();
     setupSignals();
     createTable();
 }
 
 void ProfileManager::setupSignals ()
 {
-
+    QObject::connect(this, &ProfileManager::changeProfile, this, [=](const ProfileContext &profile){
+        m_profile = profile;
+        emit profileChanged(m_profile);
+    });
 }
+
+
+GlyphContext ProfileManager::defaultGlyphContext(const QChar &ch, bool temporary)
+{
+    if(ch == QChar())
+        return GlyphContext();
+
+    GlyphContext context;
+    context.setCharacter(ch);
+    context.setProfileId(m_profile.id());
+    context.setSize(m_profile.glyphSize());
+    context.setTemporary(temporary);
+
+    return context;
+}
+
+bool ProfileManager::defaultGlyphContext(GlyphContext &context)
+{
+    if(context.character() == QChar())
+        return false;
+
+    if (context.profile() < 0)
+        context.setProfileId(m_profile.id());
+
+    if (context.size() < 0)
+        context.setSize(m_profile.glyphSize());
+
+    return true;
+}
+
 
 bool ProfileManager::createTable()
 {
@@ -69,7 +109,7 @@ bool ProfileManager::createTable()
     return true;
 }
 
-bool ProfileManager::insertOrReplaceProfile(const GlyphProfile &profile)
+bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
 {
     QSqlDatabase db = QSqlDatabase::database();
     if (!db.isOpen())
@@ -145,7 +185,7 @@ const QString & ProfileManager::tableName() const
     return m_tableName;
 }
 
-bool ProfileManager::getProfileById(int id, GlyphProfile &profile)
+bool ProfileManager::getProfileById(int id, ProfileContext &profile)
 {
     QSqlDatabase db = QSqlDatabase::database();
     if (!db.isOpen())
@@ -193,4 +233,27 @@ bool ProfileManager::getProfileById(int id, GlyphProfile &profile)
     }
 
     return true;
+}
+
+void ProfileManager::saveSettings()
+{
+    QSettings settings(this);
+    settings.beginGroup("ProfileManager");
+    settings.setValue("profile", m_profile);
+    settings.endGroup();
+}
+
+void ProfileManager::restoreSettings()
+{
+    QSettings settings(this);
+    settings.beginGroup("ProfileManager");
+    m_profile = settings.value("profile", ProfileContext()).value<ProfileContext>();
+
+    // qDebug() << __FILE__ << __LINE__ << m_profile << m_fontManager->loadFont(m_profile.font());
+    if (m_profile.font() != QFont() && m_profile.fontPath().isEmpty() && m_fontManager->loadFont(m_profile.font()))
+    {
+        m_profile.setFontPath(m_fontManager->fontPath());
+    }
+
+    settings.endGroup();
 }

@@ -6,10 +6,12 @@
 #include <QSharedPointer>
 #include <QVariant>
 
-class GlyphProfile {
+class GlyphContext;
+
+class ProfileContext {
 
 public:
-    explicit GlyphProfile(const QString &name = QString(), int bitmapDimension = -1, int glyphSize=-1, const QFont &font = QFont(), const QString &fontPath = QString(), int id = -1, bool temporary = true)
+    explicit ProfileContext(const QString &name = QString(), int bitmapDimension = -1, int glyphSize=-1, const QFont &font = QFont(), const QString &fontPath = QString(), int id = -1, bool temporary = true)
         : m_id(id)
         , m_name(name)
         , m_font(font)
@@ -24,7 +26,7 @@ public:
     {
     }
 
-    GlyphProfile(const GlyphProfile &profile)
+    ProfileContext(const ProfileContext &profile)
         : m_id(profile.m_id)
         , m_name(profile.m_name)
         , m_bitmapDimension(profile.m_bitmapDimension)
@@ -38,7 +40,7 @@ public:
         , m_paddingBottom(profile.m_paddingBottom)
     {}
 
-    GlyphProfile(const GlyphProfile *profile)
+    ProfileContext(const ProfileContext *profile)
         : m_id(profile->m_id)
         , m_name(profile->m_name)
         , m_bitmapDimension(profile->m_bitmapDimension)
@@ -52,7 +54,7 @@ public:
         , m_paddingBottom(profile->m_paddingBottom)
     {}
 
-    GlyphProfile(QSharedPointer<GlyphProfile> profile)
+    ProfileContext(QSharedPointer<ProfileContext> profile)
         : m_id(profile->m_id)
         , m_name(profile->m_name)
         , m_glyphSize(profile->m_glyphSize)
@@ -66,11 +68,9 @@ public:
         , m_paddingBottom(profile->m_paddingBottom)
     {}
 
-    ~GlyphProfile() {}
+    ~ProfileContext() {}
 
-
-
-    bool isValid() const 
+    bool isValid() const
     {
         return (
             !m_name.isEmpty()
@@ -103,7 +103,7 @@ public:
     void setPaddingRight(int value) { m_paddingRight = value; }
     void setPaddingBottom(int value) { m_paddingBottom = value; }
 
-    bool operator== (const GlyphProfile &profile) const
+    bool operator== (const ProfileContext &profile) const
     {
         return (
                m_id == profile.m_id
@@ -119,7 +119,7 @@ public:
         );
     }
 
-    bool operator!= (const GlyphProfile &profile) const
+    bool operator!= (const ProfileContext &profile) const
     {
         return (
                m_id != profile.m_id
@@ -135,7 +135,7 @@ public:
         );
     }
 
-    const GlyphProfile & operator= (const GlyphProfile &profile)
+    const ProfileContext & operator= (const ProfileContext &profile)
     {
         if (this != &profile)
         {
@@ -157,7 +157,7 @@ public:
 
     // Для QVariant/QSettings
     operator QVariant() const {
-        if(QMetaType::fromName("GlyphProfile").isValid()) {
+        if(QMetaType::fromName("ProfileContext").isValid()) {
             return QVariant::fromValue(*this);
         } else {
             // Fallback для случая, когда GridPaddings не зарегистрирован
@@ -180,8 +180,8 @@ public:
 
 
 #ifndef QT_NO_DATASTREAM
-    friend QDataStream & operator << (QDataStream &out, const GlyphProfile &profile);
-    friend QDataStream & operator >> (QDataStream &in, GlyphProfile &profile);
+    friend QDataStream & operator << (QDataStream &out, const ProfileContext &profile);
+    friend QDataStream & operator >> (QDataStream &in, ProfileContext &profile);
 #endif
 
 private:
@@ -202,7 +202,7 @@ private:
 };
 
 #ifndef QT_NO_DATASTREAM
-inline QDataStream & operator << (QDataStream &out, const GlyphProfile &profile)
+inline QDataStream & operator << (QDataStream &out, const ProfileContext &profile)
 {
     out << profile.m_id
         << profile.m_name
@@ -219,7 +219,7 @@ inline QDataStream & operator << (QDataStream &out, const GlyphProfile &profile)
     return out;
 }
 
-inline QDataStream & operator >> (QDataStream &in, GlyphProfile &profile)
+inline QDataStream & operator >> (QDataStream &in, ProfileContext &profile)
 {
     in  >> profile.m_id
         >> profile.m_name
@@ -239,10 +239,10 @@ inline QDataStream & operator >> (QDataStream &in, GlyphProfile &profile)
 #endif
 
 #ifndef QT_NO_DEBUG_OUTPUT
-inline QDebug operator <<(QDebug debug, const GlyphProfile &profile)
+inline QDebug operator <<(QDebug debug, const ProfileContext &profile)
 {
     QDebugStateSaver saver(debug); // Для автоматического сохранения состояния
-    debug.nospace() << "GlyphProfile(Id: "
+    debug.nospace() << "ProfileContext(Id: "
         << profile.id()
         << ", Name: "
         << profile.name()
@@ -272,6 +272,6 @@ inline QDebug operator <<(QDebug debug, const GlyphProfile &profile)
 }
 #endif
 
-Q_DECLARE_METATYPE(GlyphProfile)
+Q_DECLARE_METATYPE(ProfileContext)
 
 #endif // GLYPHPROFILE_H_

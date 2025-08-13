@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>241</width>
+    <width>271</width>
     <height>716</height>
    </rect>
   </property>
@@ -15,18 +15,6 @@
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
-     <widget class="QGroupBox" name="groupBoxProfiles">
-      <property name="title">
-       <string>Profiles</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QComboBox" name="comboBoxProfiles"/>
-       </item>
-      </layout>
-     </widget>
-    </item>
     <item>
      <widget class="QGroupBox" name="groupBoxGlyphSize">
       <property name="title">
@@ -209,7 +197,7 @@
       </widget>
       <widget class="QGroupBox" name="groupBoxGlyphs">
        <property name="title">
-        <string>GroupBox</string>
+        <string>Glyphs</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
