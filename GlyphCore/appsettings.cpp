@@ -60,17 +60,23 @@ const QString & AppSettings::appDataPath() const
 void AppSettings::saveAppSettings()
 {
     QSettings settings(this);
-    settings.beginGroup("Glyph");
+    settings.beginGroup("Colors");
     settings.setValue("templateColor", m_templateColor);
     settings.setValue("templateBgColor", m_templateBgColor);
     settings.setValue("previewColor", m_previewColor);
     settings.setValue("previewBgColor", m_previewBgColor);
     settings.setValue("drawColor", m_drawColor);
     settings.setValue("drawBgColor", m_drawBgColor);
+    settings.setValue("gridColor", m_gridColor);
+    settings.setValue("gridBgColor", m_gridBgColor);
+    settings.setValue("bitmapRectColor", m_bitmapRectColor);
+    settings.setValue("bitmapRectBgColor", m_bitmapRectBgColor);
     settings.endGroup();
 
     settings.beginGroup("GlyphWidget");
     settings.setValue("widgetMargins", QVariant::fromValue(m_glyphWidgetMargins));
+    settings.setValue("gridLineWidth", m_widgetGridLineWidth);
+    settings.setValue("bitmapRectLineWidth", m_widgetBitmapRectLineWidth);
     settings.endGroup();
 
     settings.beginGroup("GlyphPreview");
@@ -98,7 +104,7 @@ void AppSettings::restoreAppSettings()
 {
     QSettings settings(this);
     
-    settings.beginGroup("Glyph");
+    settings.beginGroup("Colors");
     QColor templateColor = settings.value("templateColor", QColor(0x00, 0x00, 0x55, 0x55)).value<QColor>();
     if (templateColor.isValid())
         m_templateColor = templateColor;
@@ -122,10 +128,31 @@ void AppSettings::restoreAppSettings()
     QColor drawBgColor = settings.value("drawBgColor", QColor(Qt::white)).value<QColor>();
     if (drawBgColor.isValid())
         m_drawBgColor = drawBgColor;
+
+    QColor gridColor = settings.value("gridColor", QColor(Qt::gray)).value<QColor>();
+    if (gridColor.isValid())
+        m_gridColor = gridColor;
+    m_gridColor = Qt::gray;
+
+    QColor gridBgColor = settings.value("gridBgColor", QColor(Qt::white)).value<QColor>();
+    if (gridColor.isValid())
+        m_gridBgColor = gridBgColor;
+
+    QColor bitmapRectColor = settings.value("bitmapRectColor", QColor(Qt::black)).value<QColor>();
+    if (bitmapRectColor.isValid())
+        m_bitmapRectColor = bitmapRectColor;
+
+    QColor bitmapRectBgColor = settings.value("bitmapRectBgColor", QColor(Qt::black)).value<QColor>();
+    if (bitmapRectBgColor.isValid())
+        m_bitmapRectBgColor = bitmapRectBgColor;
+
     settings.endGroup();
 
     settings.beginGroup("GlyphWidget");
     m_glyphWidgetMargins = settings.value("widgetMargins", QVariant::fromValue(QMargins(50,50,50,50))).value<QMargins>();
+    m_widgetGridLineWidth = settings.value("gridLineWidth", 1).toInt();
+    m_widgetBitmapRectLineWidth = settings.value("bitmapRectLineWidth", 2).toInt();
+    m_widgetBitmapRectLineWidth = 2;
     settings.endGroup();
 
     settings.beginGroup("GlyphPrevew");

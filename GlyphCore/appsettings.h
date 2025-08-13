@@ -73,6 +73,42 @@ public:
         }
     }
 
+    void setGridColor (const QColor &color)
+    {
+        if (m_gridColor != color)
+        {
+            m_gridColor = color;
+            emit gridColorChanged(m_gridColor);
+        }
+    }
+
+    void setGridBgColor (const QColor &color)
+    {
+        if (m_gridBgColor != color)
+        {
+            m_gridBgColor = color;
+            emit gridBgColorChanged(m_gridBgColor);
+        }
+    }
+
+    void setBitmapRectColor(const QColor &color)
+    {
+        if (m_bitmapRectColor != color)
+        {
+            m_bitmapRectColor = color;
+            emit bitmapRectColorChanged(m_bitmapRectColor);
+        }
+    }
+
+    void setBitmapRectBgColor(const QColor &color)
+    {
+        if (m_bitmapRectBgColor != color)
+        {
+            m_bitmapRectBgColor = color;
+            emit bitmapRectBgColorChanged(m_bitmapRectBgColor);
+        }
+    }
+
     void setGlyphPreviewMargins (const QMargins &value)
     {
         if (m_glyphPreviewMargins != value)
@@ -151,15 +187,35 @@ public:
         m_defaultProjectPath = value; 
     }
 
+    void setWidgetGridLineWidth(int value) { 
+        if (m_widgetGridLineWidth != value)
+        {
+            m_widgetGridLineWidth = value;
+            emit widgetGridLineWidthChanged(m_widgetGridLineWidth);
+        }
+    }
+
+    void setWidgetBitmapRectLineWidth(int value) { 
+        if (m_widgetBitmapRectLineWidth != value)
+        {
+            m_widgetBitmapRectLineWidth = value;
+            emit widgetBitmapRectLineWidthChanged(m_widgetBitmapRectLineWidth);
+        }
+    }
+
     // Getters
     const QString & defaultProjectPath() { return m_defaultProjectPath; }
 
-    const QColor & templateColor() { return m_templateColor; }
-    const QColor & templateBgColor() { return m_templateBgColor; }
-    const QColor & previewColor () { return m_previewColor; }
-    const QColor & previewBgColor () { return m_previewBgColor; }
-    const QColor & drawColor () { return m_drawColor; }
-    const QColor & drawBgColor () { return m_drawBgColor; }
+    const QColor & templateColor() const { return m_templateColor; }
+    const QColor & templateBgColor() const { return m_templateBgColor; }
+    const QColor & previewColor () const { return m_previewColor; }
+    const QColor & previewBgColor () const { return m_previewBgColor; }
+    const QColor & drawColor () const { return m_drawColor; }
+    const QColor & drawBgColor () const { return m_drawBgColor; }
+    const QColor & gridColor() const { return m_gridColor; }
+    const QColor & gridBgColor() const { return m_gridBgColor; }
+    const QColor & bitmapRectColor() const { return m_bitmapRectColor; }
+    const QColor & bitmapRectBgColor() const { return m_bitmapRectBgColor; }
 
     const QMargins & glyphPreviewMargins () { return m_glyphPreviewMargins; }
     const QMargins & glyphWidgetMargins () { return m_glyphWidgetMargins; }
@@ -172,6 +228,9 @@ public:
     bool baselineLayerEnable      () { return m_baselineLayerEnable; }
     bool bitmapRectLayerEnable ()  { return m_bitmapRectLayerEnable; }
 
+    int widgetGridLineWidth() { return m_widgetGridLineWidth; }
+    int widgetBitmapRectLineWidth() { return m_widgetBitmapRectLineWidth; }
+
 signals:
     void templateColorChanged (const QColor &color);
     void templateBgColorChanged (const QColor &color);
@@ -179,6 +238,10 @@ signals:
     void previewBgColorChanged (const QColor &color);
     void drawColorChanged (const QColor &color);
     void drawBgColorChanged (const QColor &color);
+    void gridColorChanged(const QColor &color);
+    void gridBgColorChanged(const QColor &color);
+    void bitmapRectColorChanged(const QColor &color);
+    void bitmapRectBgColorChanged(const QColor &color);
 
     void glyphPreviewMarginsChanged(const QMargins &value);
     void glyphWidgetMarginsChanged(const QMargins &value);
@@ -189,7 +252,10 @@ signals:
     void drawLayerEnableChanged(bool value);
     void glyphRectLayerEnableChanged(bool value);
     void baselineLayerEnableChanged(bool value);
-    void bitmapRectLayerEnableChanged(bool value);    
+    void bitmapRectLayerEnableChanged(bool value);
+    
+    void widgetGridLineWidthChanged(int value);
+    void widgetBitmapRectLineWidthChanged(int value);
 
 private:
     void setupValues();
@@ -211,6 +277,10 @@ private:
     QColor m_previewColor;
     QColor m_drawBgColor;
     QColor m_drawColor;
+    QColor m_gridColor;
+    QColor m_gridBgColor;
+    QColor m_bitmapRectColor;
+    QColor m_bitmapRectBgColor;
 
     bool m_gridLayerEnable;
     bool m_templateLayerEnable;
@@ -224,6 +294,9 @@ private:
     QMargins m_glyphWidgetMargins;
 
     QString m_defaultProjectPath;
+
+    int m_widgetGridLineWidth;
+    int m_widgetBitmapRectLineWidth;
 };
 
 #endif // APPSETTINGS_H_

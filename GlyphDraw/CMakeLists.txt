@@ -13,11 +13,14 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets LinguistTool
 
 set(TS_FILES GlyphDraw_ru_RU.ts)
 
+find_package(Qt6 REQUIRED COMPONENTS Core)
+
 add_library(GlyphDraw SHARED
   GlyphDraw_global.h
   glyphdraw.cpp
   glyphdraw.h
   ${TS_FILES}
+  drawcontext.h drawcontext.cpp
 )
 
 target_link_libraries(GlyphDraw PRIVATE Qt${QT_VERSION_MAJOR}::Core)
@@ -28,6 +31,7 @@ target_link_libraries(GlyphDraw PRIVATE
   GlyphModels
   GlyphMeta
 )
+target_link_libraries(GlyphDraw PRIVATE Qt6::Core)
 
 target_compile_definitions(GlyphDraw PRIVATE GLYPHDRAW_LIBRARY)
 

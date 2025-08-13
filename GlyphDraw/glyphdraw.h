@@ -4,11 +4,14 @@
 #include <QObject>
 #include <QWidget>
 #include <QPainter>
+#include <QResizeEvent>
+#include <QMouseEvent>
 
 class AppContext;
 class GlyphManager;
 class AppSettings;
 class ProfileManager;
+class DrawContext;
 
 #include "glyphcontext.h"
 #include "profilecontext.h"
@@ -26,15 +29,18 @@ public:
 
     // QWidget interface
 protected:
-
-    void drawGrid(QPainter &painter);
-
-    void setProfile(const ProfileContext &context);
-    void setGlyph(const GlyphContext &context);
     void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
 
 
 private:
+    void drawGrid(QPainter &painter);
+    void drawBitmapRect(QPainter &painter);
+
+    void setProfile(const ProfileContext &context);
+    void setGlyph(const GlyphContext &context);
+
     void setupSignals ();
 
     AppContext *m_appContext;
@@ -44,6 +50,8 @@ private:
 
     GlyphContext m_glyph;
     ProfileContext m_profile;
+
+    DrawContext *m_drawContext;
 };
 
 #endif // GLYPHDRAW_H
