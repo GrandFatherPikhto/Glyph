@@ -54,8 +54,6 @@ void MainWindow::createProject()
     qDebug() << filePath;
     if (filePath.isEmpty())
         return;
-
-    m_appContext->dbCore()->createDatabase(filePath);
 }
 
 void MainWindow::setupValues()

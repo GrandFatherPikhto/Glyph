@@ -12,7 +12,8 @@ AppSettings::AppSettings(AppContext *appContext)
     , m_appContext(appContext)
     , m_fontManager(nullptr)
 {
-    QObject::connect(m_appContext, &AppContext::valuesInited, this, &AppSettings::setupValues);
+    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &AppSettings::setupValues);
+    setupValues();
 }
 
 AppSettings::~AppSettings ()

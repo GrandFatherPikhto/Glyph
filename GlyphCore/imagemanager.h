@@ -24,7 +24,7 @@ private:
     void createTable ();
 
     AppContext *m_appContext;
-    AppSettings * m_appSettings;
+    AppSettings *m_appSettings;
     GlyphManager *m_glyphManager;
     ProfileManager *m_profileManager;
 };

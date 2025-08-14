@@ -14,7 +14,8 @@ GlyphManager::GlyphManager(AppContext *appContext)
     , m_tableName("glyphs")
 {
     restoreSettings();
-    QObject::connect(m_appContext, &AppContext::valuesInited, this, &GlyphManager::setupValues);
+    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &GlyphManager::setupValues);
+    setupValues();
 }
 
 GlyphManager::~GlyphManager()

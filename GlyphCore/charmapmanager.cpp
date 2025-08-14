@@ -36,7 +36,8 @@ CharmapManager::CharmapManager(AppContext *appContext)
     //                  "JOIN decomposition_data dd ON c.decomposition = dd.id "
     //                  ).arg(m_tableName);
 
-    QObject::connect(m_appContext, &AppContext::valuesInited, this, &CharmapManager::setupValues);
+    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &CharmapManager::setupValues);
+    setupValues();
 }
 
 CharmapManager::~CharmapManager()

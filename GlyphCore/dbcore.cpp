@@ -12,7 +12,8 @@ DbCore::DbCore(AppContext *appContext)
     , m_appContext(appContext)
     , m_appSettings(nullptr)
 {
-    QObject::connect(m_appContext, &AppContext::valuesInited, this, &DbCore::setupValues);
+    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &DbCore::setupValues);
+    setupValues();
 }
 
 DbCore::~DbCore()

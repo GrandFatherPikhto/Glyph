@@ -123,12 +123,6 @@ void DockProfiles::setupValues()
 
     updateProfilesTable();
     
-    // m_profilesModel->setHeaderData(0, Qt::Horizontal, "Название");
-    // m_profilesModel->setHeaderData(1, Qt::Horizontal, "Шрифт");
-    // m_profilesModel->setHeaderData(2, Qt::Horizontal, "Размер");
-
-    // ui->tableViewProfiles->setModel(m_profilesModel);
-    // ui->tableViewProfiles->resizeColumnsToContents();
     ui->comboBoxProfiles->setModel(m_profilesModel);
     ui->comboBoxProfiles->setModelColumn(1);
 }

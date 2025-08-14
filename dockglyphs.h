@@ -44,10 +44,11 @@ private:
     Ui::DockGlyphs *ui;
 
     AppContext *m_appContext;
+
     AppSettings *m_appSettings;
     ProfileManager *m_profileManager;
-    CharmapManager *m_charmapManager;
     GlyphManager *m_glyphManager;
+    CharmapManager *m_charmapManager;
 
     GlyphModel *m_glyphsModel;
 

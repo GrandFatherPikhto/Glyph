@@ -31,9 +31,6 @@ find_package(Boost CONFIG REQUIRED COMPONENTS filesystem system)
 add_library(GlyphCore SHARED
   GlyphCore_global.h
 
-  dbcore.h 
-  dbcore.cpp
-  
   appcontext.h 
   appcontext.cpp
 

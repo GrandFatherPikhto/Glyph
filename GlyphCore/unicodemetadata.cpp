@@ -12,7 +12,8 @@ UnicodeMetadata::UnicodeMetadata(AppContext *appContext)
     , m_categoryTable("category_data")
     , m_decompositionTable("decomposition_data")
 {
-    QObject::connect(m_appContext, &AppContext::valuesInited, this, &UnicodeMetadata::setupValues);
+    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &UnicodeMetadata::setupValues);
+    setupValues ();
 }
 
 void UnicodeMetadata::setupValues ()

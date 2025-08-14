@@ -68,10 +68,11 @@ private:
     void restoreDockCharmapState ();
 
     AppContext *m_appContext;
-    CharmapManager *m_charmapManager;
+
     AppSettings *m_appSettings;
     GlyphManager *m_glyphManager;
     ProfileManager *m_profileManager;
+    CharmapManager *m_charmapManager;
 
     SqlFilter *m_filter;
 
@@ -94,10 +95,6 @@ private:
     UnicodeMetadataSelectionModel *m_categorySelectionModel;
     UnicodeMetadataSelectionModel *m_scriptSelectionModel;
     UnicodeMetadataSelectionModel *m_decompositionSelectionModel;
-
-    // QSharedPointer<Condition> m_categoryCondition;
-    // QSharedPointer<Condition> m_scriptCondition;
-    // QSharedPointer<Condition> m_decompositionCondition;
 };
 
 

@@ -8,7 +8,8 @@ ImageManager::ImageManager(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
 {
-    connect(m_appContext, &AppContext::valuesInited, this, &ImageManager::initValues);
+    // connect(m_appContext, &AppContext::valuesInited, this, &ImageManager::initValues);
+    initValues ();
 }
 
 ImageManager::~ImageManager()

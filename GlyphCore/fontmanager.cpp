@@ -7,7 +7,8 @@ FontManager::FontManager(AppContext *appContext)
     , m_fontPath(QString())
 {
     initContext ();
-    QObject::connect(m_appContext, &AppContext::valuesInited, this, &FontManager::setupValues);
+    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &FontManager::setupValues);
+    setupValues ();
 }
 
 FontManager::~FontManager()

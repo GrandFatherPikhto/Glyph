@@ -11,7 +11,6 @@
 
 #include "GlyphCore_global.h"
 
-class DbCore;
 class AppSettings;
 class FontManager;
 class CharmapManager;
@@ -27,22 +26,23 @@ public:
     AppContext(QObject *parent=nullptr);
     ~AppContext();
 
-    DbCore * dbCore() { return m_dbCore; }
-    FontManager *fontManager() { return m_fontManager; }
-    CharmapManager *characterManager() { return m_charmapManager; }
-    UnicodeMetadata *unicodeMetadata () { return m_unicodeMetadata; }
-    ProfileManager *profileManager() { return m_profileManager; }
-    AppSettings *appSettings() { return m_appSettings; }
-    GlyphManager *glyphManager() { return m_glyphManager; }
-    ImageManager *ImageManager() { return m_imageManager; }
+    FontManager * fontManager();
+    CharmapManager * charmapManager();
+    UnicodeMetadata * unicodeMetadata();
+    ProfileManager * profileManager();
+    AppSettings * appSettings();
+    GlyphManager * glyphManager();
+    ImageManager * imageManager();
+
+    QString appDataPath();
 
 signals:
-    void valuesInited ();    
 
 private:
     void setupVariables();
+    bool initDatabase ();
+    bool releaseDatabase ();
 
-    DbCore *m_dbCore;
     AppSettings *m_appSettings;
     FontManager *m_fontManager;
     CharmapManager *m_charmapManager;

@@ -171,9 +171,9 @@ void DockCharmap::setupSignals()
 
 void DockCharmap::setupValues ()
 {
-    Q_ASSERT(m_appContext->characterManager() != nullptr && m_appContext->appSettings() != nullptr && m_appContext->glyphManager() != nullptr);
+    Q_ASSERT(m_appContext->charmapManager() != nullptr && m_appContext->appSettings() != nullptr && m_appContext->glyphManager() != nullptr);
 
-    m_charmapManager = m_appContext->characterManager();
+    m_charmapManager = m_appContext->charmapManager();
     m_appSettings = m_appContext->appSettings();
     m_glyphManager = m_appContext->glyphManager();
     m_profileManager = m_appContext->profileManager();

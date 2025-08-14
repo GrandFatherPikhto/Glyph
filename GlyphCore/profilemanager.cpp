@@ -16,7 +16,8 @@ ProfileManager::ProfileManager(AppContext *appContext)
     , m_fontManager(nullptr)
     , m_tableName("profiles")
 {
-    QObject::connect(m_appContext, &AppContext::valuesInited, this, &ProfileManager::setupValues);
+    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &ProfileManager::setupValues);
+    setupValues ();
 }
 
 ProfileManager::~ProfileManager()

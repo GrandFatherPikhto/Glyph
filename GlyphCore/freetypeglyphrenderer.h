@@ -44,8 +44,8 @@ private:
     void doneLibrary ();
     void setTargetSize (const QSize &targetSize);
 
-    QSharedPointer<GlyphContext> m_glyph;
-    QSharedPointer<QImage> m_image;
+    GlyphContext *m_glyph;
+    QImage *m_image;
     QSize m_targetSize;
     FT_Error m_ftError;
     FT_Library m_ftLibrary;
