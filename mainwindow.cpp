@@ -10,7 +10,6 @@
 #include "appcontext.h"
 #include "dockprofiles.h"
 #include "glyphdraw.h"
-#include "dbcore.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

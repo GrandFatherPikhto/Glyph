@@ -1,5 +1,4 @@
 #include "appcontext.h"
-#include "dbcore.h"
 #include "fontmanager.h"
 #include "charmapmanager.h"
 #include "unicodemetadata.h"

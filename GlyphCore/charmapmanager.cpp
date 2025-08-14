@@ -7,7 +7,6 @@
 #include "charmapmanager.h"
 #include "appcontext.h"
 #include "fontmanager.h"
-#include "dbcore.h"
 #include "sqlfilter.h"
 #include "appsettings.h"
 #include "profilecontext.h"
