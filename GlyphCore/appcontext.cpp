@@ -6,6 +6,7 @@
 #include "profilemanager.h"
 #include "appsettings.h"
 #include "glyphmanager.h"
+#include "imagemanager.h"
 
 AppContext::AppContext(QObject *parent)
     : QObject{parent}
@@ -16,6 +17,7 @@ AppContext::AppContext(QObject *parent)
     , m_profileManager(nullptr)
     , m_appSettings(nullptr)
     , m_glyphManager(nullptr)
+    , m_imageManager(nullptr)
 {
     setupVariables();
 }
@@ -34,6 +36,7 @@ void AppContext::setupVariables()
     m_charmapManager = new CharmapManager(this);
     m_unicodeMetadata = new UnicodeMetadata(this);
     m_glyphManager = new GlyphManager(this);
+    m_imageManager = new ImageManager(this);
 
     emit valuesInited ();
 }

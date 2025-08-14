@@ -14,6 +14,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core LinguistTools)
 set(TS_FILES GlyphCore_ru_RU.ts)
 
 set(CMAKE_PREFIX_PATH "D:/msys64/mingw64")
+set(Boost_DIR "D:/msys64/mingw64/lib/cmake/boost_config-1.88.0")
 
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
@@ -24,6 +25,8 @@ find_package(Qt6 REQUIRED COMPONENTS Gui)
 
 find_package(SQLite3 REQUIRED)
 find_package(Freetype REQUIRED)
+# find_package(Boost REQUIRED COMPONENTS filesystem system)
+find_package(Boost CONFIG REQUIRED COMPONENTS filesystem system)
 
 add_library(GlyphCore SHARED
   GlyphCore_global.h
@@ -57,6 +60,20 @@ add_library(GlyphCore SHARED
 
   glyphmanager.h
   glyphmanager.cpp
+
+#   iglyphrenderer.h
+
+#   glyphrenderer.h
+#   glyphrenderer.cpp
+
+#   drawglyphrenderer.h
+#   drawglyphrenderer.cpp
+
+#   freetypeglyphrenderer.h
+#   freetypeglyphrenderer.cpp
+
+  imagemanager.h
+  imagemanager.cpp
   
   ${TS_FILES}
 )
@@ -82,8 +99,6 @@ else()
     message(STATUS "Using SQLite3 bundled with Qt")
 endif()
 
-target_link_libraries(GlyphCore PRIVATE GlyphMeta)
-
 if(Freetype_FOUND)
     message(STATUS "FreeType найден: ${FREETYPE_INCLUDE_DIRS}, ${FREETYPE_LIBRARIES}")
     target_link_libraries(GlyphCore PRIVATE Freetype::Freetype)
@@ -92,6 +107,20 @@ if(Freetype_FOUND)
 else()
     message(FATAL_ERROR "FreeType не найден!")
 endif()
+
+if (Boost_FOUND)
+    message(STATUS "Boost version: ${Boost_VERSION}")
+    message(STATUS "Boost include dir: ${Boost_INCLUDE_DIRS}")
+    message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
+    target_link_libraries(GlyphCore PRIVATE Boost::filesystem Boost::system)
+else()
+    message(FATAL_ERROR "Boost не найден")
+endif()
+
+# Библиотеки проекта
+target_link_libraries(GlyphCore PRIVATE
+  GlyphMeta
+)
 
 # Указываем, какие заголовочные файлы принадлежат библиотеке
 target_include_directories(GlyphCore PUBLIC

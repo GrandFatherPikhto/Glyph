@@ -18,6 +18,7 @@ class CharmapManager;
 class UnicodeMetadata;
 class ProfileManager;
 class GlyphManager;
+class ImageManager;
 
 class GLYPHCORE_EXPORT AppContext : public QObject
 {
@@ -33,6 +34,7 @@ public:
     ProfileManager *profileManager() { return m_profileManager; }
     AppSettings *appSettings() { return m_appSettings; }
     GlyphManager *glyphManager() { return m_glyphManager; }
+    ImageManager *ImageManager() { return m_imageManager; }
 
 signals:
     void valuesInited ();    
@@ -47,6 +49,7 @@ private:
     UnicodeMetadata *m_unicodeMetadata;
     ProfileManager *m_profileManager;
     GlyphManager *m_glyphManager;
+    ImageManager *m_imageManager;
 };
 
 #endif // APPCONTEXT_H
