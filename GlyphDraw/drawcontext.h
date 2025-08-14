@@ -10,10 +10,12 @@
 #include <QRegion>
 
 #include "profilecontext.h"
+#include "glyphcontext.h"
 
 class AppContext;
 class ProfileManager;
 class AppSettings;
+class GlyphManager;
 
 class DrawContext : public QObject
 {
@@ -147,6 +149,20 @@ public:
         return false;
     }
 
+    inline int baseLineY()
+    {
+        int baseline = m_profile.bitmapDimension() + m_profile.paddingTop() - m_glyph.baseline();
+        QPoint pointBaseline = cellTopLeft(0, baseline);
+        return pointBaseline.y();
+    }
+
+    inline int lineLeftX()
+    {
+        int leftline = m_profile.paddingLeft() + m_glyph.offsetLeft();
+        QPoint pointLeftLine = cellTopLeft(leftline, 0);        
+        return pointLeftLine.x();
+    }
+
 signals:
     void changeProfile(const ProfileContext &context);
     void changeMargins(const QMargins &margins);
@@ -156,16 +172,20 @@ private:
     void setupValues ();
 
     void setProfile(const ProfileContext &context);
+    void setGlyph(const GlyphContext &context);
     void setMargins(const QMargins &margins);
 
 
     AppContext *m_appContext;
     ProfileManager *m_profileManager;
+    GlyphManager *m_glyphManager;
     AppSettings *m_appSettings;
 
     QRect m_drawRect;
 
     ProfileContext m_profile;
+    GlyphContext m_glyph;
+    
     QMargins m_margins;
     QRegion m_region;
 };
