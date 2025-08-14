@@ -37,6 +37,8 @@ protected:
 private:
     void drawGrid(QPainter &painter);
     void drawBitmapRect(QPainter &painter);
+    void drawBaseLine(QPainter &painter);
+    void drawLeftLine(QPainter &painter);
 
     void setProfile(const ProfileContext &context);
     void setGlyph(const GlyphContext &context);

@@ -6,10 +6,34 @@
 #include <QTranslator>
 #include <QCoreApplication>
 #include <QMetaType>
+#include <QMargins>
 
 #include "profilecontext.h"
 #include "gridpaddings.h"
 #include "glyphcontext.h"
+
+// QMargins -> QVariantMap
+QVariant marginsToVariantMap(const QMargins &margins) {
+    QVariantMap map;
+
+    map["left"] = margins.left();
+    map["top"] = margins.top();
+    map["right"] = margins.right();
+    map["bottom"] = margins.bottom();
+
+    return map;
+}
+
+// QVariantMap -> QMargins
+QMargins variantMapToMargins(const QVariant &value) {
+    QVariantMap map = value.toMap();
+    return QMargins(
+        map.value("left", 0).toInt(),
+        map.value("top", 0).toInt(),
+        map.value("right", 0).toInt(),
+        map.value("bottom", 0).toInt()
+        );
+}
 
 void registerMetaTypes ()
 {
@@ -17,12 +41,14 @@ void registerMetaTypes ()
     QMetaType::registerConverter<GridPaddings, QVariant>();
 
     qRegisterMetaType<ProfileContext>("ProfileContext");
-    // qRegisterMetaTypeStreamOperators<ProfileContext>("ProfileContext");    
     QMetaType::registerConverter<ProfileContext, QVariant>();
 
     qRegisterMetaType<GlyphContext>("GlyphContext");
-    // qRegisterMetaTypeStreamOperators<ProfileContext>("ProfileContext");    
     QMetaType::registerConverter<GlyphContext, QVariant>();
+
+    qRegisterMetaType<QMargins>("QMarings");
+    QMetaType::registerConverter<QMargins, QVariant>(marginsToVariantMap);
+    QMetaType::registerConverter<QVariant, QMargins>(variantMapToMargins);
 }
 
 int main(int argc, char *argv[])

@@ -12,7 +12,8 @@ DrawContext::DrawContext(AppContext *appContext, QObject *parent)
     setupSignals();
 
     setProfile(m_profileManager->profile());
-    setMargins(m_appSettings->glyphWidgetMargins());
+    QMargins margins = m_appSettings->value("glyphWidgetMargins").value<QMargins>();
+    setMargins(margins);
 }
 
 DrawContext::~DrawContext()
@@ -23,7 +24,8 @@ DrawContext::~DrawContext()
 void DrawContext::setupValues()
 {
     setProfile(m_profileManager->profile());
-    setMargins(m_appSettings->glyphPreviewMargins());
+    QMargins margins = m_appSettings->value("glyphWidgetMargins").value<QMargins>();
+    setMargins(margins);
 }
 
 void DrawContext::setupSignals()

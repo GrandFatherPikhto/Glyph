@@ -54,6 +54,8 @@ void GlyphDraw::paintEvent(QPaintEvent *event)
 
     drawGrid(painter);
     drawBitmapRect(painter);
+    drawBaseLine(painter);
+    drawLeftLine(painter);
 
     painter.end();
 }
@@ -73,11 +75,10 @@ void GlyphDraw::setProfile(const ProfileContext &context)
 
 void GlyphDraw::drawGrid(QPainter &painter)
 {
-    QColor color = m_appSettings->gridColor();
-    // QColor bgColor = m_appSettings->gridBgColor();
+    QColor color = m_appSettings->value("glyphWidgetGridColor").value<QColor>();
 
     QPen gridPen(color);
-    gridPen.setWidth(m_appSettings->widgetGridLineWidth());
+    gridPen.setWidth(m_appSettings->value("glyphWidgetGridLineWidth").toInt());
     painter.setPen(gridPen);
     QList<QLine> horizontalLines = m_drawContext->gridHorizontalLines();
     if (horizontalLines.size())
@@ -89,14 +90,40 @@ void GlyphDraw::drawGrid(QPainter &painter)
 
 void GlyphDraw::drawBitmapRect(QPainter &painter)
 {
-    QColor color = m_appSettings->bitmapRectColor();
+    QColor color = m_appSettings->value("glyphWidgetBitmapRectColor").value<QColor>();
     QPen pen(color);
-    pen.setWidth(m_appSettings->widgetBitmapRectLineWidth());
-    pen.setStyle(Qt::DotLine);
+    pen.setWidth(m_appSettings->value("glyphWidgetBitmapRectLineWidth").toInt());
+    pen.setStyle(static_cast<Qt::PenStyle>(m_appSettings->value("glyphWidgetBitmapRectLineStyle").toInt()));
     painter.setPen(pen);
-    // qDebug() << __FILE__ << __LINE__ << pen;
     painter.drawRect(m_drawContext->bitmapRect());
 }
+
+void GlyphDraw::drawBaseLine(QPainter &painter)
+{
+    QColor color = m_appSettings->value("glyphWidgetBaseLineColor").value<QColor>();
+    // qDebug() << __FILE__ << __LINE__ << color;
+    QPen pen(color);
+    pen.setWidth(m_appSettings->value("glyphWidgetBaseLineWidth").toInt());
+    pen.setStyle(static_cast<Qt::PenStyle>(m_appSettings->value("glyphWidgetBaseLineStyle").toInt()));
+    painter.setPen(pen);
+    int baseline = m_profile.bitmapDimension() + m_profile.paddingTop() - m_glyph.baseline();
+    QPoint xy = m_drawContext->cellTopLeft(0, baseline);
+    painter.drawLine(QPoint(0, xy.y()), QPoint(size().width(), xy.y()));
+}
+
+void GlyphDraw::drawLeftLine(QPainter &painter)
+{
+    QColor color = m_appSettings->value("glyphWidgetLeftLineColor").value<QColor>();
+    // qDebug() << __FILE__ << __LINE__ << color;
+    QPen pen(color);
+    pen.setWidth(m_appSettings->value("glyphWidgetLeftLineWidth").toInt());
+    pen.setStyle(static_cast<Qt::PenStyle>(m_appSettings->value("glyphWidgetLeftLineStyle").toInt()));
+    painter.setPen(pen);
+    int leftline = m_profile.paddingLeft() + m_glyph.offsetLeft();
+    QPoint xy = m_drawContext->cellTopLeft(leftline, 0);
+    painter.drawLine(QPoint(xy.x(), 0), QPoint(xy.x(), size().height()));
+}
+
 
 void GlyphDraw::resizeEvent(QResizeEvent *event)
 {

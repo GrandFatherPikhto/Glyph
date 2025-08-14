@@ -17,7 +17,6 @@ AppSettings::AppSettings(AppContext *appContext)
 
 AppSettings::~AppSettings ()
 {
-    // qDebug() << __FILE__ << __LINE__ << "Destroy AppSettings class";
     saveAppSettings ();
 }
 
@@ -31,10 +30,45 @@ void AppSettings::setupValues()
     m_fontManager = m_appContext->fontManager();
     m_profileManager = m_appContext->profileManager();
 
+    initValues();
+
     initAppDataCatalog ();
+
     restoreAppSettings ();
     
     setupSignals ();
+}
+
+void AppSettings::initValues ()
+{
+	m_values.insert("gridLayer", false);
+	m_values.insert("templateLayer", false);
+	m_values.insert("previewLayer", false);
+	m_values.insert("drawLayer", false);
+	m_values.insert("glyphRectLayer", false);
+	m_values.insert("baseLineLayer", false);
+    m_values.insert("leftLineLayer", false);
+	m_values.insert("glyphWidgetBitmapRectLayer", false);
+    m_values.insert("glyphWidgetTemplateColor", QColor(0x00, 0x00, 0x55, 0x55));
+    m_values.insert("glyphWidgetTemplateBgColor", QColor(0x00, 0x00, 0x00, 0xFF));        
+    m_values.insert("glyphWidgetPreviewColor", QColor(0x66, 0x22, 0x00, 0x33));
+    m_values.insert("glyphWidgetPreviewBgColor", QColor(0x66, 0x22, 0x00, 0x33));        
+    m_values.insert("glyphWidgetDrawColor", QColor(0x33, 0x33, 0x33, 0xFF));
+    m_values.insert("glyphWidgetDrawBgColor", QColor(0xFF, 0xFF, 0xFF, 0xFF));
+    m_values.insert("glyphWidgetGridColor", QColor(0x33, 0x33, 0x33, 0xFF));
+    m_values.insert("glyphWidgetGridBgColor", QColor(0xFF, 0xFF, 0xFF, 0xFF));
+    m_values.insert("glyphWidgetBitmapRectColor", QColor(0x0, 0x0, 0x0, 0xFF));
+    m_values.insert("glyphWidgetBitmapRectBgColor", QColor(0xFF, 0xFF, 0xFF, 0xFF));
+    m_values.insert("glyphWidgetBaseLineColor", QColor(0x33, 0x90, 0x33, 0xFF));
+    m_values.insert("glyphWidgetLeftLineColor", QColor(0x55, 0x55, 0xFF, 0xFF));
+    m_values.insert("glyphWidgetGridLineWidth", 1);
+    m_values.insert("glyphWidgetBaseLineWidth", 3);
+    m_values.insert("glyphWidgetLeftLineWidth", 3);
+    m_values.insert("glyphWidgetBaseLineStyle", static_cast<int>(Qt::SolidLine));
+    m_values.insert("glyphWidgetLeftLineStyle", static_cast<int>(Qt::SolidLine));
+    m_values.insert("glyphWidgetBitmapRectLineWidth", 2);
+    m_values.insert("glyphWidgetBitmapRectLineStyle", static_cast<int>(Qt::DotLine));
+    m_values.insert("glyphWidgetMargins", QVariant::fromValue(QMargins(50, 50, 50, 50)));
 }
 
 const QString & AppSettings::initAppDataCatalog()
@@ -60,117 +94,27 @@ const QString & AppSettings::appDataPath() const
 void AppSettings::saveAppSettings()
 {
     QSettings settings(this);
-    settings.beginGroup("Colors");
-    settings.setValue("templateColor", m_templateColor);
-    settings.setValue("templateBgColor", m_templateBgColor);
-    settings.setValue("previewColor", m_previewColor);
-    settings.setValue("previewBgColor", m_previewBgColor);
-    settings.setValue("drawColor", m_drawColor);
-    settings.setValue("drawBgColor", m_drawBgColor);
-    settings.setValue("gridColor", m_gridColor);
-    settings.setValue("gridBgColor", m_gridBgColor);
-    settings.setValue("bitmapRectColor", m_bitmapRectColor);
-    settings.setValue("bitmapRectBgColor", m_bitmapRectBgColor);
-    settings.endGroup();
 
-    settings.beginGroup("GlyphWidget");
-    settings.setValue("widgetMargins", QVariant::fromValue(m_glyphWidgetMargins));
-    settings.setValue("gridLineWidth", m_widgetGridLineWidth);
-    settings.setValue("bitmapRectLineWidth", m_widgetBitmapRectLineWidth);
+    settings.beginGroup("AppSettings");
+    for (auto it = m_values.constBegin(); it != m_values.constEnd(); ++it)
+    {
+        settings.setValue(it.key(), it.value());
+    }
     settings.endGroup();
-
-    settings.beginGroup("GlyphPreview");
-    settings.setValue("previewMargins", QVariant::fromValue(m_glyphPreviewMargins));
-    settings.endGroup();
-
-    settings.beginGroup("MainToolbar");
-    settings.setValue("gridLayerEnable", m_gridLayerEnable);
-    settings.setValue("templateLayerEnable", m_templateLayerEnable);
-    settings.setValue("previewLayerEnable", m_previewLayerEnable);
-    settings.setValue("drawLayerEnable", m_drawLayerEnable);
-    settings.setValue("glyphRectLayerEnable", m_glyphRectLayerEnable);
-    settings.setValue("baselineLayerEnable", m_baselineLayerEnable);
-    settings.setValue("bitmapRectLayerEnable", m_bitmapRectLayerEnable);
-    settings.endGroup();
-
-    settings.beginGroup("Projects");
-    settings.setValue("defaultProjectPath", m_defaultProjectPath);
-    settings.endGroup();
-
     settings.sync();
 }
 
 void AppSettings::restoreAppSettings()
 {
     QSettings settings(this);
-    
-    settings.beginGroup("Colors");
-    QColor templateColor = settings.value("templateColor", QColor(0x00, 0x00, 0x55, 0x55)).value<QColor>();
-    if (templateColor.isValid())
-        m_templateColor = templateColor;
 
-    QColor templateBgColor = settings.value("templateBgColor", QColor(Qt::white)).value<QColor>();
-    if (templateBgColor.isValid())
-        m_templateBgColor = templateBgColor;
+    const QMap<QString, QVariant> &values = m_values;
 
-    QColor previewColor = settings.value("previewColor", QColor(0x66, 0x22, 0x00, 0x33)).value<QColor>();
-    if (previewColor.isValid())
-       m_previewColor = previewColor;
-
-    QColor previewBgColor = settings.value("previewBgColor", QColor(Qt::white)).value<QColor>();
-    if (previewBgColor.isValid())
-        m_previewBgColor = previewBgColor;
-
-    QColor drawColor = settings.value("drawColor", QColor(Qt::gray)).value<QColor>();
-    if (drawColor.isValid())
-        m_drawColor = drawColor;
-
-    QColor drawBgColor = settings.value("drawBgColor", QColor(Qt::white)).value<QColor>();
-    if (drawBgColor.isValid())
-        m_drawBgColor = drawBgColor;
-
-    QColor gridColor = settings.value("gridColor", QColor(Qt::gray)).value<QColor>();
-    if (gridColor.isValid())
-        m_gridColor = gridColor;
-    m_gridColor = Qt::gray;
-
-    QColor gridBgColor = settings.value("gridBgColor", QColor(Qt::white)).value<QColor>();
-    if (gridColor.isValid())
-        m_gridBgColor = gridBgColor;
-
-    QColor bitmapRectColor = settings.value("bitmapRectColor", QColor(Qt::black)).value<QColor>();
-    if (bitmapRectColor.isValid())
-        m_bitmapRectColor = bitmapRectColor;
-
-    QColor bitmapRectBgColor = settings.value("bitmapRectBgColor", QColor(Qt::black)).value<QColor>();
-    if (bitmapRectBgColor.isValid())
-        m_bitmapRectBgColor = bitmapRectBgColor;
-
+    settings.beginGroup("AppSettings");
+    for (auto it = m_values.constBegin(); it != m_values.constEnd(); ++it)
+    {
+        // m_values.insert(it.key(), settings.value(it.key()));
+    }
     settings.endGroup();
-
-    settings.beginGroup("GlyphWidget");
-    m_glyphWidgetMargins = settings.value("widgetMargins", QVariant::fromValue(QMargins(50,50,50,50))).value<QMargins>();
-    m_widgetGridLineWidth = settings.value("gridLineWidth", 1).toInt();
-    m_widgetBitmapRectLineWidth = settings.value("bitmapRectLineWidth", 2).toInt();
-    m_widgetBitmapRectLineWidth = 2;
-    settings.endGroup();
-
-    settings.beginGroup("GlyphPrevew");
-    m_glyphPreviewMargins = settings.value("previewMargins", QVariant::fromValue(QMargins(3,3,3,3))).value<QMargins>();
-    settings.endGroup();
-
-    settings.beginGroup("MainToolbar");
-    m_gridLayerEnable = settings.value("gridLayerEnable").toBool();
-    m_templateLayerEnable = settings.value("templateLayerEnable").toBool();
-    m_previewLayerEnable = settings.value("previewLayerEnable").toBool();
-    m_drawLayerEnable = settings.value("drawLayerEnable").toBool();
-    m_glyphRectLayerEnable = settings.value("glyphRectLayerEnable").toBool();
-    m_baselineLayerEnable = settings.value("baselineLayerEnable").toBool();
-    m_bitmapRectLayerEnable = settings.value("bitmapRectLayerEnable").toBool();
-    settings.endGroup();
-
-    settings.beginGroup("Projects");
-    m_defaultProjectPath = settings.value("defaultProjectPath", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).toString();
-    settings.endGroup();
+    // m_values.insert("glyphWidgetBaseLineColor", QColor(0x33, 0xFF, 0x33, 0xFF));
 }
-
