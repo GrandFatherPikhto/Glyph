@@ -12,7 +12,6 @@ AppSettings::AppSettings(AppContext *appContext)
     , m_appContext(appContext)
     , m_fontManager(nullptr)
 {
-    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &AppSettings::setupValues);
     setupValues();
 }
 
@@ -27,20 +26,16 @@ void AppSettings::setupSignals ()
 
 void AppSettings::setupValues()
 {
-    Q_ASSERT(m_appContext->fontManager() != nullptr && m_appContext->profileManager() != nullptr);
     m_fontManager = m_appContext->fontManager();
     m_profileManager = m_appContext->profileManager();
 
-    initValues();
-
+    initSettings();
     initAppDataCatalog ();
-
     restoreAppSettings ();
-    
     setupSignals ();
 }
 
-void AppSettings::initValues ()
+void AppSettings::initSettings ()
 {
 	m_values.insert("gridLayer", false);
 	m_values.insert("templateLayer", false);
@@ -114,7 +109,9 @@ void AppSettings::restoreAppSettings()
     settings.beginGroup("AppSettings");
     for (auto it = m_values.constBegin(); it != m_values.constEnd(); ++it)
     {
-        // m_values.insert(it.key(), settings.value(it.key()));
+#ifndef NOT_RESTORE_SETTINGS        
+        m_values.insert(it.key(), settings.value(it.key()));
+#endif        
     }
     settings.endGroup();
     // m_values.insert("glyphWidgetBaseLineColor", QColor(0x33, 0xFF, 0x33, 0xFF));

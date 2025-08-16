@@ -107,11 +107,9 @@ bool CharmapManager::loadFont(const QFont &font)
         return false;
 
     m_font = font;
-    if(m_fontManager->loadFont(m_font))
+    FontContext fontContext(font);
+    if(m_fontManager->loadFontContext(fontContext))
     {
-        m_fontPath = m_fontManager->fontPath();
-        // qDebug() << __FILE__ << __LINE__ << m_fontPath;
-        m_fontFamily = m_font.family();
         if (loadFontFace())
         {
             loadCharacterTable();

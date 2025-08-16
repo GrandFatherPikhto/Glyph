@@ -251,7 +251,7 @@ void ProfileManager::restoreSettings()
     m_profile = settings.value("profile", ProfileContext()).value<ProfileContext>();
 
     // qDebug() << __FILE__ << __LINE__ << m_profile << m_fontManager->loadFont(m_profile.font());
-    if (m_profile.font() != QFont() && m_profile.fontPath().isEmpty() && m_fontManager->loadFont(m_profile.font()))
+    if (m_profile.font() != QFont() && m_profile.fontPath().isEmpty() && m_fontManager->loadFontContext(m_profile.font()))
     {
         m_profile.setFontPath(m_fontManager->fontPath());
     }

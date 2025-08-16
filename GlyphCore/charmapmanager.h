@@ -16,9 +16,10 @@
 
 #include <freetype/fterrors.h>
 
-#include "GlyphCore_global.h"
-
 #include "charmapkey.h"
+#include "fontcontext.h"
+
+#include "GlyphCore_global.h"
 
 class AppContext;
 class FontManager;
@@ -76,10 +77,7 @@ private:
     FT_Library m_ftLibrary;
     FT_Face m_ftFace;
 
-    QString m_fontPath;
-    QString m_fontFamily;
-    QFont m_font;
-
+    FontContext m_fontContext;
 
     AppContext *m_appContext;
     FontManager *m_fontManager;
@@ -89,9 +87,6 @@ private:
     SqlFilter *m_filter;
 
     QString m_tableName;
-
-    int m_fontSize;
-
 
     QString m_sortCondition;
 

@@ -6,6 +6,7 @@
 #include "appsettings.h"
 #include "glyphmanager.h"
 #include "imagemanager.h"
+#include "dbmanager.h"
 
 AppContext::AppContext(QObject *parent)
     : QObject{parent}
@@ -16,19 +17,20 @@ AppContext::AppContext(QObject *parent)
     , m_profileManager(nullptr)
     , m_glyphManager(nullptr)
     , m_imageManager(nullptr)
+    , m_dbManager(nullptr)
 {
-    initDatabase();
+    initAppUserDir();
     setupVariables();
 }
 
 AppContext::~AppContext()
 {
-    // qDebug() << __FILE__ << __LINE__ << "Destroy AppContext class";
-    releaseDatabase ();
+
 }
 
 void AppContext::setupVariables()
 {
+
 }
 
 AppSettings* AppContext::appSettings()
@@ -101,44 +103,21 @@ ImageManager * AppContext::imageManager()
     return m_imageManager;
 }
 
-QString AppContext::appDataPath()
+DbManager * AppContext::dbManager()
 {
-    // Получение пути к AppData/Local/<AppName>
-    QString appDataPath = appSettings()->appDataPath();
-
-    // Пример: создание файла БД в этом каталоге
-    QString dbPath = appDataPath + "/database.sqlite";
-
-    return dbPath;
-}
-
-bool AppContext::initDatabase()
-{
-    releaseDatabase();
-
-    QSqlDatabase db = QSqlDatabase::database();
-
-    // Подключаемся к базе данных SQLite (файл будет создан автоматически)
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(appDataPath());
-
-    if (!db.open()) {
-        qCritical() << "Failed to open database:" << db.lastError().text();
-        return false;
-    }
-
-    return true;
-}
-
-bool AppContext::releaseDatabase()
-{
-    QSqlDatabase db = QSqlDatabase::database();
-
-    if(db.isOpen())
+    if (m_dbManager == nullptr)
     {
-        db.close();
-        return true;
+        m_dbManager = new DbManager(this);
     }
 
-    return false;
+    return m_dbManager;
+}
+
+void AppContext::initAppUserDir()
+{
+    m_appUserDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    QDir dir(m_appUserDir);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
 }

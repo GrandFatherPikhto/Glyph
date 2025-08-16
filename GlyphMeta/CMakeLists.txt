@@ -30,6 +30,7 @@ find_package(Freetype REQUIRED)
 add_library(GlyphMeta SHARED
   GlyphMeta_global.h
 
+  fontcontext.h
   glyphcontext.h
   profilecontext.h
   gridpaddings.h

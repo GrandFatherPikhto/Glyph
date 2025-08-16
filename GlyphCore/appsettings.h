@@ -13,6 +13,8 @@
 
 #include "GlyphCore_global.h"
 
+#define NOT_RESTORE_SETTINGS
+
 class AppContext;
 class FontManager;
 class ProfileManager;
@@ -55,7 +57,7 @@ private:
     void saveAppSettings();
     void restoreAppSettings();
     
-    void initValues ();
+    void initSettings ();
 
     const QString & initAppDataCatalog();
 

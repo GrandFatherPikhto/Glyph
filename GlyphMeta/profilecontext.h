@@ -6,17 +6,17 @@
 #include <QSharedPointer>
 #include <QVariant>
 
+#include "fontcontext.h"
+
 class GlyphContext;
 
 class ProfileContext {
 
 public:
-    explicit ProfileContext(const QString &name = QString(), int bitmapDimension = -1, int glyphSize=-1, const QFont &font = QFont(), const QString &fontPath = QString(), int id = -1, bool temporary = true)
+    explicit ProfileContext(const QString &name = QString(), int bitmapDimension = -1, int glyphSize=-1, int id = -1, int fontId = -1)
         : m_id(id)
+        , m_fontId(fontId)
         , m_name(name)
-        , m_font(font)
-        , m_fontPath(fontPath)
-        , m_temporary(temporary)
         , m_bitmapDimension(bitmapDimension)
         , m_glyphSize(glyphSize)
         , m_paddingLeft(0)
@@ -28,12 +28,9 @@ public:
 
     ProfileContext(const ProfileContext &profile)
         : m_id(profile.m_id)
+        , m_fontId(profile.m_fontId)
         , m_name(profile.m_name)
         , m_bitmapDimension(profile.m_bitmapDimension)
-        , m_glyphSize(profile.m_glyphSize)
-        , m_font(profile.m_font)
-        , m_fontPath(profile.m_fontPath)
-        , m_temporary(profile.m_temporary)
         , m_paddingLeft(profile.m_paddingLeft)
         , m_paddingTop(profile.m_paddingTop)
         , m_paddingRight(profile.m_paddingRight)
@@ -42,12 +39,9 @@ public:
 
     ProfileContext(const ProfileContext *profile)
         : m_id(profile->m_id)
+        , m_fontId(profile->m_fontId)
         , m_name(profile->m_name)
         , m_bitmapDimension(profile->m_bitmapDimension)
-        , m_glyphSize(profile->m_glyphSize)
-        , m_font(profile->m_font)
-        , m_fontPath(profile->m_fontPath)
-        , m_temporary(profile->m_temporary)
         , m_paddingLeft(profile->m_paddingLeft)
         , m_paddingTop(profile->m_paddingTop)
         , m_paddingRight(profile->m_paddingRight)
@@ -56,12 +50,9 @@ public:
 
     ProfileContext(QSharedPointer<ProfileContext> profile)
         : m_id(profile->m_id)
+        , m_fontId(profile->m_fontId)
         , m_name(profile->m_name)
-        , m_glyphSize(profile->m_glyphSize)
         , m_bitmapDimension(profile->m_bitmapDimension)
-        , m_font(profile->m_font)
-        , m_fontPath(profile->m_fontPath)
-        , m_temporary(profile->m_temporary)
         , m_paddingLeft(profile->m_paddingLeft)
         , m_paddingTop(profile->m_paddingTop)
         , m_paddingRight(profile->m_paddingRight)
@@ -75,16 +66,18 @@ public:
         return (
             !m_name.isEmpty()
             && m_bitmapDimension > 0
+            && m_glyphSize > 0
+            && m_fontId >= 0
         );
     }
 
     int id() const { return m_id; }
+    const QString & name() const { return m_name; }
+
+    int fontId () const { return m_fontId; }
+
     int bitmapDimension() const {return m_bitmapDimension; }
     int glyphSize() const { return m_glyphSize; }
-    const QFont & font() const { return m_font; }
-    const QString & fontPath() const { return m_fontPath; }
-    const QString & name() const { return m_name; }
-    bool temporary() const { return m_temporary; }
 
     int paddingLeft() const { return m_paddingLeft; }
     int paddingTop() const { return m_paddingTop; }
@@ -93,11 +86,9 @@ public:
 
     void setId(int value) { m_id = value; }
     void setName(const QString &value) { m_name = value; }
+    void setFontId(int value) { m_fontId = value; }
     void setBitmapDimension(int value) { m_bitmapDimension = value; }
-    void setGlyphSize(int value) { m_glyphSize = value; }
-    void setFont(const QFont &value) { m_font = value; }
-    void setFontPath(const QString &value) { m_fontPath = value; }
-    void setTemporary (bool value = true) { m_temporary = value; }
+    void setGlyphSize (int value) { m_glyphSize = value; }
     void setPaddingLeft(int value) { m_paddingLeft = value; }
     void setPaddingTop(int value) { m_paddingTop = value; }
     void setPaddingRight(int value) { m_paddingRight = value; }
@@ -107,11 +98,10 @@ public:
     {
         return (
                m_id == profile.m_id
+            && m_fontId == profile.m_fontId
             && m_bitmapDimension == profile.m_bitmapDimension
-            && m_glyphSize == profile.m_glyphSize
             && m_name == profile.m_name
-            && m_font == profile.m_font
-            && m_temporary == profile.m_temporary
+            && m_glyphSize == profile.m_glyphSize
             && m_paddingLeft == profile.m_paddingLeft
             && m_paddingTop == profile.m_paddingTop
             && m_paddingRight == profile.m_paddingRight
@@ -123,11 +113,10 @@ public:
     {
         return (
                m_id != profile.m_id
+            || m_name != profile.m_name
+            || m_fontId != profile.m_fontId
             || m_bitmapDimension != profile.m_bitmapDimension
             || m_glyphSize != profile.m_glyphSize
-            || m_name != profile.m_name
-            || m_font != profile.m_font
-            || m_temporary != profile.m_temporary
             || m_paddingLeft != profile.m_paddingLeft
             || m_paddingTop != profile.m_paddingTop
             || m_paddingRight != profile.m_paddingRight
@@ -141,11 +130,9 @@ public:
         {
             m_id = profile.m_id;
             m_name = profile.m_name;
-            m_font = profile.m_font;
-            m_fontPath = profile.m_fontPath;
+            m_fontId = profile.m_fontId;
             m_bitmapDimension = profile.m_bitmapDimension;
             m_glyphSize = profile.m_glyphSize;
-            m_temporary = profile.m_temporary;
             m_paddingLeft = profile.m_paddingLeft;
             m_paddingTop = profile.m_paddingTop;
             m_paddingRight = profile.m_paddingRight;
@@ -164,15 +151,14 @@ public:
             QVariantMap map;
 
             map["id"] = m_id;
-            map["bitmapDimension"] = m_bitmapDimension;
-            map["glyphSize"] = m_glyphSize;
-            map["font"] = m_font;
             map["name"] = m_name;
-            map["temporary"] = m_temporary;
-            map["paddingLeft"] = m_paddingLeft;
-            map["paddingTop"] = m_paddingTop;
-            map["paddingRight"] = m_paddingRight;
-            map["paddingBottom"] = m_paddingBottom;
+            map["bitmap_dimension"] = m_bitmapDimension;
+            map["font_id"] = m_fontId;
+            map["glyph_size"] = m_glyphSize;
+            map["padding_left"] = m_paddingLeft;
+            map["padding_top"] = m_paddingTop;
+            map["padding_right"] = m_paddingRight;
+            map["padding_bottom"] = m_paddingBottom;
 
             return map;
         }
@@ -185,20 +171,16 @@ public:
 #endif
 
 private:
-    int m_bitmapDimension;
-    int m_glyphSize;
-
-    QFont m_font;
-    QString m_fontPath;
     QString m_name;
 
-    bool m_temporary;
-
+    int m_id;
+    int m_fontId;
+    int m_bitmapDimension;
+    int m_glyphSize;
     int m_paddingLeft;
     int m_paddingTop;
     int m_paddingRight;
     int m_paddingBottom;
-    int m_id;
 };
 
 #ifndef QT_NO_DATASTREAM
@@ -206,11 +188,9 @@ inline QDataStream & operator << (QDataStream &out, const ProfileContext &profil
 {
     out << profile.m_id
         << profile.m_name
+        << profile.m_fontId
         << profile.m_bitmapDimension
         << profile.m_glyphSize
-        << profile.m_font
-        << profile.m_fontPath
-        << profile.m_temporary
         << profile.m_paddingLeft
         << profile.m_paddingTop
         << profile.m_paddingRight
@@ -223,11 +203,9 @@ inline QDataStream & operator >> (QDataStream &in, ProfileContext &profile)
 {
     in  >> profile.m_id
         >> profile.m_name
+        >> profile.m_fontId
         >> profile.m_bitmapDimension
         >> profile.m_glyphSize
-        >> profile.m_font
-        >> profile.m_fontPath
-        >> profile.m_temporary
         >> profile.m_paddingLeft
         >> profile.m_paddingTop
         >> profile.m_paddingRight
@@ -246,16 +224,12 @@ inline QDebug operator <<(QDebug debug, const ProfileContext &profile)
         << profile.id()
         << ", Name: "
         << profile.name()
-        << ", temporary: "
-        << profile.temporary ()
         << ", Dimension: "
         << profile.bitmapDimension()
-        << ", Size:"
+        << ", Font ID: "
+        << profile.fontId()
+        << ", Glyph Size: "
         << profile.glyphSize()
-        << ", Font: "
-        << profile.font()
-        << ", Font path: "
-        << profile.fontPath ()
         << ", Valid: "
         << profile.isValid ()
         << ", Padding: ("

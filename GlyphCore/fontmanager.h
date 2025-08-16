@@ -10,9 +10,13 @@
 #include <QtGlobal>
 #include <QSettings>
 #include <QVector>
+#include <QDir>
+#include <QThread>
 
 #include <windows.h>
 #include <tchar.h>
+
+#include "fontcontext.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -21,9 +25,11 @@
 #include FT_OUTLINE_H
 #include FT_RENDER_H
 
-#include "GlyphCore_global.h"
-
 class AppContext;
+class FontLoader;
+class DbManager; 
+
+#include "GlyphCore_global.h"
 
 class GLYPHCORE_EXPORT FontManager : public QObject
 {
@@ -32,31 +38,45 @@ public:
     explicit FontManager(AppContext *appContext);
     ~FontManager();
 
-    bool loadFont (const QFont &font);
+    QString winDefaultFontPath ();
+    QStringList fontFiles(const QString &path);
+    bool isSupportedByFreeType(FontContext &context);
+    QFont fontByPath(const QString &path);
 
-    const QString & fontPath();
+    // int updateFontList(const QString &path);
+    void startAsyncFontLoading();
+    bool appendOrUpdateFontContext(FontContext &context);
+
+    bool createTable();
 
 signals:
+    void appendedFontContext(FontContext &context);
+    void updateFontDatabase();
+    void clearFontDatabase();
 
+    void startLoading (const QStringList &fontDirs);
+    void loadingProgress(int current, int total);
+    void loadingFinished(int count);
+    void loadingError(const QString &message);
+    void addedFontContext(const FontContext &context);
+
+    void addFontContext(const FontContext &context);
 
 private:
-    void setupValues ();
-    void setupSignals ();
-    
-    void initContext ();
+    bool setDefaultFontPath();
+    void saveFontManagerSettings();
+    void restoreFontManagerSettings();
 
-#if defined(Q_OS_WIN)
-    bool getRegisterFontFilePath();
-    QString getFontPathOverRegisterKey(HKEY &hKey);
-#endif
-
-    QFont m_font;
-    QString m_fontPath;
-    QString m_fontFamily;
-    QStringList m_fontDirectories;
-    QStringList m_fontRegisterPaths;
-
+    QStringList m_fontDirs;
     AppContext *m_appContext;
+    DbManager *m_dbManager;
+
+    QStringList m_fontFiles;
+
+    QString m_tableName;
+
+    QThread m_workerThread;
+    FontLoader *m_fontLoader;
 };
 
 #endif // FONTMANAGER_H

@@ -37,12 +37,11 @@ add_library(GlyphCore SHARED
   appsettings.h
   appsettings.cpp
 
-  charmapkey.h
-  
   condition.h  
   sqlfilter.h
   sqlfilter.cpp
 
+  charmapkey.h
   charmapmanager.h
   charmapmanager.cpp
 
@@ -69,9 +68,23 @@ add_library(GlyphCore SHARED
 #   freetypeglyphrenderer.h
 #   freetypeglyphrenderer.cpp
 
+  dbmanager.h
+  dbmanager.cpp
+
+  fontutils.h
+  fontutils.cpp
+
+  fontloader.h
+  fontloader.cpp
+
   imagemanager.h
   imagemanager.cpp
+
+  iglyphrenderer.h
   
+  ftrenderer.h
+  ftrenderer.cpp
+
   ${TS_FILES}
 )
 

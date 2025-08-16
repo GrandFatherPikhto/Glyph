@@ -112,7 +112,6 @@ public:
     void setOffsetLeft(int value) { m_offsetLeft = value; }
     void setBaseline(int value) { m_baseline = value; }
 
-    // Для QVariant/QSettings
     operator QVariant() const {
         if(QMetaType::fromName("GlyphContext").isValid()) {
             return QVariant::fromValue(*this);

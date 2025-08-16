@@ -74,7 +74,6 @@ Qt::ItemFlags GlyphModel::flags(const QModelIndex &index) const
     return flags;
 }
 
-// Добавляем метод для получения данных по индексу
 QVariant GlyphModel::getData(int row, int column) const
 {
     return data(index(row, column));
@@ -82,7 +81,6 @@ QVariant GlyphModel::getData(int row, int column) const
 
 int GlyphModel::columnCount(const QModelIndex &parent) const
 {
-    // Добавляем 1 столбец для чекбоксов
     return m_headers.size();
 }
 

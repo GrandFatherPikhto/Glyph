@@ -18,6 +18,7 @@ class UnicodeMetadata;
 class ProfileManager;
 class GlyphManager;
 class ImageManager;
+class DbManager;
 
 class GLYPHCORE_EXPORT AppContext : public QObject
 {
@@ -33,15 +34,15 @@ public:
     AppSettings * appSettings();
     GlyphManager * glyphManager();
     ImageManager * imageManager();
+    DbManager * dbManager();
 
-    QString appDataPath();
+    const QString & appUserDir() const { return m_appUserDir; }
 
 signals:
 
 private:
     void setupVariables();
-    bool initDatabase ();
-    bool releaseDatabase ();
+    void initAppUserDir();
 
     AppSettings *m_appSettings;
     FontManager *m_fontManager;
@@ -50,6 +51,9 @@ private:
     ProfileManager *m_profileManager;
     GlyphManager *m_glyphManager;
     ImageManager *m_imageManager;
+    DbManager *m_dbManager;
+
+    QString m_appUserDir;
 };
 
 #endif // APPCONTEXT_H

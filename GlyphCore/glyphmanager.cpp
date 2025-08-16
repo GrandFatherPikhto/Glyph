@@ -244,8 +244,6 @@ bool GlyphManager::appendGlyphIfNotExists(GlyphContext &context)
         return false;
     }
 
-    // qDebug() << __FILE__ << __LINE__ << context;
-
     QSqlQuery query(db);
     if(!query.prepare(QString(
         "INSERT INTO %1 (unicode, character, profile_id, glyph_size, temporary, offset_left, baseline) "

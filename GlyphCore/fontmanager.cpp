@@ -1,123 +1,153 @@
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QDir>
+
 #include "fontmanager.h"
+#include "fontloader.h"
+#include <windows.h>
+#include <shlobj.h>
+#include <iostream>
+
 #include "appcontext.h"
+#include "fontutils.h"
+#include "dbmanager.h"
 
 FontManager::FontManager(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
-    , m_fontPath(QString())
+    , m_dbManager(appContext->dbManager())
+    , m_fontLoader(nullptr)
+    , m_tableName(QString("fonts"))
 {
-    initContext ();
-    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &FontManager::setupValues);
-    setupValues ();
+    setDefaultFontPath();
+    createTable();
+    connect(this, &FontManager::updateFontDatabase, this, [=]{
+        startAsyncFontLoading();
+    });
+
+    connect(this, &FontManager::loadingProgress, this, [=](int progress, int total){
+        qDebug() << "Loading" << progress << total;
+    });
+
+    connect(this, &FontManager::loadingFinished, this, [=](int total){
+        qDebug() << "Finished:" << total;
+    });
+
+    connect(this, &FontManager::addedFontContext, this, [=](const FontContext &context){
+        qDebug() << "Added Context" << context;
+    });
 }
 
 FontManager::~FontManager()
 {
-
+    if (m_workerThread.isRunning()) {
+        m_workerThread.quit();
+        m_workerThread.wait();
+    }
 }
 
-void FontManager::setupValues ()
+void FontManager::startAsyncFontLoading()
 {
-    setupSignals ();
-}
+    // Останавливаем предыдущую операцию
+    if (m_workerThread.isRunning()) {
+        m_workerThread.quit();
+        m_workerThread.wait();
 
-void FontManager::setupSignals ()
-{
-
-}
-
-bool FontManager::loadFont(const QFont &font)
-{
-    if (font == QFont())
-        return false;
-
-    m_font = font;
-    m_fontFamily = font.family();
-
-    return getRegisterFontFilePath();
-}
-
-void FontManager::initContext()
-{
-#if defined(Q_OS_WIN)
-        // Windows-специфичный код
-        // qDebug() << "Running on Windows";
-        m_fontDirectories.append("C:/Windows/Fonts/");
-        m_fontRegisterPaths.append("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
-#elif defined(Q_OS_LINUX)
-        // Linux-специфичный код
-        // qDebug() << "Running on Linux";
-#elif defined(Q_OS_MACOS)
-        // macOS-специфичный код
-        // qDebug() << "Running on macOS";
-#endif
-}
-
-#if defined(Q_OS_WIN)
-bool FontManager::getRegisterFontFilePath()
-{
-    HKEY hKey;
-    for (const QString &registerPath : std::as_const(m_fontRegisterPaths)) {
-        // qDebug() << __FILE__ << __LINE__ << registerPath;
-        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, registerPath.toStdWString().c_str(), 0, KEY_READ, &hKey) != ERROR_SUCCESS) {
-            continue;
+        // Удаляем старый loader (если был)
+        if (m_fontLoader) {
+            m_fontLoader->deleteLater();
+            m_fontLoader = nullptr;
         }
+    }
 
-        QString fontPath = getFontPathOverRegisterKey(hKey);
-        RegCloseKey(hKey);
-        if (!fontPath.isEmpty())
-        {
-            m_fontPath = fontPath;
-            // qDebug() << __FILE__ << __LINE__ << m_fontPath;
-            return true;
+    // Создаем новый loader без родителя
+    m_fontLoader = new FontLoader(m_tableName, m_dbManager->dbFile());
+
+    // Настраиваем соединения перед перемещением в поток
+    connect(m_fontLoader, &FontLoader::progress, this, &FontManager::loadingProgress);
+    connect(m_fontLoader, &FontLoader::finished, this, &FontManager::loadingFinished);
+    connect(m_fontLoader, &FontLoader::addedFontContext, this, &FontManager::addedFontContext);
+
+    // Перемещаем в поток
+    m_fontLoader->moveToThread(&m_workerThread);
+
+    // Соединение для запуска задачи (после moveToThread!)
+    connect(this, &FontManager::startLoading, m_fontLoader, &FontLoader::loadFonts, Qt::QueuedConnection);
+
+    // Удаление при завершении потока
+    // connect(&m_workerThread, &QThread::finished, m_fontLoader, &QObject::deleteLater);
+    connect(&m_workerThread, &QThread::finished, this, [this]() {
+        if (m_fontLoader) {
+            m_fontLoader->deleteLater();
+            m_fontLoader = nullptr;
         }
+        // emit loadingFinished();
+    });
+
+    // Запускаем поток
+    m_workerThread.start();
+
+    qDebug() << __FILE__ << __LINE__ << m_fontDirs;
+    emit startLoading(m_fontDirs);
+}
+
+
+bool FontManager::setDefaultFontPath()
+{
+    QString defaultFontPath = ::winDefaultFontPath();
+    qDebug() << defaultFontPath << m_fontDirs.contains(defaultFontPath);
+    if (!m_fontDirs.contains(defaultFontPath))
+    {
+        m_fontDirs << defaultFontPath;
+        qDebug() << m_fontDirs;
+        return true;
     }
 
     return false;
 }
-#endif // Q_OS_WIN
 
-#if defined(Q_OS_WIN)
-QString FontManager::getFontPathOverRegisterKey(HKEY &hKey)
+bool FontManager::createTable()
 {
-    uint32_t pathSize = 0;
-    TCHAR valueName[256];
-    TCHAR valueData[MAX_PATH];
-    DWORD valueNameSize, valueDataSize, type;
-    DWORD index = 0;
-    bool found = false;
-    while (true) {
-        valueNameSize = sizeof(valueName) / sizeof(TCHAR);
-        valueDataSize = sizeof(valueData);
+    QSqlDatabase db = QSqlDatabase::database("main");
 
-        if (RegEnumValue(hKey, index, valueName, &valueNameSize, NULL,
-                         &type, (LPBYTE)valueData, &valueDataSize) != ERROR_SUCCESS) {
-            break;
-        }
-
-        TCHAR tchFontName[MAX_PATH] = {0};
-        TCHAR tchFontPath[MAX_PATH] = {0};
-        m_fontFamily.toWCharArray(tchFontName);
-        // Проверяем, содержит ли имя шрифта искомое название
-        if (_tcsstr(valueName, tchFontName) != NULL) {
-            foreach(const QString &fontDirectory, m_fontDirectories)
-            {
-                QString fontPath = QString("%1%2").arg(fontDirectory).arg(valueData);
-                if (QFile::exists(fontPath))
-                {
-                    return fontPath;
-                }
-            }
-        }
-        index++;
+    if (!db.isOpen())
+    {
+        qWarning() << "Database is not open";
+        return false;
     }
 
-    return QString();
-}
-#endif // Q_OS_WIN
 
-const QString & FontManager::fontPath()
+    QSqlQuery query(db);
+
+    QString createTableQuery =
+        QString(
+            "CREATE TABLE IF NOT EXISTS %1 ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "name TEXT NOT NULL, "
+            "path TEXT NOT NULL, "
+            "family TEXT NOT NULL, "
+            "style TEXT, "
+            "system TEXT, "
+            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+            "UNIQUE(name, path)"
+            ");"
+            ).arg(m_tableName);
+
+    if (!query.exec(createTableQuery)) {
+        qWarning() << QString("Failed to create table %1: %2").arg(m_tableName, query.lastError().text());
+        return false;
+    }
+
+    return true;
+}
+
+void FontManager::saveFontManagerSettings()
 {
-    return m_fontPath;
+
 }
 
+void FontManager::restoreFontManagerSettings()
+{
+
+}
