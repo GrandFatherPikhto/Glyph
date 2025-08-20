@@ -153,7 +153,5 @@ GlyphContext CharmapModel::glyphContext(int row)
         return context;
     }
 
-    context.setTemporary();
-
     return context;
 }

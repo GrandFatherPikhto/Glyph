@@ -11,22 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Font Selector</string>
+   <string>Character selector</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout_6">
-    <item>
-     <widget class="QGroupBox" name="groupBoxFilters">
-      <property name="title">
-       <string>Filters</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
-       <item>
-        <widget class="QFontComboBox" name="fontComboBox"/>
-       </item>
-      </layout>
-     </widget>
-    </item>
     <item>
      <widget class="QPushButton" name="pushButtonClearFilters">
       <property name="text">
@@ -49,7 +37,7 @@
           <x>0</x>
           <y>0</y>
           <width>310</width>
-          <height>191</height>
+          <height>206</height>
          </rect>
         </property>
         <attribute name="label">
@@ -74,7 +62,7 @@
           <x>0</x>
           <y>0</y>
           <width>310</width>
-          <height>191</height>
+          <height>206</height>
          </rect>
         </property>
         <attribute name="label">
@@ -96,7 +84,7 @@
           <x>0</x>
           <y>0</y>
           <width>310</width>
-          <height>191</height>
+          <height>206</height>
          </rect>
         </property>
         <attribute name="label">
@@ -118,7 +106,7 @@
           <x>0</x>
           <y>0</y>
           <width>310</width>
-          <height>191</height>
+          <height>206</height>
          </rect>
         </property>
         <attribute name="label">
@@ -246,7 +234,7 @@
           <x>0</x>
           <y>0</y>
           <width>310</width>
-          <height>191</height>
+          <height>206</height>
          </rect>
         </property>
         <attribute name="label">

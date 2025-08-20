@@ -9,6 +9,7 @@
 #include "GlyphCore_global.h"
 
 class AppContext;
+class DbManager;
 
 class GLYPHCORE_EXPORT UnicodeMetadata : public QObject
 {
@@ -52,6 +53,7 @@ private:
 
     // DI
     AppContext *m_appContext;
+    DbManager *m_dbManager;
 
     QMap<QChar::Script, QString> m_scripts;
     QMap<QChar::Category, QString> m_categories;

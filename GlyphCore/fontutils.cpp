@@ -26,7 +26,7 @@ QFont fontByPath(const QString &fontPath)
     int fontId = QFontDatabase::addApplicationFont(fontPath);
 
     if (fontId == -1) {
-        qWarning() << "Не удалось загрузить шрифт из" << fontPath;
+        qWarning()  << __FILE__ << __LINE__ << "Не удалось загрузить шрифт из" << fontPath;
         return QFont();
     }
 
@@ -34,7 +34,7 @@ QFont fontByPath(const QString &fontPath)
     QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
 
     if (fontFamilies.isEmpty()) {
-        qWarning() << "Не удалось определить семейство шрифтов";
+        qWarning()  << __FILE__ << __LINE__ << "Не удалось определить семейство шрифтов";
         return QFont();
     }
 

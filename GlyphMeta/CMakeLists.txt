@@ -33,7 +33,9 @@ add_library(GlyphMeta SHARED
   fontcontext.h
   glyphcontext.h
   profilecontext.h
+  imagecontext.h
   gridpaddings.h
+  drawcontext.h
   
   ${TS_FILES}
 )
@@ -62,8 +64,6 @@ endif()
 if(Freetype_FOUND)
     message(STATUS "FreeType найден: ${FREETYPE_INCLUDE_DIRS}, ${FREETYPE_LIBRARIES}")
     target_link_libraries(GlyphMeta PRIVATE Freetype::Freetype)
-target_link_libraries(GlyphMeta PRIVATE Qt6::Core)
-target_link_libraries(GlyphMeta PRIVATE Qt6::Core)
 else()
     message(FATAL_ERROR "FreeType не найден!")
 endif()

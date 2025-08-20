@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QString>
+#include <QSqlQuery>
+#include <QSqlError>
 
 #include "GlyphCore_global.h"
 
@@ -10,6 +12,7 @@
 
 class AppContext;
 class GlyphContext;
+class AppSettings;
 class FontManager;
 
 class GLYPHCORE_EXPORT ProfileManager : public QObject
@@ -26,14 +29,19 @@ public:
     const ProfileContext & profile() const { return m_profile; }
 
     bool getProfileById(int id, ProfileContext &profile);
+    bool findProfile(ProfileContext &profile);
 
-    GlyphContext defaultGlyphContext(const QChar &ch, bool temporary = true);
+    GlyphContext defaultGlyphContext(const QChar &ch);
+    ProfileContext glyphProfile(const GlyphContext &glyph);
     bool defaultGlyphContext(GlyphContext &context);
+    bool defaultProfile(ProfileContext &context);
+    bool assignQueryWithProfile(ProfileContext &profile, QSqlQuery query);
 
 signals:
     void profilesChanged();
     void changeProfile(const ProfileContext &profile);
     void profileChanged(const ProfileContext &profile);
+    void profileAppended(ProfileContext profile);
 
 private:
     void setupValues ();
@@ -45,6 +53,7 @@ private:
 
     AppContext *m_appContext;
     FontManager *m_fontManager;
+    AppSettings *m_appSettings;
 
     QString m_tableName;
 

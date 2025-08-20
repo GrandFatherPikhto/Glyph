@@ -12,11 +12,16 @@ class GlyphManager;
 class AppSettings;
 class ProfileManager;
 class DrawContext;
+class ImageManager;
+class FontManager;
 
 #include "glyphcontext.h"
 #include "profilecontext.h"
+#include "imagecontext.h"
 
 #include "GlyphDraw_global.h"
+
+class GlyphDrawContext;
 
 class GLYPHDRAW_EXPORT GlyphDraw : public QWidget
 {
@@ -39,6 +44,11 @@ private:
     void drawBitmapRect(QPainter &painter);
     void drawBaseLine(QPainter &painter);
     void drawLeftLine(QPainter &painter);
+    void drawTemplate(QPainter &painter);
+    void drawPreview(QPainter &painter);
+
+    // bool renderTemplate(const GlyphContext &glyph);
+    // bool renderPreview(const GlyphContext &glyph);
 
     void setProfile(const ProfileContext &context);
     void setGlyph(const GlyphContext &context);
@@ -49,11 +59,13 @@ private:
     GlyphManager *m_glyphManager;
     AppSettings *m_appSettings;
     ProfileManager *m_profileManager;
+    ImageManager *m_imageManager;
+    FontManager *m_fontManager;
 
     GlyphContext m_glyph;
     ProfileContext m_profile;
 
-    DrawContext *m_drawContext;
+    GlyphDrawContext *m_drawContext;
 };
 
 #endif // GLYPHDRAW_H

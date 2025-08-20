@@ -26,6 +26,7 @@ class UnicodeMetadataSelectionModel;
 class SqlFilter;
 class GlyphManager;
 class ProfileManager;
+class FontManager;
 
 namespace Ui {
 class DockCharmap;
@@ -46,8 +47,6 @@ public:
 private:
     void setupSignals ();
     void setupValues  ();
-
-    void initFontComboBox ();
 
     void initCharmapTable ();
 
@@ -72,6 +71,7 @@ private:
     AppSettings *m_appSettings;
     GlyphManager *m_glyphManager;
     ProfileManager *m_profileManager;
+    FontManager *m_fontManager;
     CharmapManager *m_charmapManager;
 
     SqlFilter *m_filter;
@@ -81,8 +81,6 @@ private:
     Ui::DockCharmap *ui;
 
     CharmapModel *m_charmapModel;
-
-    QFont m_font;
 
     // CharmapQuery *m_charmapQuery;
 

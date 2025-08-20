@@ -29,6 +29,9 @@ set(TS_FILES GlyphModels_ru_RU.ts)
 
 add_library(GlyphModels SHARED
   GlyphModels_global.h
+
+  fontmodel.h
+  fontmodel.cpp
   
   glyphmodel.cpp
   glyphmodel.h

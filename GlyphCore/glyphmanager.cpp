@@ -5,17 +5,19 @@
 #include "appcontext.h"
 #include "glyphcontext.h"
 #include "appsettings.h"
+#include "fontmanager.h"
 
 GlyphManager::GlyphManager(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
-    , m_appSettings(nullptr)
-    , m_profileManager(nullptr)
+    , m_appSettings(appContext->appSettings())
+    , m_profileManager(appContext->profileManager())
+    , m_fontManager(appContext->fontManager())
     , m_tableName("glyphs")
 {
     restoreSettings();
-    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &GlyphManager::setupValues);
     setupValues();
+    setupSignals();
 }
 
 GlyphManager::~GlyphManager()
@@ -25,12 +27,6 @@ GlyphManager::~GlyphManager()
 
 void GlyphManager::setupValues()
 {
-    Q_ASSERT(m_appContext->appSettings() != nullptr && m_appContext->profileManager() != nullptr);
-
-    m_appSettings = m_appContext->appSettings();
-    m_profileManager = m_appContext->profileManager();
-
-    setupSignals();
     createTable ();
 }
 
@@ -38,16 +34,21 @@ void GlyphManager::setupSignals()
 {
     QObject::connect(this, &GlyphManager::changeGlyph, this, [=](const GlyphContext &glyph){
         m_glyph = glyph;
+        findGlyph(m_glyph);
+        if (m_glyph.size() < 0)
+            m_glyph.setSize(m_profileManager->profile().glyphSize());
+
+        qDebug() << __FILE__ << __LINE__ << m_glyph;
         emit glyphChanged(m_glyph);
     });
 }
 
 bool GlyphManager::createTable()
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
 
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -61,50 +62,44 @@ bool GlyphManager::createTable()
             "character TEXT, "
             "profile_id INTEGER NOT NULL, "
             "glyph_size INTEGER NOT NULL, "      // uint8
-            "temporary BOOL DEFAULT TRUE, "
             "offset_left INTEGER, "        // uint16
             "baseline INTERGER, "
-            "bitmap_template BLOB DEFAULT NULL, "
-            "bitmap_preview BLOB DEFAULT NULL, "
-            "bitmap_draw BLOB DEFAULT NULL, "
             "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
             "UNIQUE(unicode, profile_id) ON CONFLICT REPLACE"
             ");"
         ).arg(m_tableName);
     
     if (!query.exec(createTableQuery)) {
-        qWarning() << QString("Failed to create table %1: %2").arg(m_tableName, query.lastError().text());
+        qWarning() << __FILE__ << __LINE__ << QString("Failed to create table %1: %2").arg(m_tableName, query.lastError().text());
         return false;
     }
     
     // Создаем индекс для ускорения поиска по категории (опционально)
     if (!query.exec(QString("CREATE INDEX IF NOT EXISTS idx_category ON %1(category)").arg(m_tableName))) {
-        qWarning() << QString("Failed to create index %1: %2").arg(m_tableName, query.lastError().text());
-        // Не считаем это критической ошибкой
+        qWarning() << __FILE__ << __LINE__ << QString("Failed to create index %1: %2").arg(m_tableName, query.lastError().text());
     }
     
-    // qDebug() << QString("Table %1 created successfully").arg(m_tableName);
     return true;
 }
 
 bool GlyphManager::findGlyph(GlyphContext &context)
 {
-    if (context.profile() < 0)
+    if (context.profile() < 0 && m_profileManager->profile().id() < 0)
         return false;
 
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
 
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
     QSqlQuery query(db);
 
-    query.prepare(QString("SELECT id, unicode, character, profile_id, glyph_size, temporary, offset_left, baseline, bitmap_template, bitmap_preview, bitmap_draw FROM %1 WHERE unicode = :unicode AND profile_id = :profile").arg(m_tableName));
+    query.prepare(QString("SELECT id, unicode, character, profile_id, glyph_size, offset_left, baseline FROM %1 WHERE unicode = :unicode AND profile_id = :profile").arg(m_tableName));
 
     query.bindValue(":unicode", QString::number(context.character().unicode()));
-    query.bindValue(":profile", context.profile());
+    query.bindValue(":profile", context.profile() < 0 ? m_profileManager->profile().id() : context.profile());
 
     if(!query.exec())
     {
@@ -125,10 +120,10 @@ bool GlyphManager::findGlyph(GlyphContext &context)
 
 bool GlyphManager::findGlyph(int id, GlyphContext &context)
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
 
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -137,10 +132,9 @@ bool GlyphManager::findGlyph(int id, GlyphContext &context)
     if(!query.prepare(
             QString(
                 "SELECT id, unicode, character, profile_id, glyph_size, "
-                " offset_left, baseline, temporary, bitmap_template, "
-                "bitmap_preview, bitmap_draw FROM %1 WHERE id = :id").arg(m_tableName)))
+                " offset_left, baseline FROM %1 WHERE id = :id").arg(m_tableName)))
     {
-        qWarning() << "Can't prepare SQL" << query.lastQuery() << " with Error: " << query.lastError();
+        qWarning()  << __FILE__ << __LINE__ << "Can't prepare SQL" << query.lastQuery() << " with Error: " << query.lastError();
         return false;
     }
 
@@ -190,14 +184,15 @@ bool GlyphManager::removeGlyph(GlyphContext &context)
 bool GlyphManager::removeGlyphById(int id)
 {
     GlyphContext context;
+
     if (!findGlyph(id, context))
     {
         return false;
     }
 
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -219,8 +214,8 @@ bool GlyphManager::removeGlyphById(int id)
         return false;
     }
 
-    context.resetId();
-    context.resetProfile();
+    context.setId();
+    context.setProfileId();
 
     emit glyphsTableChanged(m_profileManager->profile());
     emit glyphRemoved(context);
@@ -237,7 +232,7 @@ bool GlyphManager::appendGlyphIfNotExists(GlyphContext &context)
         return false;
     }
 
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
 
     if (!db.isOpen()) {
         qWarning() << __FILE__ << __LINE__ << "Database is not open!";
@@ -246,8 +241,8 @@ bool GlyphManager::appendGlyphIfNotExists(GlyphContext &context)
 
     QSqlQuery query(db);
     if(!query.prepare(QString(
-        "INSERT INTO %1 (unicode, character, profile_id, glyph_size, temporary, offset_left, baseline) "
-        "VALUES (:unicode, :character, :profile_id, :glyph_size, :temporary, :offset_left, :baseline)").arg(m_tableName)))
+        "INSERT INTO %1 (unicode, character, profile_id, glyph_size, offset_left, baseline) "
+        "VALUES (:unicode, :character, :profile_id, :glyph_size, :offset_left, :baseline)").arg(m_tableName)))
     {
         qWarning() << __FILE__ << __LINE__ << "Can't prepare " << query.lastQuery() << query.lastError();
         return false;
@@ -257,7 +252,6 @@ bool GlyphManager::appendGlyphIfNotExists(GlyphContext &context)
     query.bindValue(":character", QString(context.character()));
     query.bindValue(":profile_id", context.profile());
     query.bindValue(":glyph_size", context.size());
-    query.bindValue(":temporary", context.temporary());
     query.bindValue(":offset_left", context.offsetLeft());
     query.bindValue(":baseline", context.baseline());
 
@@ -285,10 +279,8 @@ bool GlyphManager::queryToContext(QSqlQuery &query, GlyphContext &context)
         context.setCharacter(ch);
         context.setSize(query.value("glyph_size").toInt());
         context.setProfileId(query.value("profile_id").toInt());
-        context.setTemporary(query.value("temporary").toBool());
         context.setOffsetLeft(query.value("offset_left").toInt());
         context.setBaseline(query.value("baseline").toInt());
-        context.setTemporary();
         // qDebug() << __FILE__ << __LINE__ << context << "Character: " << ch;
         // Доделать BLOBB поля
     } catch (const std::exception &e) {
@@ -304,15 +296,15 @@ bool GlyphManager::queryGlyphsByProfile(QSqlQuery &query, const ProfileContext &
     if(profile.id() < 0)
         return false;
 
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
     query = QSqlQuery(db);
 
-    QString sql = QString("SELECT id, unicode, character, profile_id, glyph_size, temporary, offset_left, baseline, bitmap_template, bitmap_preview, bitmap_draw, created_at  FROM %1 WHERE profile_id = :profile_id ORDER BY unicode ASC").arg(m_tableName);
+    QString sql = QString("SELECT id, unicode, character, profile_id, glyph_size, offset_left, baseline, created_at  FROM %1 WHERE profile_id = :profile_id ORDER BY unicode ASC").arg(m_tableName);
     if(!query.prepare(sql))
     {
         qWarning() << __FILE__ << __LINE__ << "Error prepare SQL " << sql << ", Error:" << query.lastError();

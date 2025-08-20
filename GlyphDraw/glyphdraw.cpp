@@ -8,14 +8,20 @@
 #include "appsettings.h"
 #include "glyphmanager.h"
 #include "profilemanager.h"
+#include "imagemanager.h"
+#include "fontmanager.h"
 
 #include "glyphcontext.h"
 
-#include "drawcontext.h"
+#include "glyphdrawcontext.h"
 
 GlyphDraw::GlyphDraw(QWidget *parent)
     : QWidget{parent}
     , m_drawContext(nullptr)
+    , m_appSettings(nullptr)
+    , m_profileManager(nullptr)
+    , m_imageManager(nullptr)
+    , m_fontManager(nullptr)
 {
 
 }
@@ -31,8 +37,10 @@ void GlyphDraw::setAppContext(AppContext *appContext)
     m_appSettings = m_appContext->appSettings();
     m_glyphManager = m_appContext->glyphManager();
     m_profileManager = m_appContext->profileManager();
+    m_imageManager = m_appContext->imageManager();
+    m_fontManager = m_appContext->fontManager();
 
-    m_drawContext = new DrawContext(m_appContext, this);
+    m_drawContext = new GlyphDrawContext(m_appContext, this);
 
     setProfile(m_profileManager->profile());
     setGlyph(m_glyphManager->glyph());
@@ -56,20 +64,20 @@ void GlyphDraw::paintEvent(QPaintEvent *event)
     drawBitmapRect(painter);
     drawBaseLine(painter);
     drawLeftLine(painter);
+    drawTemplate(painter);
+    drawPreview(painter);
 
     painter.end();
 }
 
-void GlyphDraw::setGlyph(const GlyphContext &context)
+void GlyphDraw::setGlyph(const GlyphContext &glyph)
 {
-    m_glyph = context;
-    // qDebug() << __FILE__ << __LINE__ << m_glyph;
+    update();
 }
 
 void GlyphDraw::setProfile(const ProfileContext &context)
 {
     m_profile = context;
-    // qDebug() << __FILE__ << __LINE__ << m_profile;
     update();
 }
 
@@ -118,6 +126,24 @@ void GlyphDraw::drawLeftLine(QPainter &painter)
     painter.setPen(pen);
     int leftlineX = m_drawContext->lineLeftX();
     painter.drawLine(QPoint(leftlineX, 0), QPoint(leftlineX, size().height()));
+}
+
+void GlyphDraw::drawTemplate(QPainter &painter)
+{
+    QSharedPointer<QImage> img = m_drawContext->imageTemplate();
+    if (img.isNull())
+        return;
+
+    painter.drawImage(m_drawContext->glyphRect(), *(img.data()));
+}
+
+void GlyphDraw::drawPreview(QPainter &painter)
+{
+    QSharedPointer<QImage> img = m_drawContext->imagePreview();
+    if (img.isNull())
+        return;
+
+    painter.drawImage(m_drawContext->glyphRect(), *(img.data()));
 }
 
 

@@ -10,15 +10,14 @@
 #include "GlyphMeta_global.h"
 
 class GLYPHMETA_EXPORT GlyphContext {
-public:    
-    explicit GlyphContext(int glyphId = -1, const QChar &character = QChar(), int glyphSize = -1, int profile = -1, int offsetLeft = 0, int baseline = 0, bool temporary = true) 
+public:
+    explicit GlyphContext(int glyphId = -1, const QChar &character = QChar(), int glyphSize = -1, int profile = -1, int offsetLeft = 0, int baseline = 0)
         : m_glyphId(glyphId)
         , m_character(character) 
         , m_glyphSize(glyphSize) 
         , m_profile(profile)
         , m_offsetLeft(offsetLeft)
         , m_baseline(baseline)
-        , m_temporary(temporary)
         {};
         
     GlyphContext(const GlyphContext &glyph)
@@ -28,10 +27,6 @@ public:
         , m_profile(glyph.m_profile)
         , m_offsetLeft(glyph.m_offsetLeft)
         , m_baseline(glyph.m_baseline)
-        , m_temporary(glyph.m_temporary)
-        , m_template(glyph.m_template)
-        , m_preview(glyph.m_preview)
-        , m_draw(glyph.m_draw)
         {}
 
     GlyphContext(GlyphContext *glyph)
@@ -41,10 +36,6 @@ public:
         , m_profile(glyph->m_profile)
         , m_offsetLeft(glyph->m_offsetLeft)
         , m_baseline(glyph->m_baseline)
-        , m_temporary(glyph->m_temporary)
-        , m_template(glyph->m_template)
-        , m_preview(glyph->m_preview)
-        , m_draw(glyph->m_draw)
         {}
 
     ~GlyphContext() {}
@@ -55,14 +46,8 @@ public:
         m_character = glyph.m_character;
         m_glyphSize = glyph.m_glyphSize;
         m_profile = glyph.m_profile;
-        m_temporary = glyph.m_temporary;
         m_offsetLeft = glyph.m_offsetLeft;
         m_baseline = glyph.m_baseline;
-
-        m_template = glyph.m_template;
-        m_preview = glyph.m_preview;
-        m_draw = glyph.m_draw;
-
         return *this;
     }
 
@@ -73,7 +58,6 @@ public:
             && m_character == glyph.m_character
             && m_glyphSize == glyph.m_glyphSize
             && m_profile == glyph.m_profile
-            && m_temporary == glyph.m_temporary
             && m_offsetLeft == glyph.m_offsetLeft
             && m_baseline == glyph.m_baseline
         );
@@ -86,7 +70,6 @@ public:
             || m_character != glyph.m_character
             || m_glyphSize != glyph.m_glyphSize
             || m_profile != glyph.m_profile
-            || m_temporary != glyph.m_temporary
             || m_offsetLeft == glyph.m_offsetLeft
             || m_baseline == glyph.m_baseline
         );
@@ -98,17 +81,13 @@ public:
     const QChar & character() const { return m_character; };
     int size() const { return m_glyphSize; }
     int profile() const { return m_profile; }
-    int temporary() const { return m_temporary; }
     int offsetLeft() const { return m_offsetLeft; }
     int baseline() const { return m_baseline; }
 
-    void setId(int value) { m_glyphId = value; }
-    void resetId() { m_glyphId = -1; }
-    void resetProfile() { m_profile = -1; }
+    void setId(int value = -1) { m_glyphId = value; }
+    void setProfileId(int value = -1) { m_profile = value; }
     void setCharacter(const QChar &value) { m_character = value; }
     void setSize(int value) { m_glyphSize = value; }
-    void setProfileId(int value) { m_profile = value; }
-    void setTemporary(bool value = true) { m_temporary = value; }
     void setOffsetLeft(int value) { m_offsetLeft = value; }
     void setBaseline(int value) { m_baseline = value; }
 
@@ -125,10 +104,6 @@ public:
             map["profile"] = m_profile;
             map["offset_left"] = m_offsetLeft;
             map["baseline"] = m_baseline;
-            map["temporary"] = m_temporary;
-            map["template"] = m_template;
-            map["preview"] = m_preview;
-            map["draw"] = m_draw;
 
             return map;
         }
@@ -147,11 +122,6 @@ private:
     int m_profile;
     int m_offsetLeft;
     int m_baseline;
-    bool m_temporary;
-
-    QImage m_template;
-    QImage m_preview;
-    QImage m_draw;
 };
 
 #ifndef QT_NO_DATASTREAM
@@ -162,11 +132,7 @@ private:
             << profile.m_glyphSize
             << profile.m_profile
             << profile.m_offsetLeft
-            << profile.m_baseline
-            << profile.m_temporary
-            << profile.m_template
-            << profile.m_preview
-            << profile.m_draw;
+            << profile.m_baseline;
 
         return out;
     }
@@ -178,11 +144,7 @@ private:
             >> profile.m_glyphSize
             >> profile.m_profile
             >> profile.m_offsetLeft
-            >> profile.m_baseline
-            >> profile.m_temporary
-            >> profile.m_template
-            >> profile.m_preview
-            >> profile.m_draw;
+            >> profile.m_baseline;
 
         return in;
     }
@@ -200,8 +162,6 @@ inline QDebug operator <<(QDebug debug, const GlyphContext &glyph)
         << glyph.character()
         << ", profile: "
         << glyph.profile()
-        << ", temporary: "
-        << glyph.temporary ()
         << ", Valid: "
         << glyph.isValid ()
         << ", offset left: "

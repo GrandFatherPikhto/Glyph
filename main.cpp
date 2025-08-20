@@ -11,6 +11,8 @@
 #include "profilecontext.h"
 #include "gridpaddings.h"
 #include "glyphcontext.h"
+#include "fontcontext.h"
+#include "imagecontext.h"
 
 // QMargins -> QVariantMap
 QVariant marginsToVariantMap(const QMargins &margins) {
@@ -45,6 +47,12 @@ void registerMetaTypes ()
 
     qRegisterMetaType<GlyphContext>("GlyphContext");
     QMetaType::registerConverter<GlyphContext, QVariant>();
+
+    qRegisterMetaType<FontContext>("FontContext");
+    QMetaType::registerConverter<FontContext, QVariant>();
+
+    qRegisterMetaType<ImageContext>("ImageContext");
+    QMetaType::registerConverter<ImageContext, QVariant>();
 
     qRegisterMetaType<QMargins>("QMarings");
     QMetaType::registerConverter<QMargins, QVariant>(marginsToVariantMap);

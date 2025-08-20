@@ -17,10 +17,14 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 
 add_library(GlyphDraw SHARED
   GlyphDraw_global.h
+  
   glyphdraw.cpp
   glyphdraw.h
+
+  glyphdrawcontext.h 
+  glyphdrawcontext.cpp
+  
   ${TS_FILES}
-  drawcontext.h drawcontext.cpp
 )
 
 target_link_libraries(GlyphDraw PRIVATE Qt${QT_VERSION_MAJOR}::Core)

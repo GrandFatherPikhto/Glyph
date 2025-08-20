@@ -13,7 +13,8 @@
 ProfileManager::ProfileManager(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
-    , m_fontManager(nullptr)
+    , m_fontManager(appContext->fontManager())
+    , m_appSettings(appContext->appSettings())
     , m_tableName("profiles")
 {
     // QObject::connect(m_appContext, &AppContext::valuesInited, this, &ProfileManager::setupValues);
@@ -43,7 +44,7 @@ void ProfileManager::setupSignals ()
 }
 
 
-GlyphContext ProfileManager::defaultGlyphContext(const QChar &ch, bool temporary)
+GlyphContext ProfileManager::defaultGlyphContext(const QChar &ch)
 {
     if(ch == QChar())
         return GlyphContext();
@@ -52,7 +53,6 @@ GlyphContext ProfileManager::defaultGlyphContext(const QChar &ch, bool temporary
     context.setCharacter(ch);
     context.setProfileId(m_profile.id());
     context.setSize(m_profile.glyphSize());
-    context.setTemporary(temporary);
 
     return context;
 }
@@ -74,10 +74,10 @@ bool ProfileManager::defaultGlyphContext(GlyphContext &context)
 
 bool ProfileManager::createTable()
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
 
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ <<  "Database is not open!";
         return false;
     }
 
@@ -86,12 +86,11 @@ bool ProfileManager::createTable()
     QString createTableQuery = QString(
         "CREATE TABLE IF NOT EXISTS %1 ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "font_id INTEGER, "
         "name TEXT NOT NULL, "
-        "font_family TEXT, "
-        "font_path TEXT, "
         "bitmap_dimension INTEGER NOT NULL, "
-        "glyph_size INTEGER NOT NULL, "
-        "temporary BOOL, "
+        "glyph_size INTEGER, "
+        "font_size INTEGER, "
         "padding_left INTEGER, "
         "padding_top INTEGER, "
         "padding_right INTEGER, "
@@ -101,7 +100,7 @@ bool ProfileManager::createTable()
     ")").arg(m_tableName);
     
     if (!query.exec(createTableQuery)) {
-        qWarning() << QString("Failed to create table %1: %2").arg(m_tableName, query.lastError().text());
+        qWarning()  << __FILE__ << __LINE__ << QString("Failed to create table %1: %2").arg(m_tableName, query.lastError().text());
         return false;
     }
         
@@ -112,10 +111,15 @@ bool ProfileManager::createTable()
 
 bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    if (!profile.isValid())
+    {
+        return false;
+    }
+    
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen())
     {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -125,22 +129,21 @@ bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
     db.transaction();
     // Явно указываем имена столбцов и параметры
     query.prepare(QString("INSERT OR REPLACE INTO %1 "
-                          "(name, font_family, font_path, bitmap_dimension, glyph_size, temporary, padding_left, padding_top, padding_right, padding_bottom) "
-                          "VALUES (:name, :font_family, :font_path, :bitmap_dimension, :glyph_size, :temporary, :padding_left, :padding_top, :padding_right, :padding_bottom);").arg(m_tableName));
+                          "(name, font_id, bitmap_dimension, glyph_size, font_size, padding_left, padding_top, padding_right, padding_bottom) "
+                          "VALUES (:name, :font_id, :bitmap_dimension, :glyph_size, :font_size, :padding_left, :padding_top, :padding_right, :padding_bottom);").arg(m_tableName));
 
     query.bindValue(":name", profile.name());
-    query.bindValue(":font_family", profile.font().family());
-    query.bindValue(":font_path", profile.fontPath());
+    query.bindValue(":font_id", profile.fontId());
     query.bindValue(":bitmap_dimension", profile.bitmapDimension());
     query.bindValue(":glyph_size", profile.glyphSize());
-    query.bindValue(":temporary", profile.temporary());
+    query.bindValue(":font_size", profile.fontSize());
     query.bindValue(":padding_left", profile.paddingLeft());
     query.bindValue(":padding_top", profile.paddingTop());
     query.bindValue(":padding_right", profile.paddingRight());
     query.bindValue(":padding_bottom", profile.paddingBottom());
 
     if (!query.exec()) {
-        qWarning() << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
+        qWarning() << __FILE__ << __LINE__ << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
         db.rollback();
 
         return false;
@@ -148,11 +151,12 @@ bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
 
 
     if (!db.commit()) {
-        qWarning() << "Commit failed:" << db.lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Commit failed:" << db.lastError().text();
         return false;
     }
 
     emit profilesChanged ();
+    emit profileAppended (profile);
 
     return true;
 }
@@ -161,10 +165,10 @@ bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
 
 bool ProfileManager::clearTable()
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen())
     {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -172,7 +176,7 @@ bool ProfileManager::clearTable()
 
     if (!query.exec(QString("DELETE FROM %1").arg(m_tableName)))
     {
-        qWarning() << "Delete failed:" << query.lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Delete failed:" << query.lastError().text();
         return false;
     }
 
@@ -186,43 +190,89 @@ const QString & ProfileManager::tableName() const
     return m_tableName;
 }
 
-bool ProfileManager::getProfileById(int id, ProfileContext &profile)
+bool ProfileManager::findProfile(ProfileContext &profile)
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    if (!profile.isValid())
+        return false;
+
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen())
     {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
     QSqlQuery query(db);
-    query.prepare("SELECT id, name, bitmap_dimension, glyph_size, font_family, font_path, temporary, padding_left, padding_top, padding_right, padding_bottom FROM profiles WHERE id = :id");
+
+    QString strSql = QString(
+        "SELECT id, name, font_id, bitmap_dimension, glyph_size, font_size, font_id, padding_left, padding_top, padding_right, padding_bottom FROM %1 WHERE name = :name AND font_id = :font_id").arg(m_tableName);
+
+    if(!query.prepare(strSql))
+    {
+        qWarning() << __FILE__ << __LINE__ << "Error prepare SQL:" << query.lastQuery() << "; With Error:" << query.lastError();
+        return false;
+    }
+
+    query.bindValue(":name", profile.name());
+    query.bindValue(":font_id", profile.fontId());
+
+    if (!query.exec())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Error execute SQL:" << query.lastQuery() << "; With Error:" << query.lastError();
+        profile.setId(-1);
+        return false;
+    }
+
+    if (!query.next())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Can't find record with name = " << profile.name() << "AND font_id" << profile.fontId() << "; With Error:" << query.lastError();
+        profile.setId(-1);
+        return false;
+    }
+
+    return assignQueryWithProfile(profile, std::move(query));
+}
+
+
+bool ProfileManager::getProfileById(int id, ProfileContext &profile)
+{
+    QSqlDatabase db = QSqlDatabase::database("main");
+    if (!db.isOpen())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
+        return false;
+    }
+
+    QSqlQuery query(db);
+    query.prepare("SELECT id, name, font_id, bitmap_dimension, glyph_size, font_size, font_id, padding_left, padding_top, padding_right, padding_bottom FROM profiles WHERE id = :id");
     query.bindValue(":id", id);
 
     if(!query.exec())
     {
-        qWarning() << "Can't execute " << query.lastQuery() << ", Error: " << query.lastError();
+        qWarning() << __FILE__ << __LINE__ << "Can't execute " << query.lastQuery() << ", Error: " << query.lastError();
         return false;
     }
 
 
     if (!query.next())
     {
-        qWarning() << "No profile found with id:" << id;
+        qWarning()  << __FILE__ << __LINE__ << "No profile found with id:" << id;
         return false;
     }
 
+    return assignQueryWithProfile(profile, std::move(query));
+}
+
+bool ProfileManager::assignQueryWithProfile(ProfileContext &profile, QSqlQuery query)
+{
     // Заполняем структуру данными из запроса
     try {
         profile.setId(query.value("id").toInt());
         profile.setName(query.value("name").toString());
         profile.setBitmapDimension(query.value("bitmap_dimension").toInt());
         profile.setGlyphSize(query.value("glyph_size").toInt());
-
-        QFont font(query.value("font_family").toString());
-        profile.setFont(font);
-        profile.setFontPath(query.value("font_path").toString());
-        profile.setTemporary(query.value("temporary").toBool());
+        profile.setFontSize(query.value("font_size").toInt());
+        profile.setFontId(query.value("font_id").toInt());
         profile.setPaddingLeft(query.value("padding_left").toInt());
         profile.setPaddingTop(query.value("padding_top").toInt());
         profile.setPaddingRight(query.value("padding_right").toInt());
@@ -234,6 +284,50 @@ bool ProfileManager::getProfileById(int id, ProfileContext &profile)
     }
 
     return true;
+}
+
+bool ProfileManager::defaultProfile(ProfileContext &profile)
+{
+    bool res = false;
+    if (profile.fontId() < 0)
+    {
+        profile.setFontId(m_fontManager->fontContext().id());
+        res = true;
+    }
+
+    if (m_profile.glyphSize() < 0)
+    {
+        m_profile.setGlyphSize(m_appSettings->value("defaultGlyphSize").toInt());
+        res = true;
+    }
+
+    if (m_profile.bitmapDimension() < 0)
+    {
+        m_profile.setBitmapDimension(m_appSettings->value("defaultBitmapDimension").toInt());
+        res = true;
+    }
+
+    if(findProfile(profile))
+    {
+        res = true;
+    } else
+    {
+        profile.setId(-1);
+    }
+
+    return res;
+}
+
+ProfileContext ProfileManager::glyphProfile(const GlyphContext &glyph)
+{
+    if (glyph.profile() < 0)
+    {
+        return m_profile;
+    }
+    
+    ProfileContext profile;
+    getProfileById(glyph.profile(), profile);
+    return profile;
 }
 
 void ProfileManager::saveSettings()
@@ -249,12 +343,8 @@ void ProfileManager::restoreSettings()
     QSettings settings(this);
     settings.beginGroup("ProfileManager");
     m_profile = settings.value("profile", ProfileContext()).value<ProfileContext>();
-
-    // qDebug() << __FILE__ << __LINE__ << m_profile << m_fontManager->loadFont(m_profile.font());
-    if (m_profile.font() != QFont() && m_profile.fontPath().isEmpty() && m_fontManager->loadFontContext(m_profile.font()))
-    {
-        m_profile.setFontPath(m_fontManager->fontPath());
-    }
-
     settings.endGroup();
+
+    defaultProfile(m_profile);
 }
+

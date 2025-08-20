@@ -6,16 +6,19 @@
 
 #include "appcontext.h"
 #include "profilemanager.h"
+#include "fontmanager.h"
 #include "appsettings.h"
 #include "charmapmanager.h"
 #include "profilemanager.h"
+#include "fontmanager.h"
 
 DockProfiles::DockProfiles(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
     , ui(new Ui::DockProfiles)
     , m_appContext(appContext)
-    , m_appSettings(nullptr)
-    , m_profileManager(nullptr)
+    , m_appSettings(appContext->appSettings())
+    , m_fontManager(appContext->fontManager())
+    , m_profileManager(appContext->profileManager())
     , m_profilesModel(nullptr)
 {
     ui->setupUi(this);
@@ -76,14 +79,14 @@ void DockProfiles::setupSignals()
     });
 
     QObject::connect(ui->pushButtonCreateProfile, &QPushButton::clicked, this, [=](){
-        if (m_profile.isValid() && m_profile.temporary())
+        m_profileManager->defaultProfile(m_profile);
+        qDebug() << __FILE__ << __LINE__ << m_profile;
+        if (m_profile.isValid() && m_profile.id() < 0)
         {
-            // qDebug() << __FILE__ << __LINE__ << m_profile;
-            m_profile.setTemporary(false);
             if (m_profileManager->insertOrReplaceProfile(m_profile))
             {
                 emit m_profileManager->changeProfile(m_profile);
-                updateProfilesTable();
+                updateProfilesCombo();
             }
         }
     });
@@ -104,7 +107,7 @@ void DockProfiles::setupSignals()
     });
 
     QObject::connect(m_profileManager, &ProfileManager::profilesChanged, this, [=](){
-        updateProfilesTable();
+        updateProfilesCombo();
     });
 }
 
@@ -112,36 +115,33 @@ void DockProfiles::setupValues()
 {
     Q_ASSERT(m_appContext->appSettings());
 
-    m_appSettings = m_appContext->appSettings();
-    m_profileManager = m_appContext->profileManager();
-    
     m_profile = m_profileManager->profile();
+    m_fontManager->fontContextById(m_profile.fontId(), m_font);
 
     loadProfileContext();
 
-    m_profilesModel = new QSqlTableModel(this);
+    m_profilesModel = new QSqlQueryModel(this);
 
-    updateProfilesTable();
+    updateProfilesCombo();
     
     ui->comboBoxProfiles->setModel(m_profilesModel);
     ui->comboBoxProfiles->setModelColumn(1);
 }
 
-void DockProfiles::updateProfilesTable()
+void DockProfiles::updateProfilesCombo()
 {
-    // QString strSql = QString("SELECT name, font_family, bitmap_dimension FROM %1").arg(m_profileManager->tableName());
-    QString strSql = "SELECT "
-                "id, "
-                "name || ' (' || font_family || ', ' || bitmap_dimension || 'px)' AS display_name, "
-                "name, bitmap_dimension, temporary, font_family, font_path, padding_left, padding_top, padding_right, padding_bottom "
-                "FROM profiles  "
-                "ORDER BY name, bitmap_dimension DESC";
-    m_profilesModel->setQuery(strSql);
+    QString strSql = QString(
+    "SELECT p.id, p.name || ' (' || f.family || ', ' || p.bitmap_dimension || 'px)' AS display_name, "
+    "p.name, p.bitmap_dimension, p.padding_left, p.padding_top, p.padding_right, p.padding_bottom "
+    "FROM  %1 p JOIN  %2 f ON f.id = p.font_id "
+    " ORDER BY p.name, p.bitmap_dimension DESC;").arg(m_profileManager->tableName(), m_fontManager->tableName());
+    m_profilesModel->setQuery(strSql, QSqlDatabase::database("main"));
 }
 
 void DockProfiles::loadProfileContext()
 {
-    ui->labelFont->setText(QString("Font: %1").arg(m_profile.font().family()));
+    m_fontManager->fontContextById(m_profile.fontId(), m_font);
+    ui->labelFont->setText(QString("Font: %1/%2").arg(m_font.name(), m_font.family()));
     ui->spinBoxBitmapDimension->setValue(m_profile.bitmapDimension());
     if (m_profile.paddingLeft() != ui->spinBoxPaddingLeft->value())
     {

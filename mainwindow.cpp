@@ -7,9 +7,11 @@
 
 #include "dockcharmap.h"
 #include "dockglyphs.h"
+#include "dockfonts.h"
 #include "appcontext.h"
 #include "dockprofiles.h"
 #include "glyphdraw.h"
+#include "fontmanager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_dockCharmap(nullptr)
     , m_dockProfiles(nullptr)
     , m_dockGlyphs(nullptr)
+    , m_dockFonts(nullptr)
 {
     ui->setupUi(this);
 
@@ -34,6 +37,7 @@ void MainWindow::setupSignals()
 {
     QObject::connect(ui->action_Quit, &QAction::triggered, this, &MainWindow::quitApplication);
     QObject::connect(ui->action_New_project, &QAction::triggered, this, &MainWindow::createProject);
+    QObject::connect(ui->actionRefresh_fonts, &QAction::triggered, m_appContext->fontManager(), &FontManager::updateFontDatabase);
 }
 
 void MainWindow::quitApplication()
@@ -63,10 +67,14 @@ void MainWindow::setupValues()
     m_dockCharmap = new DockCharmap(m_appContext, this);
     m_dockProfiles = new DockProfiles(m_appContext, this);
     m_dockGlyphs = new DockGlyphs(m_appContext, this);
+    m_dockFonts = new DockFonts(m_appContext, this);
 
     addDockWidget(Qt::LeftDockWidgetArea, m_dockCharmap);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockFonts);
     addDockWidget(Qt::RightDockWidgetArea, m_dockProfiles);
     addDockWidget(Qt::RightDockWidgetArea, m_dockGlyphs);
+
+    tabifyDockWidget(m_dockCharmap, m_dockFonts);
     tabifyDockWidget(m_dockProfiles, m_dockGlyphs);
 }
 

@@ -9,6 +9,7 @@
 #include <QSettings>
 
 #include "profilecontext.h"
+#include "glyphcontext.h"
 
 namespace Ui {
 class DockGlyphs;
@@ -34,6 +35,7 @@ public:
     void closeEvent(QCloseEvent *event) override;
 
 private:
+    void setProfile();
     void setupValues();
     void setupSignals();
     void refreshGlyphsTable ();
@@ -53,6 +55,7 @@ private:
     GlyphModel *m_glyphsModel;
 
     ProfileContext m_profile;
+    GlyphContext m_glyph;
 };
 
 #endif // DOCKGLYPHS_H

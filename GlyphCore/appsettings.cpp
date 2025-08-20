@@ -10,7 +10,6 @@
 AppSettings::AppSettings(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
-    , m_fontManager(nullptr)
 {
     setupValues();
 }
@@ -26,9 +25,6 @@ void AppSettings::setupSignals ()
 
 void AppSettings::setupValues()
 {
-    m_fontManager = m_appContext->fontManager();
-    m_profileManager = m_appContext->profileManager();
-
     initSettings();
     initAppDataCatalog ();
     restoreAppSettings ();
@@ -44,7 +40,9 @@ void AppSettings::initSettings ()
 	m_values.insert("glyphRectLayer", false);
 	m_values.insert("baseLineLayer", false);
     m_values.insert("leftLineLayer", false);
-	m_values.insert("glyphWidgetBitmapRectLayer", false);
+    m_values.insert("defaultGlyphSize", 12);
+    m_values.insert("defaultBitmapDimension", 12);
+    m_values.insert("glyphWidgetBitmapRectLayer", false);
     m_values.insert("glyphWidgetTemplateColor", QColor(0x00, 0x00, 0x55, 0x55));
     m_values.insert("glyphWidgetTemplateBgColor", QColor(0x00, 0x00, 0x00, 0xFF));        
     m_values.insert("glyphWidgetPreviewColor", QColor(0x66, 0x22, 0x00, 0x33));
@@ -86,6 +84,11 @@ const QString & AppSettings::appDataPath() const
     return m_appDataPath;
 }
 
+void AppSettings::clearAllSettings()
+{
+    QSettings settings(this);
+    settings.clear();
+}
 
 void AppSettings::saveAppSettings()
 {

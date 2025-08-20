@@ -6,6 +6,9 @@
 #include <QMutex>
 #include <QString>
 #include <QStringList>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
 #include <QFile>
 #include <QtGlobal>
 #include <QSettings>
@@ -38,16 +41,20 @@ public:
     explicit FontManager(AppContext *appContext);
     ~FontManager();
 
-    QString winDefaultFontPath ();
-    QStringList fontFiles(const QString &path);
-    bool isSupportedByFreeType(FontContext &context);
-    QFont fontByPath(const QString &path);
-
-    // int updateFontList(const QString &path);
     void startAsyncFontLoading();
-    bool appendOrUpdateFontContext(FontContext &context);
 
-    bool createTable();
+    const FontContext & fontContext() const { return m_fontContext; }
+    bool fontContextById(int id, FontContext &context);
+
+    void setFontContext(const FontContext & value) { 
+        if (m_fontContext != value)
+        {
+            m_fontContext = value;
+            emit fontContextChanged(m_fontContext);
+        }
+    }
+
+    const QString & tableName() { return m_tableName; }
 
 signals:
     void appendedFontContext(FontContext &context);
@@ -62,7 +69,14 @@ signals:
 
     void addFontContext(const FontContext &context);
 
+    void changeFontContext (const FontContext &context);
+    void fontContextChanged(const FontContext &context);
+
 private:
+    void setupValues ();
+    void setupSignals ();
+    bool createTable();
+
     bool setDefaultFontPath();
     void saveFontManagerSettings();
     void restoreFontManagerSettings();
@@ -77,6 +91,8 @@ private:
 
     QThread m_workerThread;
     FontLoader *m_fontLoader;
+
+    FontContext m_fontContext;
 };
 
 #endif // FONTMANAGER_H

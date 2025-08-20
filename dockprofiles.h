@@ -3,12 +3,16 @@
 
 #include <QDockWidget>
 #include <QSqlTableModel>
+#include <QSqlQueryModel>
 
+#include "profilecontext.h"
+#include "fontcontext.h"
 #include "profilecontext.h"
 
 class AppContext;
 class AppSettings;
 class ProfileManager;
+class FontManager;
 
 namespace Ui {
 class DockProfiles;
@@ -23,7 +27,7 @@ public:
     ~DockProfiles();
 
 private:
-    void updateProfilesTable();
+    void updateProfilesCombo();
     void setupValues ();
     void setupSignals ();
     void loadProfileContext ();
@@ -32,10 +36,11 @@ private:
     AppContext *m_appContext;
     AppSettings *m_appSettings;
     ProfileManager *m_profileManager;
-
-    QSqlTableModel *m_profilesModel;
+    FontManager *m_fontManager;
+    QSqlQueryModel *m_profilesModel;
 
     ProfileContext m_profile;
+    FontContext m_font;
 };
 
 #endif // DOCKPROFILES_H

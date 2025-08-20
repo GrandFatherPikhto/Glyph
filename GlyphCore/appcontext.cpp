@@ -30,7 +30,8 @@ AppContext::~AppContext()
 
 void AppContext::setupVariables()
 {
-
+    // dbManager();
+    unicodeMetadata();
 }
 
 AppSettings* AppContext::appSettings()

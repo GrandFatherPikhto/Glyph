@@ -7,7 +7,6 @@
 #include "fontloader.h"
 #include <windows.h>
 #include <shlobj.h>
-#include <iostream>
 
 #include "appcontext.h"
 #include "fontutils.h"
@@ -20,8 +19,29 @@ FontManager::FontManager(AppContext *appContext)
     , m_fontLoader(nullptr)
     , m_tableName(QString("fonts"))
 {
+    setupValues ();
     setDefaultFontPath();
+    restoreFontManagerSettings ();
     createTable();
+    setupSignals ();
+}
+
+FontManager::~FontManager()
+{
+    saveFontManagerSettings ();
+    if (m_workerThread.isRunning()) {
+        m_workerThread.quit();
+        m_workerThread.wait();
+    }
+}
+
+void FontManager::setupValues()
+{
+
+}
+
+void FontManager::setupSignals()
+{
     connect(this, &FontManager::updateFontDatabase, this, [=]{
         startAsyncFontLoading();
     });
@@ -37,14 +57,8 @@ FontManager::FontManager(AppContext *appContext)
     connect(this, &FontManager::addedFontContext, this, [=](const FontContext &context){
         qDebug() << "Added Context" << context;
     });
-}
 
-FontManager::~FontManager()
-{
-    if (m_workerThread.isRunning()) {
-        m_workerThread.quit();
-        m_workerThread.wait();
-    }
+    connect(this, &FontManager::changeFontContext, this, &FontManager::setFontContext);
 }
 
 void FontManager::startAsyncFontLoading()
@@ -113,10 +127,9 @@ bool FontManager::createTable()
 
     if (!db.isOpen())
     {
-        qWarning() << "Database is not open";
+        qWarning()  << __FILE__ << __LINE__ << "Database is not open";
         return false;
     }
-
 
     QSqlQuery query(db);
 
@@ -135,7 +148,59 @@ bool FontManager::createTable()
             ).arg(m_tableName);
 
     if (!query.exec(createTableQuery)) {
-        qWarning() << QString("Failed to create table %1: %2").arg(m_tableName, query.lastError().text());
+        qWarning()  << __FILE__ << __LINE__ << QString("Failed to create table %1: %2").arg(m_tableName, query.lastError().text());
+        return false;
+    }
+
+    return true;
+}
+
+bool FontManager::fontContextById(int id, FontContext &context)
+{
+    if (id < 0)
+        return false;
+    
+    QSqlDatabase db = QSqlDatabase::database("main");
+    // QSqlDatabase db = m_appContext->dbManager()->db();
+
+    if (!db.isOpen())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Database is not open";
+        return false;
+    }
+
+    QSqlQuery query(db);
+    
+    QString sql = QString("SELECT id, name, path, family, style, system, created_at FROM %1 WHERE id = :id").arg(m_tableName);
+
+    if(!query.prepare(sql))
+    {
+        qWarning() << __FILE__ << __LINE__ << "Error prepare" << query.lastQuery() << "Error:" << query.lastError();
+        return false;
+    }
+
+    query.bindValue(":id", id);
+
+    if (!query.exec())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Error exec query" << query.lastQuery() << "Error:" << query.lastError();
+        return false;
+    }
+
+    if (!query.next())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Not find records" << query.lastQuery() << "Error: " << query.lastError();
+    }
+
+    try {
+        context.setId(query.value("id").toInt());
+        context.setPath(query.value("path").toString());
+        context.setName(query.value("name").toString());
+        context.setFamily(query.value("family").toString());
+        context.setStyle(query.value("style").toString());
+        context.setSystem(query.value("system").toString());
+    } catch (const std::exception &e) {
+        qCritical() << "Error parsing profile data:" << e.what();
         return false;
     }
 
@@ -144,10 +209,16 @@ bool FontManager::createTable()
 
 void FontManager::saveFontManagerSettings()
 {
-
+    QSettings settings(this);
+    settings.beginGroup("FontManager");
+    settings.setValue("fontContext", m_fontContext);
+    settings.endGroup();
 }
 
 void FontManager::restoreFontManagerSettings()
 {
-
+    QSettings settings(this);
+    settings.beginGroup("FontManager");
+    m_fontContext = settings.value("fontContext", FontContext()).value<FontContext>();
+    settings.endGroup();
 }

@@ -10,6 +10,7 @@
 #include "profilecontext.h"
 #include "glyphcontext.h"
 #include "glyphmanager.h"
+#include "fontmanager.h"
 #include "sqlfilter.h"
 #include "charmapmanager.h"
 #include "profilemanager.h"
@@ -20,8 +21,9 @@ DockCharmap::DockCharmap(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
     , ui(new Ui::DockCharmap)
     , m_appContext(appContext)
-    , m_glyphManager(nullptr)
-    , m_profileManager(nullptr)
+    , m_fontManager(appContext->fontManager())
+    , m_glyphManager(appContext->glyphManager())
+    , m_profileManager(appContext->profileManager())
     , m_charmapModel(nullptr)
     , m_categoryModel(nullptr)
     , m_scriptModel(nullptr)
@@ -46,16 +48,6 @@ void DockCharmap::setupSignals()
     QObject::connect(ui->tableViewCharmap, &QTableView::clicked, this, &DockCharmap::glyphClicked);
 
     QObject::connect(ui->tableViewCharmap, &QTableView::doubleClicked, this, &DockCharmap::glyphDoubleClicked);
-
-    QObject::connect(ui->fontComboBox, &QFontComboBox::currentFontChanged, this, [=](const QFont &font){
-        QFont newFont(font);
-        newFont.setPointSize(14);
-        m_charmapManager->loadFont(newFont);
-        refreshCharmapTable();
-        m_profile.setFont(newFont);
-        m_profile.setFontPath(m_charmapManager->fontPath());
-        emit m_profileManager->changeProfile(m_profile);
-    });
 
     QObject::connect(ui->listViewCategories->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=](const QItemSelection &selected, const QItemSelection &deselected){
         refreshCharmapTable();
@@ -109,13 +101,11 @@ void DockCharmap::setupSignals()
         refreshCharmapTable();
     });
 
-    QObject::connect(m_profileManager, &ProfileManager::profileChanged, this, [=](const ProfileContext &profile){
-        if (m_profile != profile && !profile.temporary() && profile.font() != QFont())
-        {
-            ui->fontComboBox->setCurrentFont(profile.font());
-            refreshCharmapTable();
-        }
+    connect(m_fontManager, &FontManager::fontContextChanged, this, [=](const FontContext &context){
+        // qDebug() << __FILE__ << __LINE__ << context;
+        refreshCharmapTable();
     });
+
 
     QObject::connect(ui->pushButtonClearFilters, &QPushButton::clicked, this, [=](){
         ui->listViewDecompositions->selectionModel()->clearSelection();
@@ -173,6 +163,10 @@ void DockCharmap::setupValues ()
 {
     Q_ASSERT(m_appContext->charmapManager() != nullptr && m_appContext->appSettings() != nullptr && m_appContext->glyphManager() != nullptr);
 
+    m_charmapModel = new CharmapModel(m_appContext, this);
+    m_categoryModel = new QSqlQueryModel(this);
+    m_scriptModel = new QSqlQueryModel(this);
+
     m_charmapManager = m_appContext->charmapManager();
     m_appSettings = m_appContext->appSettings();
     m_glyphManager = m_appContext->glyphManager();
@@ -181,26 +175,14 @@ void DockCharmap::setupValues ()
 
     m_profile = m_profileManager->profile();
 
-    initFontComboBox();
     initCategoriesList();
     initScriptsList();
     initDecompositionsList();
     initCharmapTable ();
 }
 
-void DockCharmap::initFontComboBox ()
-{
-    if (m_profile.font() != QFont())
-    {
-        ui->fontComboBox->setCurrentFont(m_profile.font());
-    }
-}
-
 void DockCharmap::initCharmapTable()
 {
-    m_charmapModel = new CharmapModel(m_appContext, this);
-    refreshCharmapTable();
-
     ui->tableViewCharmap->setModel(m_charmapModel);
     ui->tableViewCharmap->resizeColumnsToContents();
 
@@ -214,6 +196,7 @@ void DockCharmap::initCharmapTable()
         "}"
         );
     ui->tableViewCharmap->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+    refreshCharmapTable();
 }
 
 void DockCharmap::refreshCharmapTable ()
@@ -226,7 +209,6 @@ void DockCharmap::refreshCharmapTable ()
 
 void DockCharmap::initCategoriesList ()
 {
-    m_categoryModel = new QSqlQueryModel(this);
     QSharedPointer<Condition> condition = m_filter->getCondition("category");
     Q_ASSERT(!condition.isNull());
     m_categorySelectionModel = new UnicodeMetadataSelectionModel(m_categoryModel, condition, this);
@@ -239,7 +221,6 @@ void DockCharmap::initCategoriesList ()
 
 void DockCharmap::initScriptsList ()
 {
-    m_scriptModel = new QSqlQueryModel(this);
     QSharedPointer<Condition> condition = m_filter->getCondition("script");
     Q_ASSERT(!condition.isNull());
     m_scriptSelectionModel = new UnicodeMetadataSelectionModel(m_scriptModel, condition, this);
@@ -265,18 +246,18 @@ void DockCharmap::initDecompositionsList ()
 void DockCharmap::refreshCategoriesList ()
 {
     QString queryStr = "SELECT id, name FROM category_data";
-    m_categoryModel->setQuery(queryStr);;
+    m_categoryModel->setQuery(queryStr, QSqlDatabase::database("main"));
     if (m_categoryModel->lastError().isValid()) {
-        qWarning() << __FILE__ << __LINE__ << m_charmapModel->lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Error set model query" << m_charmapModel->lastError().text();
     }
 }
 
 void DockCharmap::refreshScriptsList ()
 {
     QString queryStr = "SELECT id, name FROM script_data";
-    m_scriptModel->setQuery(queryStr);;
+    m_scriptModel->setQuery(queryStr, QSqlDatabase::database("main"));;
     if (m_scriptModel->lastError().isValid()) {
-        qWarning() << __FILE__ << __LINE__ << m_charmapModel->lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Error set model query" << m_charmapModel->lastError().text();
     }
 
 }
@@ -284,9 +265,9 @@ void DockCharmap::refreshScriptsList ()
 void DockCharmap::refreshDecompositionsList ()
 {
     QString queryStr = "SELECT id, name FROM decomposition_data";
-    m_decompostionModel->setQuery(queryStr);;
+    m_decompostionModel->setQuery(queryStr, QSqlDatabase::database("main"));;
     if (m_decompostionModel->lastError().isValid()) {
-        qWarning() << __FILE__ << __LINE__ << m_charmapModel->lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Error set model query" << m_charmapModel->lastError().text();
     }
 }
 

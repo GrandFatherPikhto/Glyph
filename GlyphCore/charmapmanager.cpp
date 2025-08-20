@@ -19,24 +19,10 @@ CharmapManager::CharmapManager(AppContext *appContext)
     , m_profileManager(nullptr)
     , m_ftLibrary(0)
     , m_ftFace(0)
-    , m_fontSize(12)
-    , m_fontPath(QString())
-    , m_fontFamily(QString())
-    , m_font(QFont())
     , m_tableName("charmap")
 {
-    // m_sqlFilter = new SqlFilter(this);
-    // m_sqlBegin = QString(
-    //                  "SELECT c.unicode, c.character, cd.name AS category, "
-    //                  "sd.name AS script, dd.name AS decomposition "
-    //                  "FROM %1 c "
-    //                  "JOIN category_data cd ON c.category = cd.id "
-    //                  "JOIN script_data sd ON c.script = sd.id "
-    //                  "JOIN decomposition_data dd ON c.decomposition = dd.id "
-    //                  ).arg(m_tableName);
-
-    // QObject::connect(m_appContext, &AppContext::valuesInited, this, &CharmapManager::setupValues);
     setupValues();
+    setupSignals ();
 }
 
 CharmapManager::~CharmapManager()
@@ -68,13 +54,14 @@ void CharmapManager::setupValues ()
     initFtLibrary();
 
     createCharacterTable();
-
-    setupSignals ();
+    loadCharacterTable();
 }
 
 void CharmapManager::setupSignals ()
 {
-    
+    connect(m_fontManager, &FontManager::fontContextChanged, this, [=](const FontContext &context){
+        loadCharacterTable();
+    });
 }
 
 void CharmapManager::initFtLibrary()
@@ -87,34 +74,27 @@ void CharmapManager::initFtLibrary()
 
 bool CharmapManager::loadFontFace()
 {
-    releaseFontFace ();
+    FontContext font = m_fontManager->fontContext();
 
-    FT_Error ftError = FT_New_Face(m_ftLibrary, m_fontPath.toStdString().c_str(), 0, &m_ftFace);
-    // Загрузка шрифта
-    if (ftError) {
-        QString strError(FT_Error_String(ftError));
-        qWarning() << __FILE__ << __LINE__ << "Could not open font" << m_fontPath << ftError << strError;
-        releaseFontFace();
+    qDebug() << __FILE__ << __LINE__ << "Font" << font;
+
+    if (!font.isValid())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Font Context is Invalid" << font;
         return false;
     }
 
-    return true;
-}
+    releaseFontFace();
+    initFtLibrary();
 
-bool CharmapManager::loadFont(const QFont &font)
-{
-    if (m_font == font)
-        return false;
+    qDebug() << __FILE__ << __LINE__ << "FtLibrary Inited";
 
-    m_font = font;
-    FontContext fontContext(font);
-    if(m_fontManager->loadFontContext(fontContext))
-    {
-        if (loadFontFace())
-        {
-            loadCharacterTable();
-        }
-
+    FT_Error ftError = FT_New_Face(m_ftLibrary, font.fileName().toStdString().c_str(), 0, &m_ftFace);
+    // Загрузка шрифта
+    if (ftError) {
+        QString strError(FT_Error_String(ftError));
+        qWarning() << __FILE__ << __LINE__ << "Could not open font" << font.path() << ftError << strError;
+        releaseFontFace();
         return false;
     }
 
@@ -123,15 +103,29 @@ bool CharmapManager::loadFont(const QFont &font)
 
 bool CharmapManager::loadCharacterTable()
 {
-    if (m_fontPath.isEmpty() || m_fontFamily.isEmpty() || !m_ftFace)
+    FontContext font = m_fontManager->fontContext();
+    ProfileContext profile = m_profileManager->profile();
+    // qDebug() << __FILE__ << __LINE__ << font;
+    if (!font.isValid())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Font is not valid" << font;
         return false;
+    }
 
-    FT_Set_Pixel_Sizes(m_ftFace, 0, m_fontSize);
+    loadFontFace();
 
-    QSqlDatabase db = QSqlDatabase::database();
+    if (!m_ftFace)
+    {
+        qWarning() << __FILE__ << __LINE__ << "Font Face is invalid";
+        return false;
+    }
+
+    FT_Set_Pixel_Sizes(m_ftFace, 0, profile.glyphSize());
+
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen())
     {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -140,7 +134,7 @@ bool CharmapManager::loadCharacterTable()
 
     if (!query.exec())
     {
-        qWarning() << "Delete failed:" << query.lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Delete failed:" << query.lastError().text();
         return false;
     }
 
@@ -159,6 +153,7 @@ bool CharmapManager::loadCharacterTable()
         if (charcode && charcode < 0xFFFF)
         {
             QChar ch(static_cast<quint32>(charcode));
+            // qDebug() << __FILE__ << __LINE__ << gindex <<  ch;
 
             // Получаем правильные значения для каждого поля
             uint8_t category = static_cast<uint8_t>(ch.category()); // QChar::Category -> uint8
@@ -179,7 +174,7 @@ bool CharmapManager::loadCharacterTable()
             // }
 
             if (!query.exec()) {
-                qWarning() << "Failed to insert character" << static_cast<quint32>(ch.unicode()) << ":" << query.lastError().text() << query.lastQuery();
+                qWarning()  << __FILE__ << __LINE__ << "Failed to insert character" << static_cast<quint32>(ch.unicode()) << ":" << query.lastError().text() << query.lastQuery();
                 db.rollback();
 
                 return false;
@@ -190,21 +185,21 @@ bool CharmapManager::loadCharacterTable()
     }
 
     if (!db.commit()) {
-        qWarning() << "Commit failed:" << db.lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Commit failed:" << db.lastError().text();
         return false;
     }
 
-    emit charmapUpdated(m_font);
+    emit charmapUpdated(m_fontManager->fontContext());
 
     return true;
 }
 
 bool CharmapManager::createCharacterTable()
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
 
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -228,8 +223,7 @@ bool CharmapManager::createCharacterTable()
     
     // Создаем индекс для ускорения поиска по категории (опционально)
     if (!query.exec(QString("CREATE INDEX IF NOT EXISTS idx_category ON %1(category)").arg(m_tableName))) {
-        qWarning() << QString("Failed to create index %1: %2").arg(m_tableName, query.lastError().text());
-        // Не считаем это критической ошибкой
+        qWarning() << __FILE__ << __LINE__ << QString("Failed to create index %1: %2").arg(m_tableName, query.lastError().text());
     }
     
     // qDebug() << QString("Table %1 created successfully").arg(m_tableName);
@@ -256,8 +250,11 @@ void CharmapManager::releaseFontFace()
 
 bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
 {
-    //< Здесь доделать: если !profile.isValid() поменять запрос!
     ProfileContext profile = m_profileManager->profile();
+    FontContext font = m_fontManager->fontContext();
+
+    if (!font.isValid())
+        return false;
 
     QString sql = QString(
         "SELECT "
@@ -274,10 +271,10 @@ bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
     ).arg(m_tableName);
 
 
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
 
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -291,11 +288,9 @@ bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
 
     sql += " " + sqlSort;
 
-    // qDebug() << __FILE__ << __LINE__ << sql;
-
     if (!query.prepare(sql))
     {
-        qWarning() << "Can't prepare sql query " << sql << ", Error: " << query.lastError();
+        qWarning() << __FILE__ << __LINE__ << "Can't prepare sql query " << sql << ", Error: " << query.lastError();
         return false;
     }
 
@@ -310,10 +305,8 @@ bool CharmapManager::execQuery(QSqlQuery &query, const QString &sqlSort)
 
     if (!query.exec())
     {
-        qWarning() << "Can't execute sql query " << sql << query.lastQuery();
+        qWarning() << __FILE__ << __LINE__ << "Can't execute sql query " << sql << query.lastQuery();
     }
-
-    // qDebug() << __FILE__ << __LINE__ << query.lastQuery() << ", ProfileID: " << m_appSettings->glyphProfile().id() << ", Binds: " << binds << query.boundValues() << query.boundValueNames();
 
     return true;
 }

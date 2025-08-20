@@ -11,6 +11,7 @@ class AppContext;
 class DockCharmap;
 class DockProfiles;
 class DockGlyphs;
+class DockFonts;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -45,5 +46,6 @@ private:
     DockCharmap *m_dockCharmap;
     DockProfiles *m_dockProfiles;
     DockGlyphs *m_dockGlyphs;
+    DockFonts *m_dockFonts;
 };
 #endif // MAINWINDOW_H

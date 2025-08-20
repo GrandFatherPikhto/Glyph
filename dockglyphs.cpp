@@ -12,10 +12,10 @@ DockGlyphs::DockGlyphs(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
     , ui(new Ui::DockGlyphs)
     , m_appContext(appContext)
-    , m_appSettings(nullptr)
-    , m_glyphManager(nullptr)
-    , m_profileManager(nullptr)
-    , m_charmapManager(nullptr)
+    , m_appSettings(appContext->appSettings())
+    , m_glyphManager(appContext->glyphManager())
+    , m_profileManager(appContext->profileManager())
+    , m_charmapManager(appContext->charmapManager())
     , m_glyphsModel(nullptr)
 {
     ui->setupUi(this);
@@ -30,22 +30,19 @@ DockGlyphs::~DockGlyphs()
 
 void DockGlyphs::setupValues()
 {
-    Q_ASSERT(m_appContext->appSettings() != nullptr && m_appContext->profileManager() != nullptr && m_appContext->glyphManager());
-    m_appSettings = m_appContext->appSettings();
-    m_profileManager = m_appContext->profileManager();
-    m_glyphManager = m_appContext->glyphManager();
     m_glyphsModel = new GlyphModel(m_appContext, this);
-
     m_profile = m_profileManager->profile();
 
     ui->tableViewGlyphs->setModel(m_glyphsModel);
+
+    ui->spinBoxGlyphSize->setValue(m_glyphManager->glyph().size());
 
     refreshGlyphsTable ();
 }
 
 void DockGlyphs::refreshGlyphsTable ()
 {
-    QSqlQuery query;
+    QSqlQuery query(QSqlDatabase::database("main"));
     m_glyphManager->queryGlyphsByProfile(query, m_profileManager->profile());
     m_glyphsModel->setQuery(std::move(query));
 }
@@ -75,6 +72,13 @@ void DockGlyphs::setupSignals()
     QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, [=](const GlyphContext &context){
         ui->spinBoxGlyphSize->setValue(context.size());
     });
+}
+
+void DockGlyphs::setProfile()
+{
+    m_profile = m_profileManager->profile();
+    m_glyph = m_glyphManager->glyph();
+    ui->spinBoxGlyphSize->setValue(m_glyph.size());
 }
 
 void DockGlyphs::saveDockGlyphsSettings()

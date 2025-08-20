@@ -86,6 +86,7 @@ add_library(GlyphCore SHARED
   ftrenderer.cpp
 
   ${TS_FILES}
+  iglyphrendererfactory.h iglyphrendererfactory.cpp
 )
 
 target_link_libraries(GlyphCore PRIVATE

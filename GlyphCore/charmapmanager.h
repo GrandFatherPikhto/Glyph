@@ -36,26 +36,21 @@ public:
     explicit CharmapManager(AppContext *appContext);
     ~CharmapManager();
 
-    bool loadFont(const QFont &font);
-
-    void setFontSize(int value) { m_fontSize = value; }
-    int fontSize () { return m_fontSize; }
+    bool loadFont(const FontContext &context);
 
     const QString tableName() { return m_tableName; }
-    const QFont & font() const { return m_font; }
-    const QString & fontPath() const { return m_fontPath; }
 
     SqlFilter *filter() { return m_filter; }
 
-    void setTextFilter(const QString &chars);
-    void setMSBFilter(int value);
+    // void setTextFilter(const QString &chars);
+    // void setMSBFilter(int value);
 
-    QString updateQuery();
+//     QString updateQuery();
     bool execQuery(QSqlQuery &query, const QString &endSql="ORDER BY c.unicode ASC");
     bool isFilter();
 
 signals:
-    void charmapUpdated(const QFont &font);
+    void charmapUpdated(const FontContext &context);
 
 private:
     void setupValues ();

@@ -36,6 +36,8 @@ public:
     inline const QString & system() const { return m_system; }
     inline const int id() const { return m_id; }
 
+    inline QString fileName() { return m_path + "/" + m_name; }
+
     bool isValid() const { return m_path != QString() && m_family != QString(); }
 
     inline void setName(const QString &value) { m_name = value; }
@@ -90,10 +92,10 @@ public:
 
             map["id"] = m_id;
             map["name"] = m_name;
+            map["path"] = m_path;
             map["family"] = m_family;
             map["system"] = m_system;
             map["style"] = m_style;
-            map["path"] = m_path;
 
             return map;
         }
@@ -156,6 +158,8 @@ inline QDebug operator <<(QDebug debug, const FontContext &context)
                     << context.style()
                     << ", Path: "
                     << context.path()
+                    << ", Valid: "
+                    << context.isValid()
                     << ")";
 
     return debug;

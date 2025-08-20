@@ -16,8 +16,6 @@
 #define NOT_RESTORE_SETTINGS
 
 class AppContext;
-class FontManager;
-class ProfileManager;
 
 class GLYPHCORE_EXPORT AppSettings : public QObject {
     Q_OBJECT
@@ -25,11 +23,14 @@ public:
     explicit AppSettings(AppContext *appContext);
     ~AppSettings ();
 
+    void clearAllSettings();
+
     const QString & appDataPath () const;
 
     inline bool setValue(const QString &name, const QVariant &value)
     {
-        bool contains = m_values.keys().contains(name);
+        const auto &keys = m_values.keys();
+        bool contains = keys.contains(name);
         m_values.insert(name, value);
         emit valueChanged(name, value);
         return contains;
@@ -63,8 +64,6 @@ private:
 
 
     AppContext *m_appContext;
-    FontManager *m_fontManager;
-    ProfileManager *m_profileManager;
 
     QMap<QString, QVariant> m_values;
     QString m_appDataPath;

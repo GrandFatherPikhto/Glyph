@@ -48,6 +48,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         dockglyphs.ui
         
         icons.qrc
+        dockfonts.h dockfonts.cpp dockfonts.ui
     )
 
 # target_include_directories(Glyph PRIVATE 

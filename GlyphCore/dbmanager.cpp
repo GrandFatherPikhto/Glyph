@@ -23,10 +23,10 @@ void DbManager::enableWalMode()
     if (m_db.driverName() == "QSQLITE" && m_db.isOpen()) {
         QSqlQuery query(m_db);
         if (!query.exec("PRAGMA journal_mode=WAL")) {
-            qWarning() << "Failed to set WAL mode:" << query.lastError();
+            qWarning() << __FILE__ << __LINE__ << "Failed to set WAL mode:" << query.lastError();
         }
         if (!query.exec("PRAGMA synchronous=NORMAL")) {
-            qWarning() << "Failed to set synchronous mode:" << query.lastError();
+            qWarning() << __FILE__ << __LINE__ << "Failed to set synchronous mode:" << query.lastError();
         }
     }
 }

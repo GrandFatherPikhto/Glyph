@@ -1,5 +1,5 @@
-#ifndef DRAWCONTEXT_H
-#define DRAWCONTEXT_H
+#ifndef GLYPHDRAWCONTEXT_H
+#define GLYPHDRAWCONTEXT_H
 
 #include <QWidget>
 #include <QObject>
@@ -8,21 +8,26 @@
 #include <QMargins>
 #include <QPoint>
 #include <QRegion>
+#include <QSharedPointer>
 
 #include "profilecontext.h"
 #include "glyphcontext.h"
+#include "imagecontext.h"
+#include "drawcontext.h"
 
 class AppContext;
 class ProfileManager;
 class AppSettings;
 class GlyphManager;
+class ImageManager;
+class FontManager;
 
-class DrawContext : public QObject
+class GlyphDrawContext : public QObject
 {
     Q_OBJECT
 public:
-    DrawContext(AppContext *appContext, QObject *parent);
-    ~DrawContext();
+    GlyphDrawContext(AppContext *appContext, QObject *parent);
+    ~GlyphDrawContext();
 
     void setRegion(const QRegion &region);
 
@@ -123,6 +128,10 @@ public:
         return false;
     }
 
+    inline const QRect & glyphRect() const { return m_glyphRect; }
+    inline QSharedPointer<QImage> imageTemplate() const { return m_template->image(); }
+    inline QSharedPointer<QImage> imagePreview() const { return m_preview->image(); }
+
     inline bool clickBitmap(const QPoint &point, int &col, int &row)
     {
         if (!bitmapRect().contains(point))
@@ -163,9 +172,12 @@ public:
         return pointLeftLine.x();
     }
 
+
+
 signals:
     void changeProfile(const ProfileContext &context);
     void changeMargins(const QMargins &margins);
+    void changeGlyph(const GlyphContext &glyph);
 
 private:
     void setupSignals();
@@ -175,19 +187,29 @@ private:
     void setGlyph(const GlyphContext &context);
     void setMargins(const QMargins &margins);
 
+    bool renderTemplate();
+    bool renderPreview();
+    bool renderDraw();
 
     AppContext *m_appContext;
     ProfileManager *m_profileManager;
     GlyphManager *m_glyphManager;
     AppSettings *m_appSettings;
+    ImageManager *m_imageManager;
+    FontManager *m_fontManager;
 
     QRect m_drawRect;
+    QRect m_glyphRect;
 
     ProfileContext m_profile;
     GlyphContext m_glyph;
     
     QMargins m_margins;
     QRegion m_region;
+
+    QSharedPointer<ImageContext> m_template;
+    QSharedPointer<ImageContext> m_preview;
+    QSharedPointer<DrawContext> m_draw;
 };
 
-#endif // DRAWCONTEXT_H
+#endif // GLYPHDRAWCONTEXT_H

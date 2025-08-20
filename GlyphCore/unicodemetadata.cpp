@@ -1,6 +1,7 @@
 #include "appcontext.h"
 #include "unicodemetadata.h"
 #include "appsettings.h"
+#include "dbmanager.h"
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -8,6 +9,7 @@
 UnicodeMetadata::UnicodeMetadata(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
+    , m_dbManager(appContext->dbManager())
     , m_scriptTable("script_data")
     , m_categoryTable("category_data")
     , m_decompositionTable("decomposition_data")
@@ -40,10 +42,10 @@ void UnicodeMetadata::setupSignals ()
 
 bool UnicodeMetadata::fillScriptTable()
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen())
     {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -51,7 +53,7 @@ bool UnicodeMetadata::fillScriptTable()
 
     if (!query.exec(QString("DELETE FROM %1").arg(m_scriptTable)))
     {
-        qWarning() << "Delete failed:" << query.lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Delete failed:" << query.lastError().text();
         return false;
     }
 
@@ -74,7 +76,7 @@ bool UnicodeMetadata::fillScriptTable()
 
 
     if (!db.commit()) {
-        qWarning() << "Commit failed:" << db.lastError().text();
+        qWarning()  << __FILE__ << __LINE__ << "Commit failed:" << db.lastError().text();
         return false;
     }
 
@@ -83,10 +85,10 @@ bool UnicodeMetadata::fillScriptTable()
 
 bool UnicodeMetadata::fillCategoryTable()
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen())
     {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -94,7 +96,7 @@ bool UnicodeMetadata::fillCategoryTable()
 
     if (!query.exec(QString("DELETE FROM %1").arg(m_categoryTable)))
     {
-        qWarning() << "Delete failed:" << query.lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Delete failed:" << query.lastError().text();
         return false;
     }
 
@@ -109,7 +111,7 @@ bool UnicodeMetadata::fillCategoryTable()
         query.bindValue(":name", it.value());
 
         if (!query.exec()) {
-            qWarning() << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
+            qWarning() << __FILE__ << __LINE__ << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
             db.rollback();
 
             return false;
@@ -118,7 +120,7 @@ bool UnicodeMetadata::fillCategoryTable()
 
 
     if (!db.commit()) {
-        qWarning() << "Commit failed:" << db.lastError().text();
+        qWarning()  << __FILE__ << __LINE__ << "Commit failed:" << db.lastError().text();
         return false;
     }
 
@@ -127,10 +129,10 @@ bool UnicodeMetadata::fillCategoryTable()
 
 bool UnicodeMetadata::fillDecompositionTable()
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen())
     {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ <<  "Database is not open!";
         return false;
     }
 
@@ -138,7 +140,7 @@ bool UnicodeMetadata::fillDecompositionTable()
 
     if (!query.exec(QString("DELETE FROM %1").arg(m_decompositionTable)))
     {
-        qWarning() << "Delete failed:" << query.lastError().text();
+        qWarning()  << __FILE__ << __LINE__ << "Delete failed:" << query.lastError().text();
         return false;
     }
 
@@ -153,7 +155,7 @@ bool UnicodeMetadata::fillDecompositionTable()
         query.bindValue(":name", it.value());
 
         if (!query.exec()) {
-            qWarning() << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
+            qWarning() << __FILE__ << __LINE__ << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
             db.rollback();
 
             return false;
@@ -162,7 +164,7 @@ bool UnicodeMetadata::fillDecompositionTable()
 
 
     if (!db.commit()) {
-        qWarning() << "Commit failed:" << db.lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Commit failed:" << db.lastError().text();
         return false;
     }
 
@@ -172,10 +174,10 @@ bool UnicodeMetadata::fillDecompositionTable()
 
 bool UnicodeMetadata::initTable(const QString &tableName)
 {
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database("main");
 
     if (!db.isOpen()) {
-        qWarning() << "Database is not open!";
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
         return false;
     }
 
@@ -190,13 +192,13 @@ bool UnicodeMetadata::initTable(const QString &tableName)
         ");").arg(tableName);
     
     if (!query.exec(createTableQuery)) {
-        qWarning() << QString("Failed to create table %1: %2").arg(tableName, query.lastError().text());
+        qWarning()  << __FILE__ << __LINE__ << QString("Failed to create table %1: %2").arg(tableName, query.lastError().text());
         return false;
     }
     
     // Создаем индекс для ускорения поиска по категории (опционально)
     if (!query.exec(QString("CREATE INDEX IF NOT EXISTS idx_category ON %1(category)").arg(tableName))) {
-        qWarning() << QString("Failed to create index %1: %2").arg(tableName, query.lastError().text());
+        qWarning()  << __FILE__ << __LINE__ << QString("Failed to create index %1: %2").arg(tableName, query.lastError().text());
         // Не считаем это критической ошибкой
     }
     

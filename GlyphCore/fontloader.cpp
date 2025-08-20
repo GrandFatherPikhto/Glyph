@@ -20,11 +20,10 @@ FontLoader::~FontLoader()
 void FontLoader::loadFonts(const QStringList &fontDirs)
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", QString("thread_%1").arg(GetCurrentThreadId()));
-    QString strDbPath = "C:/Users/yevst/AppData/Local/FtFonts/glyph.sqlite";
-    db.setDatabaseName(strDbPath);
+    db.setDatabaseName(m_dbFile);
     if (!db.open())
     {
-        qWarning() << "Can't open DB" << strDbPath;
+        qWarning() << __FILE__ << __LINE__ << "Can't open DB" << m_dbFile;
         return;
     }
 
@@ -53,7 +52,7 @@ int FontLoader::processFontDir(QSqlDatabase db, const QString &path)
     int counter = 0;
     const auto files = fontsDir.entryList(QDir::Files);
     for (const QString &fileName : files) {
-
+        qDebug() << fileName;
         FontContext context(fontsDir.absolutePath(), fileName);
 
         auto it = m_sysfonts.find(fileName);
@@ -65,7 +64,7 @@ int FontLoader::processFontDir(QSqlDatabase db, const QString &path)
         if (::isFontSupportedByFreeType(context)) {
             if(::appendOrUpdateFontContext(db, m_tableName, context))
             {
-                qDebug() << context;
+                // qDebug() << context;
             }
         }
     }
