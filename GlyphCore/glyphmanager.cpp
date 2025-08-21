@@ -34,11 +34,8 @@ void GlyphManager::setupSignals()
 {
     QObject::connect(this, &GlyphManager::changeGlyph, this, [=](const GlyphContext &glyph){
         m_glyph = glyph;
+        m_profileManager->defaultGlyphContext(m_glyph);
         findGlyph(m_glyph);
-        if (m_glyph.size() < 0)
-            m_glyph.setSize(m_profileManager->profile().glyphSize());
-
-        qDebug() << __FILE__ << __LINE__ << m_glyph;
         emit glyphChanged(m_glyph);
     });
 }
@@ -225,7 +222,11 @@ bool GlyphManager::removeGlyphById(int id)
 
 bool GlyphManager::appendGlyphIfNotExists(GlyphContext &context)
 {
+    if (context.profile() < 0)
+        return false;
+
     m_profileManager->defaultGlyphContext(context);
+
 
     if(findGlyph(context))
     {
@@ -334,6 +335,6 @@ void GlyphManager::restoreSettings()
 {
     QSettings settings(this);
     settings.beginGroup("GlyphManager");
-    m_glyph = settings.value("glyph", GlyphContext()).value<GlyphContext>();
+    // m_glyph = settings.value("glyph", GlyphContext()).value<GlyphContext>();
     settings.endGroup();
 }

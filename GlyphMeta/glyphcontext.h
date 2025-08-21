@@ -75,7 +75,7 @@ public:
         );
     }
 
-    bool isValid() const { return (m_character != QChar() && m_glyphSize > 0 && m_profile >= 0); }
+    bool isValid() const { return (m_character != QChar() && m_glyphSize > 0); }
     
     int id() const { return m_glyphId; }
     const QChar & character() const { return m_character; };

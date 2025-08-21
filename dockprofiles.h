@@ -12,6 +12,7 @@
 class AppContext;
 class AppSettings;
 class ProfileManager;
+class GlyphManager;
 class FontManager;
 
 namespace Ui {
@@ -36,10 +37,11 @@ private:
     AppContext *m_appContext;
     AppSettings *m_appSettings;
     ProfileManager *m_profileManager;
+    GlyphManager *m_glyphManager;
     FontManager *m_fontManager;
     QSqlQueryModel *m_profilesModel;
 
-    ProfileContext m_profile;
+    // ProfileContext m_profile;
     FontContext m_font;
 };
 

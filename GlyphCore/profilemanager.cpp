@@ -88,15 +88,16 @@ bool ProfileManager::createTable()
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "font_id INTEGER, "
         "name TEXT NOT NULL, "
-        "bitmap_dimension INTEGER NOT NULL, "
         "glyph_size INTEGER, "
         "font_size INTEGER, "
-        "padding_left INTEGER, "
-        "padding_top INTEGER, "
-        "padding_right INTEGER, "
-        "padding_bottom INTEGER, "
+        "grid_width INTEGER, "
+        "grid_height INTEGER, "
+        "grid_left INTEGER, "
+        "grid_top INTEGER, "
+        "grid_right INTEGER, "
+        "grid_bottom INTEGER, "
         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
-        "UNIQUE(name, bitmap_dimension) ON CONFLICT REPLACE"
+        "UNIQUE(name, font_id, glyph_size) ON CONFLICT REPLACE"
     ")").arg(m_tableName);
     
     if (!query.exec(createTableQuery)) {
@@ -129,18 +130,19 @@ bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
     db.transaction();
     // Явно указываем имена столбцов и параметры
     query.prepare(QString("INSERT OR REPLACE INTO %1 "
-                          "(name, font_id, bitmap_dimension, glyph_size, font_size, padding_left, padding_top, padding_right, padding_bottom) "
-                          "VALUES (:name, :font_id, :bitmap_dimension, :glyph_size, :font_size, :padding_left, :padding_top, :padding_right, :padding_bottom);").arg(m_tableName));
+                          "(name, font_id, glyph_size, font_size, grid_width, grid_height, grid_left, grid_top, grid_right, grid_bottom) "
+                          "VALUES (:name, :font_id, :glyph_size, :font_size, :grid_width, :grid_height, :grid_left, :grid_top, :grid_right, :grid_bottom);").arg(m_tableName));
 
     query.bindValue(":name", profile.name());
     query.bindValue(":font_id", profile.fontId());
-    query.bindValue(":bitmap_dimension", profile.bitmapDimension());
     query.bindValue(":glyph_size", profile.glyphSize());
     query.bindValue(":font_size", profile.fontSize());
-    query.bindValue(":padding_left", profile.paddingLeft());
-    query.bindValue(":padding_top", profile.paddingTop());
-    query.bindValue(":padding_right", profile.paddingRight());
-    query.bindValue(":padding_bottom", profile.paddingBottom());
+    query.bindValue(":grid_width", profile.gridWidth());
+    query.bindValue(":height", profile.gridHeight());
+    query.bindValue(":grid_left", profile.gridLeft());
+    query.bindValue(":grid_top", profile.gridTop());
+    query.bindValue(":grid_right", profile.gridRight());
+    query.bindValue(":grid_bottom", profile.gridBottom());
 
     if (!query.exec()) {
         qWarning() << __FILE__ << __LINE__ << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
@@ -205,7 +207,7 @@ bool ProfileManager::findProfile(ProfileContext &profile)
     QSqlQuery query(db);
 
     QString strSql = QString(
-        "SELECT id, name, font_id, bitmap_dimension, glyph_size, font_size, font_id, padding_left, padding_top, padding_right, padding_bottom FROM %1 WHERE name = :name AND font_id = :font_id").arg(m_tableName);
+        "SELECT id, name, font_id, glyph_size, font_size, font_id, grid_width, grid_height, grid_left, grid_top, grid_right, grid_bottom FROM %1 WHERE name = :name AND font_id = :font_id").arg(m_tableName);
 
     if(!query.prepare(strSql))
     {
@@ -225,7 +227,7 @@ bool ProfileManager::findProfile(ProfileContext &profile)
 
     if (!query.next())
     {
-        qWarning() << __FILE__ << __LINE__ << "Can't find record with name = " << profile.name() << "AND font_id" << profile.fontId() << "; With Error:" << query.lastError();
+        // qWarning() << __FILE__ << __LINE__ << "Can't find record with name = " << profile.name() << "AND font_id" << profile.fontId() << "; With Error:" << query.lastError();
         profile.setId(-1);
         return false;
     }
@@ -244,7 +246,7 @@ bool ProfileManager::getProfileById(int id, ProfileContext &profile)
     }
 
     QSqlQuery query(db);
-    query.prepare("SELECT id, name, font_id, bitmap_dimension, glyph_size, font_size, font_id, padding_left, padding_top, padding_right, padding_bottom FROM profiles WHERE id = :id");
+    query.prepare("SELECT id, name, font_id, glyph_size, font_size, font_id, grid_width, grid_height, grid_left, grid_top, grid_right, grid_bottom FROM profiles WHERE id = :id");
     query.bindValue(":id", id);
 
     if(!query.exec())
@@ -269,14 +271,15 @@ bool ProfileManager::assignQueryWithProfile(ProfileContext &profile, QSqlQuery q
     try {
         profile.setId(query.value("id").toInt());
         profile.setName(query.value("name").toString());
-        profile.setBitmapDimension(query.value("bitmap_dimension").toInt());
         profile.setGlyphSize(query.value("glyph_size").toInt());
         profile.setFontSize(query.value("font_size").toInt());
         profile.setFontId(query.value("font_id").toInt());
-        profile.setPaddingLeft(query.value("padding_left").toInt());
-        profile.setPaddingTop(query.value("padding_top").toInt());
-        profile.setPaddingRight(query.value("padding_right").toInt());
-        profile.setPaddingBottom(query.value("padding_bottom").toInt());
+        profile.setGridWidth(query.value("grid_width").toInt());
+        profile.setGridHeight(query.value("grid_height").toInt());
+        profile.setGridLeft(query.value("grid_left").toInt());
+        profile.setGridTop(query.value("grid_top").toInt());
+        profile.setGridRight(query.value("grid_right").toInt());
+        profile.setGridBottom(query.value("grid_bottom").toInt());
     }
     catch (const std::exception &e) {
         qCritical() << "Error parsing profile data:" << e.what();
@@ -301,9 +304,39 @@ bool ProfileManager::defaultProfile(ProfileContext &profile)
         res = true;
     }
 
-    if (m_profile.bitmapDimension() < 0)
+    if (m_profile.gridWidth() < 0)
     {
-        m_profile.setBitmapDimension(m_appSettings->value("defaultBitmapDimension").toInt());
+        m_profile.setGridWidth(m_appSettings->value("defaultGridWidth").toInt());
+        res = true;
+    }
+
+    if (m_profile.gridHeight() < 0)
+    {
+        m_profile.setGridHeight(m_appSettings->value("defaultGridHeight").toInt());
+        res = true;
+    }
+
+    if (m_profile.gridLeft() < 0)
+    {
+        m_profile.setGridLeft(m_appSettings->value("defaultGridLeft").toInt());
+        res = true;
+    }
+
+    if (m_profile.gridTop() < 0)
+    {
+        m_profile.setGridTop(m_appSettings->value("defaultGridTop").toInt());
+        res = true;
+    }
+
+    if (m_profile.gridRight() < 0)
+    {
+        m_profile.setGridRight(m_appSettings->value("defaultGridRight").toInt());
+        res = true;
+    }
+
+    if (m_profile.gridBottom() < 0)
+    {
+        m_profile.setGridBottom(m_appSettings->value("defaultGridBottom").toInt());
         res = true;
     }
 
@@ -342,8 +375,20 @@ void ProfileManager::restoreSettings()
 {
     QSettings settings(this);
     settings.beginGroup("ProfileManager");
-    m_profile = settings.value("profile", ProfileContext()).value<ProfileContext>();
+    // m_profile = settings.value("profile", ProfileContext()).value<ProfileContext>();    
     settings.endGroup();
+
+    m_profile.setId(-1);
+    m_profile.setGlyphSize(m_appSettings->value("defaultGlyphSize").toInt());
+    m_profile.setFontSize(m_appSettings->value("defaultFontSize").toInt());
+    m_profile.setGridWidth(m_appSettings->value("defaultGridWidth").toInt());
+    m_profile.setGridHeight(m_appSettings->value("defaultGridHeight").toInt());
+    m_profile.setGridLeft(m_appSettings->value("defaultGridLeft").toInt());
+    m_profile.setGridTop(m_appSettings->value("defaultGridTop").toInt());
+    m_profile.setGridRight(m_appSettings->value("defaultGridRight").toInt());
+    m_profile.setGridBottom(m_appSettings->value("defaultGridBottom").toInt());
+
+    // qDebug() << __FILE__ << __LINE__ << m_profile;
 
     defaultProfile(m_profile);
 }

@@ -70,7 +70,15 @@ void DockGlyphs::setupSignals()
     });
 
     QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, [=](const GlyphContext &context){
+        ProfileContext profile = m_profileManager->profile();
+        // qDebug() << __FILE__ << __LINE__ << context << profile;
         ui->spinBoxGlyphSize->setValue(context.size());
+    });
+
+    connect(ui->spinBoxGlyphSize, &QSpinBox::valueChanged, this, [=](int value){
+        GlyphContext glyph = m_glyphManager->glyph();
+        glyph.setSize(value);
+        emit m_glyphManager->changeGlyph(glyph);
     });
 }
 

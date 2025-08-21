@@ -130,7 +130,7 @@ void GlyphDraw::drawLeftLine(QPainter &painter)
 
 void GlyphDraw::drawTemplate(QPainter &painter)
 {
-    QSharedPointer<QImage> img = m_drawContext->imageTemplate();
+    QSharedPointer<QImage> img = m_drawContext->templateImage();
     if (img.isNull())
         return;
 
@@ -139,7 +139,7 @@ void GlyphDraw::drawTemplate(QPainter &painter)
 
 void GlyphDraw::drawPreview(QPainter &painter)
 {
-    QSharedPointer<QImage> img = m_drawContext->imagePreview();
+    QSharedPointer<QImage> img = m_drawContext->previewImage();
     if (img.isNull())
         return;
 
@@ -150,6 +150,7 @@ void GlyphDraw::drawPreview(QPainter &painter)
 void GlyphDraw::resizeEvent(QResizeEvent *event)
 {
     Q_UNUSED(event);
+    update();
 }
 
 

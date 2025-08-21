@@ -12,13 +12,14 @@
     </qresource>
     <qresource prefix="/toolbar">
         <file alias="baseline">images/baseline.png</file>
-        <file alias="bitmapRect">images/bitmapRect.png</file>
+        <file alias="leftline">images/leftline.png</file>
+        <file alias="bitmap_rect">images/bitmapRect.png</file>
         <file alias="clear">images/clear.png</file>
         <file alias="edit">images/edit.png</file>
         <file alias="preview">images/preview.png</file>
         <file alias="paste">images/paste.png</file>
         <file alias="template">images/center.png</file>
-        <file alias="glyphRect">images/rect.png</file>
+        <file alias="glyph_rect">images/rect.png</file>
         <file alias="grid">images/grid.png</file>
         <file alias="draw">images/draw.png</file>
     </qresource>

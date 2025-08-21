@@ -136,6 +136,9 @@ bool ImageManager::saveDrawImage(const QSharedPointer<DrawContext> &draw)
 
 bool ImageManager::findDrawImage(int glyphId, QSharedPointer<DrawContext> &draw)
 {
+    if (glyphId < 0)
+        return false;
+
     QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen()) {
         qWarning() << __FILE__ << __LINE__ << "Database is not open";

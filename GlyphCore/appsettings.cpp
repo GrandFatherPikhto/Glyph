@@ -37,11 +37,18 @@ void AppSettings::initSettings ()
 	m_values.insert("templateLayer", false);
 	m_values.insert("previewLayer", false);
 	m_values.insert("drawLayer", false);
+    m_values.insert("bitmapRectLayer", false);
 	m_values.insert("glyphRectLayer", false);
-	m_values.insert("baseLineLayer", false);
-    m_values.insert("leftLineLayer", false);
+	m_values.insert("baselineLayer", false);
+    m_values.insert("leftlineLayer", false);
     m_values.insert("defaultGlyphSize", 12);
-    m_values.insert("defaultBitmapDimension", 12);
+    m_values.insert("defaultFontSize", 12);
+    m_values.insert("defaultGridWidth", 12);
+    m_values.insert("defaultGridHeight", 12);
+    m_values.insert("defaultGridLeft", 3);
+    m_values.insert("defaultGridTop", 3);
+    m_values.insert("defaultGridRight", 3);
+    m_values.insert("defaultGridBottom", 3);
     m_values.insert("glyphWidgetBitmapRectLayer", false);
     m_values.insert("glyphWidgetTemplateColor", QColor(0x00, 0x00, 0x55, 0x55));
     m_values.insert("glyphWidgetTemplateBgColor", QColor(0x00, 0x00, 0x00, 0xFF));        
@@ -114,6 +121,7 @@ void AppSettings::restoreAppSettings()
     {
 #ifndef NOT_RESTORE_SETTINGS        
         m_values.insert(it.key(), settings.value(it.key()));
+        // qDebug() << __FILE__ << __LINE__ << it.key() << it.value();
 #endif        
     }
     settings.endGroup();

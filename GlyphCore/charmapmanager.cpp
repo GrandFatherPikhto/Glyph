@@ -76,8 +76,6 @@ bool CharmapManager::loadFontFace()
 {
     FontContext font = m_fontManager->fontContext();
 
-    qDebug() << __FILE__ << __LINE__ << "Font" << font;
-
     if (!font.isValid())
     {
         qWarning() << __FILE__ << __LINE__ << "Font Context is Invalid" << font;
@@ -87,7 +85,7 @@ bool CharmapManager::loadFontFace()
     releaseFontFace();
     initFtLibrary();
 
-    qDebug() << __FILE__ << __LINE__ << "FtLibrary Inited";
+    // qDebug() << __FILE__ << __LINE__ << "FtLibrary Inited";
 
     FT_Error ftError = FT_New_Face(m_ftLibrary, font.fileName().toStdString().c_str(), 0, &m_ftFace);
     // Загрузка шрифта
@@ -167,11 +165,6 @@ bool CharmapManager::loadCharacterTable()
             query.bindValue(":category", category);
             query.bindValue(":script", script);
             query.bindValue(":decomposition", decomposition);
-
-            // if (!query.isActive())
-            // {
-            //     qWarning() << __FILE__ << __LINE__ << query.lastError();
-            // }
 
             if (!query.exec()) {
                 qWarning()  << __FILE__ << __LINE__ << "Failed to insert character" << static_cast<quint32>(ch.unicode()) << ":" << query.lastError().text() << query.lastQuery();

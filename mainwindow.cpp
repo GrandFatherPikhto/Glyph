@@ -12,6 +12,7 @@
 #include "dockprofiles.h"
 #include "glyphdraw.h"
 #include "fontmanager.h"
+#include "maintoolbar.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_dockProfiles(nullptr)
     , m_dockGlyphs(nullptr)
     , m_dockFonts(nullptr)
+    , m_mainToolbar(nullptr)
 {
     ui->setupUi(this);
 
@@ -76,6 +78,9 @@ void MainWindow::setupValues()
 
     tabifyDockWidget(m_dockCharmap, m_dockFonts);
     tabifyDockWidget(m_dockProfiles, m_dockGlyphs);
+
+    m_mainToolbar = new MainToolbar(m_appContext, this);
+    addToolBar(Qt::TopToolBarArea, m_mainToolbar);
 }
 
 void MainWindow::showEvent(QShowEvent *event)

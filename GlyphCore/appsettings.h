@@ -13,7 +13,7 @@
 
 #include "GlyphCore_global.h"
 
-#define NOT_RESTORE_SETTINGS
+// #define NOT_RESTORE_SETTINGS
 
 class AppContext;
 

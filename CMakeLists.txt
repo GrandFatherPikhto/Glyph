@@ -31,6 +31,8 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+
     qt_add_executable(Glyph
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
@@ -47,8 +49,14 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         dockglyphs.cpp 
         dockglyphs.ui
         
+        dockfonts.h 
+        dockfonts.cpp 
+        dockfonts.ui
+        
+        maintoolbar.h 
+        maintoolbar.cpp
+
         icons.qrc
-        dockfonts.h dockfonts.cpp dockfonts.ui
     )
 
 # target_include_directories(Glyph PRIVATE 
@@ -102,6 +110,7 @@ endif()
 if(Freetype_FOUND)
     message(STATUS "FreeType найден: ${FREETYPE_INCLUDE_DIRS}, ${FREETYPE_LIBRARIES}")
     target_link_libraries(Glyph PRIVATE Freetype::Freetype)
+target_link_libraries(Glyph PRIVATE Qt6::Core Qt6::Widgets)
 else()
     message(FATAL_ERROR "FreeType не найден!")
 endif()

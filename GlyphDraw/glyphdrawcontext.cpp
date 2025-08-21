@@ -43,15 +43,14 @@ void GlyphDrawContext::setupSignals()
 
 void GlyphDrawContext::setGlyph(const GlyphContext &glyph)
 {
-    m_glyph = glyph;
-    renderTemplate();
-    renderPreview();
-    renderDraw();
+    // m_glyph = glyph;
+    updateContext();
 }
 
 void GlyphDrawContext::setProfile(const ProfileContext &profile)
 {
-    m_profile = profile;
+    // m_profile = profile;
+    updateContext();
 }
 
 void GlyphDrawContext::setMargins(const QMargins &margins)
@@ -68,11 +67,15 @@ void GlyphDrawContext::setRegion(const QRegion &region)
 
     m_drawRect = m_region.boundingRect();
     m_drawRect -= m_margins;
+
+    updateContext();
 }
 
 bool GlyphDrawContext::renderTemplate()
 {
-    if (!m_glyph.isValid())
+    GlyphContext glyph = m_glyphManager->glyph();
+
+    if (!glyph.isValid())
         return false;
 
     FontContext font = m_fontManager->fontContext();
@@ -82,29 +85,31 @@ bool GlyphDrawContext::renderTemplate()
         m_template = QSharedPointer<ImageContext>::create();
     }
 
-    m_template->setCharacter(m_glyph.character());
+    m_template->setCharacter(glyph.character());
     m_template->setDirty();
-    m_template->setSize(QSize(m_glyph.size(), m_glyph.size()));
+    m_template->setSize(QSize(glyph.size(), glyph.size()));
     m_template->setType(ImageContext::ImageTemplate);
     m_template->setColor(m_appSettings->value("glyphWidgetTemplateColor").value<QColor>());
     m_template->setBgColor(m_appSettings->value("glyphWidgetTemplateBgColor").value<QColor>());
     m_imageManager->getGlyphImage(font, m_template);
-    qDebug() << __FILE__ << __LINE__ << "Template:" << m_template;
+    // qDebug() << __FILE__ << __LINE__ << "Template:" << m_template;
 
     QSize glyphSize(m_template->width() * cellSize(),
                     m_template->height() * cellSize());
 
-    ProfileContext profile = m_profileManager->glyphProfile(m_glyph);
+    ProfileContext profile = m_profileManager->glyphProfile(glyph);
 
-    int bottom = profile.bitmapDimension() - m_template->top();
-    m_glyphRect = QRect(glyphTopLeft() + QPoint(m_template->left() * cellSize(), bottom * cellSize()), glyphSize);
+    int bottom = profile.gridHeight() - m_template->top();
+    m_glyphRect = QRect(bitmapTopLeft() + QPoint(m_template->left() * cellSize(), bottom * cellSize()), glyphSize);
 
     return true;
 }
 
 bool GlyphDrawContext::renderPreview()
 {
-    if (!m_glyph.isValid())
+    GlyphContext glyph = m_glyphManager->glyph();
+
+    if (!glyph.isValid())
         return false;
 
     FontContext font = m_fontManager->fontContext();
@@ -114,24 +119,27 @@ bool GlyphDrawContext::renderPreview()
         m_preview = QSharedPointer<ImageContext>::create();
     }
 
-    if (bitmapRect().size().isValid())
+    if (!bitmapRect().size().isValid())
         return false;
 
-    m_preview->setCharacter(m_glyph.character());
+    m_preview->setCharacter(glyph.character());
     m_preview->setDirty();
-    m_preview->setSize(bitmapRect().size());
-    m_preview->setType(ImageContext::ImageTemplate);
+    m_preview->setSize(m_region.boundingRect().size());
+    m_preview->setType(ImageContext::ImagePreview);
     m_preview->setColor(m_appSettings->value("glyphWidgetPreviewColor").value<QColor>());
     m_preview->setBgColor(m_appSettings->value("glyphWidgetPreviewBgColor").value<QColor>());
     m_imageManager->getGlyphImage(font, m_preview);
-    qDebug() << __FILE__ << __LINE__ << "Preview:" << m_preview;
+
+    // qDebug() << __FILE__ << __LINE__ << m_preview << m_region << m_region.boundingRect().size() * 2;
 
     return true;
 }
 
 bool GlyphDrawContext::renderDraw()
 {
-    if (!m_glyph.isValid())
+    GlyphContext glyph = m_glyphManager->glyph();
+
+    if (!glyph.isValid())
         return false;
 
     ProfileContext profile;
@@ -141,14 +149,221 @@ bool GlyphDrawContext::renderDraw()
         m_draw = QSharedPointer<DrawContext>::create();
     }
 
-    profile = m_profileManager->glyphProfile(m_glyph);
+    profile = m_profileManager->glyphProfile(glyph);
     if (!profile.isValid())
         return false;
 
-    m_draw->setSize(QSize(profile.bitmapDimension(), profile.bitmapDimension()));
-    m_draw->setGlyphId(m_glyph.id());
+    m_draw->setSize(QSize(profile.gridWidth(), profile.gridHeight()));
+    m_draw->setGlyphId(glyph.id());
 
-    m_imageManager->loadOrCreateDrawImage(m_glyph.id(), m_draw);
+    m_imageManager->loadOrCreateDrawImage(glyph.id(), m_draw);
 
     return true;    
+}
+
+ProfileContext GlyphDrawContext::glyphProfile()
+{
+    GlyphContext glyph = m_glyphManager->glyph();
+    return m_profileManager->glyphProfile(glyph);
+}
+
+int GlyphDrawContext::dimX () { 
+    ProfileContext profile = glyphProfile();
+    if (!profile.isValid())
+        return -1;
+
+    return profile.gridLeft() + profile.gridWidth() + profile.gridRight(); 
+}
+
+int GlyphDrawContext::dimY () { 
+    ProfileContext profile = glyphProfile();
+    if (!profile.isValid())
+        return -1;
+
+    return profile.gridTop() + profile.gridHeight() + profile.gridBottom(); 
+}
+
+QList<QLine> GlyphDrawContext::gridHorizontalLines()
+{
+    QList<QLine> lines;
+    for(int i = 0; i <= dimY(); i++)
+    {
+        QPoint left = cellTopLeft(0, i);
+        QPoint right = cellTopLeft(dimX(), i);
+
+        lines.append(QLine(left, right));
+    }
+
+    return lines;
+}
+
+QList<QLine> GlyphDrawContext::gridVerticalLines()
+{
+    QList<QLine> lines;
+    for(int i = 0; i <= dimX(); i++)
+    {
+        QPoint top = cellTopLeft(i, 0);
+        QPoint bottom = cellTopLeft(i, dimY());
+
+        lines.append(QLine(top, bottom));
+    }
+
+    return lines;
+}
+
+int GlyphDrawContext::cellSize () {
+    int cellX = m_drawRect.width() / dimX();
+    int cellY = m_drawRect.height() / dimY ();
+
+    return cellX < cellY ? cellX : cellY;
+}
+
+QPoint GlyphDrawContext::cellTopLeft(int col, int row)
+{
+    int size = cellSize();
+    return m_drawRect.topLeft() + QPoint(col * size, row * size);
+}
+
+QPoint GlyphDrawContext::glyphTopLeft()
+{
+    ProfileContext profile = glyphProfile();
+    if (!profile.isValid())
+        return QPoint();
+
+    int size = cellSize();
+    return m_drawRect.topLeft() + QPoint(profile.gridLeft() * size, profile.gridTop() * size);
+}
+
+QRect GlyphDrawContext::cellRect(int col, int row)
+{
+    int size = cellSize();
+    return QRect(cellTopLeft(col, row), QSize(size, size));
+}
+
+QPoint GlyphDrawContext::bitmapTopLeft()
+{
+    int size = cellSize();
+    ProfileContext profile = glyphProfile();        
+    if (!profile.isValid())
+        return QPoint();
+
+    return m_drawRect.topLeft() + QPoint(profile.gridLeft() * size, profile.gridTop() * size);
+}
+
+QRect GlyphDrawContext::bitmapRect()
+{
+    int size = cellSize();
+    ProfileContext profile = glyphProfile();        
+    if (!profile.isValid())
+        return QRect();
+
+    int dimX = profile.gridWidth();
+    int dimY = profile.gridHeight();
+    return QRect(bitmapTopLeft(), QSize(dimX * size, dimY * size));
+}
+
+bool GlyphDrawContext::clickGrid(const QPoint &point, int &col, int &row)
+{
+    if (!m_drawRect.contains(point))
+    {
+        row = -1;
+        col = -1;
+        return false;
+    }
+
+    for (int x = 0; x < dimX(); x ++)
+    {
+        for (int y = 0; y < dimY(); y ++)
+        {
+            QRect rect = cellRect(x, y);
+            if (rect.contains(point))
+            {
+                col = x;
+                row = y;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+int GlyphDrawContext::baseLineY()
+{
+    GlyphContext glyph = m_glyphManager->glyph();
+    ProfileContext profile = m_profileManager->glyphProfile(glyph);
+    if (!profile.isValid() || !glyph.isValid())
+        return -1;
+    int baseline = profile.gridTop() + profile.gridHeight() - glyph.baseline();
+    QPoint pointBaseline = cellTopLeft(0, baseline);
+    return pointBaseline.y();
+}
+
+int GlyphDrawContext::lineLeftX()
+{
+    GlyphContext glyph = m_glyphManager->glyph();
+    ProfileContext profile = m_profileManager->glyphProfile(glyph);
+    if (!profile.isValid() || !glyph.isValid())
+        return -1;
+    int leftline = profile.gridLeft() + glyph.offsetLeft();
+    QPoint pointLeftLine = cellTopLeft(leftline, 0);        
+    return pointLeftLine.x();
+}
+
+bool GlyphDrawContext::clickBitmap(const QPoint &point, int &col, int &row)
+{
+    ProfileContext profile = glyphProfile();
+    if (!profile.isValid())
+        return false;
+
+    if (!bitmapRect().contains(point))
+    {
+        row = -1;
+        col = -1;
+        return false;
+    }
+
+    for (int x = 0; x < profile.gridRight() + profile.gridWidth() + profile.gridRight(); x ++)
+    {
+        for (int y = 0; y < profile.gridTop() + profile.gridHeight() + profile.gridBottom(); y ++)
+        {
+            QRect rect = cellRect(x + profile.gridLeft(), y + profile.gridTop());
+            if (rect.contains(point))
+            {
+                col = x;
+                row = y;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+QSharedPointer<QImage> GlyphDrawContext::templateImage () const
+{
+    if (m_template.isNull())
+        return QSharedPointer<QImage>();
+    return m_template->image();
+}
+
+QSharedPointer<QImage> GlyphDrawContext::previewImage () const
+{
+    if (m_preview.isNull())
+        return QSharedPointer<QImage>();
+    return m_preview->image();
+}
+
+QSharedPointer<QImage> GlyphDrawContext::drawImage () const
+{
+    if (m_draw.isNull())
+        return QSharedPointer<QImage>();
+    return m_draw->image();
+}
+
+void GlyphDrawContext::updateContext()
+{
+    renderTemplate();
+    renderPreview();
+    renderDraw();
 }

@@ -15,6 +15,12 @@
 #include "imagecontext.h"
 #include "drawcontext.h"
 
+// #include "profilemanager.h"
+// #include "glyphdrawcontext.h"
+// #include "glyphmanager.h"
+// #include "fontmanager.h"
+// #include "imagemanager.h"
+
 class AppContext;
 class ProfileManager;
 class AppSettings;
@@ -33,146 +39,28 @@ public:
 
     const QRect & drawRect() const { return m_drawRect; }
 
-    inline int dimX () { return m_profile.paddingLeft() + m_profile.bitmapDimension() + m_profile.paddingRight(); }
-    inline int dimY () { return m_profile.paddingTop() + m_profile.bitmapDimension() + m_profile.paddingBottom(); }
+    ProfileContext glyphProfile();
+    int dimX ();
+    int dimY ();
+    QList<QLine> gridHorizontalLines();
+    QList<QLine> gridVerticalLines();
+    int cellSize ();
+    QPoint cellTopLeft(int col, int row);
+    QPoint glyphTopLeft();
+    QRect cellRect(int col, int row);
+    QPoint bitmapTopLeft();
+    QRect bitmapRect();
+    bool clickGrid(const QPoint &point, int &col, int &row);
 
-    inline QList<QLine> gridHorizontalLines()
-    {
-        QList<QLine> lines;
-        for(int i = 0; i <= dimY(); i++)
-        {
-            QPoint left = cellTopLeft(0, i);
-            QPoint right = cellTopLeft(dimX(), i);
+    const QRect & glyphRect() const { return m_glyphRect; }
 
-            lines.append(QLine(left, right));
-        }
+    QSharedPointer<QImage> templateImage() const;
+    QSharedPointer<QImage> previewImage() const;
+    QSharedPointer<QImage> drawImage() const;
 
-        return lines;
-    }
-
-    inline QList<QLine> gridVerticalLines()
-    {
-        QList<QLine> lines;
-        for(int i = 0; i <= dimX(); i++)
-        {
-            QPoint top = cellTopLeft(i, 0);
-            QPoint bottom = cellTopLeft(i, dimY());
-
-            lines.append(QLine(top, bottom));
-        }
-
-        return lines;
-    }
-
-    inline int cellSize () {
-        int cellX = m_drawRect.width() / dimX();
-        int cellY = m_drawRect.height() / dimY ();
-
-        return cellX < cellY ? cellX : cellY;
-    }
-
-    inline QPoint cellTopLeft(int col, int row)
-    {
-        int size = cellSize();
-        return m_drawRect.topLeft() + QPoint(col * size, row * size);
-    }
-
-    inline QPoint glyphTopLeft()
-    {
-        int size = cellSize();
-        return m_drawRect.topLeft() + QPoint(m_profile.paddingLeft() * size, m_profile.paddingTop() * size);
-    }
-
-    inline QRect cellRect(int col, int row)
-    {
-        int size = cellSize();
-        return QRect(cellTopLeft(col, row), QSize(size, size));
-    }
-
-    inline QPoint bitmapTopLeft()
-    {
-        int size = cellSize();
-        return m_drawRect.topLeft() + QPoint(m_profile.paddingLeft() * size, m_profile.paddingTop() * size);
-    }
-
-    inline QRect bitmapRect()
-    {
-        int size = cellSize();
-        int dim = m_profile.bitmapDimension();
-        return QRect(bitmapTopLeft(), QSize(dim * size, dim * size));
-    }
-
-    inline bool clickGrid(const QPoint &point, int &col, int &row)
-    {
-        if (!m_drawRect.contains(point))
-        {
-            row = -1;
-            col = -1;
-            return false;
-        }
-
-        for (int x = 0; x < dimX(); x ++)
-        {
-            for (int y = 0; y < dimY(); y ++)
-            {
-                QRect rect = cellRect(x, y);
-                if (rect.contains(point))
-                {
-                    col = x;
-                    row = y;
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    inline const QRect & glyphRect() const { return m_glyphRect; }
-    inline QSharedPointer<QImage> imageTemplate() const { return m_template->image(); }
-    inline QSharedPointer<QImage> imagePreview() const { return m_preview->image(); }
-
-    inline bool clickBitmap(const QPoint &point, int &col, int &row)
-    {
-        if (!bitmapRect().contains(point))
-        {
-            row = -1;
-            col = -1;
-            return false;
-        }
-
-        for (int x = 0; x < m_profile.bitmapDimension(); x ++)
-        {
-            for (int y = 0; y < m_profile.bitmapDimension(); y ++)
-            {
-                QRect rect = cellRect(x + m_profile.paddingLeft(), y + m_profile.paddingTop());
-                if (rect.contains(point))
-                {
-                    col = x;
-                    row = y;
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    inline int baseLineY()
-    {
-        int baseline = m_profile.bitmapDimension() + m_profile.paddingTop() - m_glyph.baseline();
-        QPoint pointBaseline = cellTopLeft(0, baseline);
-        return pointBaseline.y();
-    }
-
-    inline int lineLeftX()
-    {
-        int leftline = m_profile.paddingLeft() + m_glyph.offsetLeft();
-        QPoint pointLeftLine = cellTopLeft(leftline, 0);        
-        return pointLeftLine.x();
-    }
-
-
+    bool clickBitmap(const QPoint &point, int &col, int &row);
+    int baseLineY();
+    int lineLeftX();
 
 signals:
     void changeProfile(const ProfileContext &context);
@@ -191,6 +79,8 @@ private:
     bool renderPreview();
     bool renderDraw();
 
+    void updateContext();
+
     AppContext *m_appContext;
     ProfileManager *m_profileManager;
     GlyphManager *m_glyphManager;
@@ -201,8 +91,8 @@ private:
     QRect m_drawRect;
     QRect m_glyphRect;
 
-    ProfileContext m_profile;
-    GlyphContext m_glyph;
+    // ProfileContext m_profile;
+    // GlyphContext m_glyph;
     
     QMargins m_margins;
     QRegion m_region;

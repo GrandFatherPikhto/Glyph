@@ -12,6 +12,7 @@ class DockCharmap;
 class DockProfiles;
 class DockGlyphs;
 class DockFonts;
+class MainToolbar;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -47,5 +48,6 @@ private:
     DockProfiles *m_dockProfiles;
     DockGlyphs *m_dockGlyphs;
     DockFonts *m_dockFonts;
+    MainToolbar *m_mainToolbar;
 };
 #endif // MAINWINDOW_H

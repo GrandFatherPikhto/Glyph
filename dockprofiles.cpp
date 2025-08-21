@@ -4,9 +4,11 @@
 #include "dockprofiles.h"
 #include "ui_dockprofiles.h"
 
+#include "glyphcontext.h"
 #include "appcontext.h"
 #include "profilemanager.h"
 #include "fontmanager.h"
+#include "glyphmanager.h"
 #include "appsettings.h"
 #include "charmapmanager.h"
 #include "profilemanager.h"
@@ -19,6 +21,7 @@ DockProfiles::DockProfiles(AppContext *appContext, QWidget *parent)
     , m_appSettings(appContext->appSettings())
     , m_fontManager(appContext->fontManager())
     , m_profileManager(appContext->profileManager())
+    , m_glyphManager(appContext->glyphManager())
     , m_profilesModel(nullptr)
 {
     ui->setupUi(this);
@@ -33,64 +36,82 @@ DockProfiles::~DockProfiles()
 
 void DockProfiles::setupSignals()
 {
-    QObject::connect(m_profileManager, &ProfileManager::profileChanged, this, [=](const ProfileContext &profile){
-        // qDebug() << __FILE__ << __LINE__ << profile;
-        if (m_profile != profile)
-        {
-            m_profile = profile;
-            loadProfileContext();
-            emit m_profileManager->changeProfile(profile);
-        }
+    
+
+    QObject::connect(m_profileManager, &ProfileManager::profileChanged, this, [=](const ProfileContext &value) {
+        loadProfileContext();
     });
 
-    QObject::connect(ui->spinBoxBitmapDimension, &QSpinBox::valueChanged, this, [=](int value){
-        m_profile.setBitmapDimension(value);
-        emit m_profileManager->changeProfile(m_profile);
+    QObject::connect(ui->spinBoxWidth, &QSpinBox::valueChanged, this, [=](int value) {
+        ProfileContext profile = m_profileManager->profile();
+        profile.setGridWidth(value);
+        m_appSettings->setValue("defaultGridWidth", value);
+        emit m_profileManager->changeProfile(profile);
     });
 
-    QObject::connect(ui->lineEditProfileName, &QLineEdit::editingFinished, this, [=](){
-        m_profile.setName(ui->lineEditProfileName->text());
-        emit m_profileManager->changeProfile(m_profile);
+    QObject::connect(ui->spinBoxHeight, &QSpinBox::valueChanged, this, [=](int value) {
+        ProfileContext profile = m_profileManager->profile();
+        profile.setGridHeight(value);
+        m_appSettings->setValue("defaultGridHeight", value);
+        emit m_profileManager->changeProfile(profile);
     });
 
-    QObject::connect(ui->spinBoxPaddingLeft, &QSpinBox::valueChanged, this, [=](int value){
-        m_profile.setPaddingLeft(value);
-        emit m_profileManager->changeProfile(m_profile);
+    QObject::connect(ui->lineEditProfileName, &QLineEdit::editingFinished, this, [=]() {
+        ProfileContext profile = m_profileManager->profile();
+        profile.setName(ui->lineEditProfileName->text());
+        emit m_profileManager->changeProfile(profile);
     });
 
-    QObject::connect(ui->spinBoxPaddingTop, &QSpinBox::valueChanged, this, [=](int value){
-        m_profile.setPaddingTop(value);
-        emit m_profileManager->changeProfile(m_profile);
+    QObject::connect(ui->spinBoxPaddingLeft, &QSpinBox::valueChanged, this, [=](int value) {
+        ProfileContext profile = m_profileManager->profile();
+        profile.setGridLeft(value);
+        m_appSettings->setValue("defaultGridLeft", value);
+        emit m_profileManager->changeProfile(profile);
     });
 
-    QObject::connect(ui->spinBoxPaddingRight, &QSpinBox::valueChanged, this, [=](int value){
-        m_profile.setPaddingRight(value);
-        emit m_profileManager->changeProfile(m_profile);
+    QObject::connect(ui->spinBoxPaddingTop, &QSpinBox::valueChanged, this, [=](int value) {
+        ProfileContext profile = m_profileManager->profile();
+        profile.setGridTop(value);
+        m_appSettings->setValue("defaultGridTop", value);
+        emit m_profileManager->changeProfile(profile);
+    });
+
+    QObject::connect(ui->spinBoxPaddingRight, &QSpinBox::valueChanged, this, [=](int value) {
+        ProfileContext profile = m_profileManager->profile();
+        profile.setGridRight(value);
+        m_appSettings->setValue("defaultGridRight", value);
+        emit m_profileManager->changeProfile(profile);
     });
 
     QObject::connect(ui->spinBoxPaddingBottom, &QSpinBox::valueChanged, this, [=](int value){
-        m_profile.setPaddingBottom(value);
-        emit m_profileManager->changeProfile(m_profile);
+        ProfileContext profile = m_profileManager->profile();
+        profile.setGridBottom(value);
+        m_appSettings->setValue("defaultGridBottom", value);
+        emit m_profileManager->changeProfile(profile);
     });
 
     QObject::connect(ui->spinBoxGlyphSize, &QSpinBox::valueChanged, this, [=](int value){
-        m_profile.setGlyphSize(value);
-        emit m_profileManager->changeProfile(m_profile);
+        GlyphContext glyph = m_glyphManager->glyph();
+        glyph.setSize(value);
+        m_appSettings->setValue("defaultGlyphSize", value);
+        emit m_glyphManager->changeGlyph(glyph);
     });
 
     QObject::connect(ui->pushButtonCreateProfile, &QPushButton::clicked, this, [=](){
-        m_profileManager->defaultProfile(m_profile);
-        qDebug() << __FILE__ << __LINE__ << m_profile;
-        if (m_profile.isValid() && m_profile.id() < 0)
+        ProfileContext profile = m_profileManager->profile();
+        // m_profileManager->defaultProfile(profile);
+        qDebug() << __FILE__ << __LINE__ << profile;
+        if (profile.isValid() && profile.id() < 0)
         {
-            if (m_profileManager->insertOrReplaceProfile(m_profile))
+            if (m_profileManager->insertOrReplaceProfile(profile))
             {
-                emit m_profileManager->changeProfile(m_profile);
+                emit m_profileManager->changeProfile(profile);
                 updateProfilesCombo();
             }
         }
     });
 
+/*
     QObject::connect(ui->comboBoxProfiles, &QComboBox::currentIndexChanged, this, [=](int value){
         QModelIndex idIdx = m_profilesModel->index(value, 0);
         if (idIdx.isValid())
@@ -105,7 +126,7 @@ void DockProfiles::setupSignals()
             }
         }
     });
-
+*/
     QObject::connect(m_profileManager, &ProfileManager::profilesChanged, this, [=](){
         updateProfilesCombo();
     });
@@ -115,8 +136,7 @@ void DockProfiles::setupValues()
 {
     Q_ASSERT(m_appContext->appSettings());
 
-    m_profile = m_profileManager->profile();
-    m_fontManager->fontContextById(m_profile.fontId(), m_font);
+    // m_fontManager->fontContextById(profile.fontId(), m_font);
 
     loadProfileContext();
 
@@ -124,8 +144,8 @@ void DockProfiles::setupValues()
 
     updateProfilesCombo();
     
-    ui->comboBoxProfiles->setModel(m_profilesModel);
-    ui->comboBoxProfiles->setModelColumn(1);
+    // ui->comboBoxProfiles->setModel(m_profilesModel);
+    // ui->comboBoxProfiles->setModelColumn(1);
 }
 
 void DockProfiles::updateProfilesCombo()
@@ -140,32 +160,48 @@ void DockProfiles::updateProfilesCombo()
 
 void DockProfiles::loadProfileContext()
 {
-    m_fontManager->fontContextById(m_profile.fontId(), m_font);
-    ui->labelFont->setText(QString("Font: %1/%2").arg(m_font.name(), m_font.family()));
-    ui->spinBoxBitmapDimension->setValue(m_profile.bitmapDimension());
-    if (m_profile.paddingLeft() != ui->spinBoxPaddingLeft->value())
+    ProfileContext profile = m_profileManager->profile();
+
+    m_fontManager->fontContextById(profile.fontId(), m_font);
+    // ui->labelFont->setText(QString("Font: %1/%2").arg(m_font.name(), m_font.family()));
+    // ui->spinBoxBitmapDimension->setValue(m_profile.bitmapDimension());
+    if (profile.gridLeft() != ui->spinBoxPaddingLeft->value())
     {
-        ui->spinBoxPaddingLeft->setValue(m_profile.paddingLeft());
+        ui->spinBoxPaddingLeft->setValue(profile.gridLeft());
     }
 
-    if (m_profile.paddingTop() != ui->spinBoxPaddingTop->value())
+    if (profile.gridWidth() != ui->spinBoxWidth->value())
     {
-        ui->spinBoxPaddingTop->setValue(m_profile.paddingTop());
+        ui->spinBoxWidth->setValue(profile.gridWidth());
     }
 
-    if (m_profile.paddingRight() != ui->spinBoxPaddingRight->value())
+    if (profile.gridTop() != ui->spinBoxPaddingTop->value())
     {
-        ui->spinBoxPaddingRight->setValue(m_profile.paddingRight());
+        ui->spinBoxPaddingTop->setValue(profile.gridTop());
     }
 
-
-    if (m_profile.paddingBottom() != ui->spinBoxPaddingBottom->value())
+    if (profile.gridRight() != ui->spinBoxPaddingRight->value())
     {
-        ui->spinBoxPaddingBottom->setValue(m_profile.paddingBottom());
+        ui->spinBoxPaddingRight->setValue(profile.gridRight());
     }
 
-    if (ui->lineEditProfileName->text() != m_profile.name())
+    if (profile.gridHeight() != ui->spinBoxHeight->value())
     {
-        ui->lineEditProfileName->setText(m_profile.name());
+        ui->spinBoxHeight->setValue(profile.gridHeight());
+    }
+
+    if (profile.gridBottom() != ui->spinBoxPaddingBottom->value())
+    {
+        ui->spinBoxPaddingBottom->setValue(profile.gridBottom());
+    }
+
+    if (profile.glyphSize() != ui->spinBoxGlyphSize->value())
+    {
+        ui->spinBoxGlyphSize->setValue(profile.glyphSize());
+    }
+
+    if (ui->lineEditProfileName->text() != profile.name())
+    {
+        ui->lineEditProfileName->setText(profile.name());
     }
 }

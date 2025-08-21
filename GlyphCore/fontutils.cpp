@@ -154,7 +154,12 @@ bool isFontSupportedByFreeType(FontContext &context)
         0,
         &face);
 
-    if (!ftError)
+    qDebug() << __FILE__ << __LINE__ << filePath << face->num_glyphs << face->num_charmaps << face->num_fixed_sizes;
+
+    /**
+     * TODO: Пока что не поддерживаются шрифты с фиксированным размером
+     */
+    if (!ftError && face->num_glyphs != 0 && face->num_fixed_sizes == 0)
     {
         context.setFamily(QString(face->family_name));
         context.setStyle(QString(face->style_name));
