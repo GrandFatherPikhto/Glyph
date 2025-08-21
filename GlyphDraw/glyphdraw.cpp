@@ -23,6 +23,7 @@ GlyphDraw::GlyphDraw(QWidget *parent)
     , m_profileManager(nullptr)
     , m_imageManager(nullptr)
     , m_fontManager(nullptr)
+    , m_values({"templateLayer", "drawLayer", "previewLayer", "gridLayer", "glyphRectLayer", "bitmapRectLayer", "baselineLayer", "leftlineLayer"})
 {
 
 }
@@ -55,6 +56,12 @@ void GlyphDraw::setupSignals()
     connect(m_glyphManager, &GlyphManager::glyphChanged, this, &GlyphDraw::setGlyph);
     connect(m_profileManager, &ProfileManager::profileChanged, this, &GlyphDraw::setProfile);
     connect(m_gridManager, &GridManager::gridItemChanged, this, &GlyphDraw::setGrid);
+    connect(m_appSettings, &AppSettings::valueChanged, this, [=](const QString &name, const QVariant &value){
+        if (m_values.contains(name))
+        {
+            update();
+        }
+    });
 }
 
 void GlyphDraw::paintEvent(QPaintEvent *event)
@@ -63,12 +70,20 @@ void GlyphDraw::paintEvent(QPaintEvent *event)
 
     QPainter painter(this);
 
-    drawGrid(painter);
-    drawBitmapRect(painter);
-    drawBaseLine(painter);
-    drawLeftLine(painter);
-    drawTemplate(painter);
-    drawPreview(painter);
+    if (m_appSettings->value("gridLayer").toBool())
+        drawGrid(painter);
+    if (m_appSettings->value("bitmapRectLayer").toBool())
+        drawBitmapRect(painter);
+    if (m_appSettings->value("baselineLayer").toBool())
+        drawBaseLine(painter);
+    if (m_appSettings->value("leftlineLayer").toBool())
+        drawLeftLine(painter);
+    if (m_appSettings->value("drawLayer").toBool())
+        drawDraw(painter);
+    if (m_appSettings->value("templateLayer").toBool())
+        drawTemplate(painter);
+    if (m_appSettings->value("previewLayer").toBool())
+        drawPreview(painter);
 
     painter.end();
 }
@@ -143,6 +158,11 @@ void GlyphDraw::drawTemplate(QPainter &painter)
         return;
 
     painter.drawImage(m_drawContext->glyphRect(), *(img.data()));
+}
+
+void GlyphDraw::drawDraw(QPainter &painter)
+{
+
 }
 
 void GlyphDraw::drawPreview(QPainter &painter)

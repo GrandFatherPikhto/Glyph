@@ -42,6 +42,10 @@ void DockProfiles::setupSignals()
         loadProfileContext();
     });
 
+    connect(m_gridManager, &GridManager::gridItemChanged, this, [=](const GridContext &context) {
+        loadGridContext ();
+    });
+
     QObject::connect(ui->lineEditProfileName, &QLineEdit::editingFinished, this, [=]() {
         ProfileContext profile = m_profileManager->profile();
         profile.setName(ui->lineEditProfileName->text());
@@ -98,15 +102,18 @@ void DockProfiles::setupSignals()
     });
 
     QObject::connect(ui->pushButtonCreateProfile, &QPushButton::clicked, this, [=](){
-        ProfileContext profile = m_profileManager->profile();
-        // m_profileManager->defaultProfile(profile);
-        qDebug() << __FILE__ << __LINE__ << profile;
-        if (profile.isValid() && profile.id() < 0)
+        GridContext grid = readGridContext();
+        m_gridManager->appendGridItem(grid);
+        ProfileContext profile = readProfileContext();
+        profile.setGridId(grid.id());
+        // qDebug() << __FILE__ << __LINE__ << grid;
+        if (profile.isValid())
         {
-            if (m_profileManager->insertOrReplaceProfile(profile))
+            if (m_profileManager->appendProfile(profile))
             {
+                // qDebug() << __FILE__ << __LINE__ << profile;
                 emit m_profileManager->changeProfile(profile);
-                updateProfilesCombo();
+                updateProfilesTable();
             }
         }
     });
@@ -128,7 +135,7 @@ void DockProfiles::setupSignals()
     });
 */
     QObject::connect(m_profileManager, &ProfileManager::profilesChanged, this, [=](){
-        updateProfilesCombo();
+        updateProfilesTable();
     });
 }
 
@@ -136,35 +143,67 @@ void DockProfiles::setupValues()
 {
     Q_ASSERT(m_appContext->appSettings());
 
-    // m_fontManager->fontContextById(profile.fontId(), m_font);
-
-    loadProfileContext();
+    loadProfileContext ();
+    loadGridContext ();
 
     m_profilesModel = new QSqlQueryModel(this);
 
-    updateProfilesCombo();
-    
-    // ui->comboBoxProfiles->setModel(m_profilesModel);
-    // ui->comboBoxProfiles->setModelColumn(1);
+    updateProfilesTable();
+
+    m_profilesModel->setHeaderData(0, Qt::Horizontal, "id");
+    m_profilesModel->setHeaderData(1, Qt::Horizontal, "Name");
+    m_profilesModel->setHeaderData(2, Qt::Horizontal, "Size");
+    m_profilesModel->setHeaderData(3, Qt::Horizontal, "Font Id");
+    m_profilesModel->setHeaderData(4, Qt::Horizontal, "Font Name");
+    m_profilesModel->setHeaderData(5, Qt::Horizontal, "Font Family");
+    m_profilesModel->setHeaderData(6, Qt::Horizontal, "Font Style");
+
+    ui->tableViewProfiles->setModel(m_profilesModel);
+    ui->tableViewProfiles->resizeColumnsToContents();
 }
 
-void DockProfiles::updateProfilesCombo()
+void DockProfiles::updateProfilesTable()
 {
-    QString strSql = QString(
-    "SELECT p.id, p.name || ' (' || f.family || ', ' || p.bitmap_dimension || 'px)' AS display_name, "
-    "p.name, p.bitmap_dimension, p.padding_left, p.padding_top, p.padding_right, p.padding_bottom "
-    "FROM  %1 p JOIN  %2 f ON f.id = p.font_id "
-    " ORDER BY p.name, p.bitmap_dimension DESC;").arg(m_profileManager->tableName(), m_fontManager->tableName());
-    m_profilesModel->setQuery(strSql, QSqlDatabase::database("main"));
+    QSqlQuery query(QSqlDatabase::database("main"));
+    if (query.prepare(QString(
+        "SELECT pr.id, pr.name, pr.glyph_size, fn.id, fn.name, fn.family, fn.style "
+        "FROM %1 pr JOIN %2 fn ON pr.font_id = fn.id ORDER BY pr.name ASC").arg(
+            m_profileManager->tableName(),
+            m_fontManager->tableName())))
+    {
+        if(query.exec())
+        {
+            m_profilesModel->setQuery(std::move(query));
+        }
+    } else
+    {
+        qWarning() << __FILE__ << __LINE__ << "Error prepare query" << query.lastQuery() << ", Error: " << query.lastError();
+    }
 }
 
 void DockProfiles::loadProfileContext()
 {
     ProfileContext profile = m_profileManager->profile();
-    GridContext grid = m_gridManager->grid();
     FontContext font = m_fontManager->fontContext();
 
+    qDebug() << __FILE__ << __LINE__ << profile;
+
     m_fontManager->fontContextById(profile.fontId(), font);
+
+    if (profile.glyphSize() != ui->spinBoxGlyphSize->value())
+    {
+        ui->spinBoxGlyphSize->setValue(profile.glyphSize());
+    }
+
+    if (ui->lineEditProfileName->text() != profile.name())
+    {
+        ui->lineEditProfileName->setText(profile.name());
+    }
+}
+
+void DockProfiles::loadGridContext()
+{
+    GridContext grid = m_gridManager->grid();
 
     if (grid.width() != ui->spinBoxWidth->value())
     {
@@ -195,14 +234,30 @@ void DockProfiles::loadProfileContext()
     {
         ui->spinBoxPaddingBottom->setValue(grid.bottom());
     }
+}
 
-    if (profile.glyphSize() != ui->spinBoxGlyphSize->value())
-    {
-        ui->spinBoxGlyphSize->setValue(profile.glyphSize());
-    }
+GridContext DockProfiles::readGridContext()
+{
+    GridContext grid;
 
-    if (ui->lineEditProfileName->text() != profile.name())
-    {
-        ui->lineEditProfileName->setText(profile.name());
-    }
+    grid.setWidth(ui->spinBoxWidth->value());
+    grid.setHeight(ui->spinBoxHeight->value());
+    grid.setLeft(ui->spinBoxPaddingLeft->value());
+    grid.setTop(ui->spinBoxPaddingTop->value());
+    grid.setRight(ui->spinBoxPaddingRight->value());
+    grid.setBottom(ui->spinBoxPaddingBottom->value());
+
+    return grid;
+}
+
+ProfileContext DockProfiles::readProfileContext()
+{
+    ProfileContext profile;
+
+    profile.setGlyphSize(ui->spinBoxGlyphSize->value());
+    profile.setFontId(m_fontManager->fontContext().id());
+    profile.setGridId(m_gridManager->grid().id());
+    profile.setName(ui->lineEditProfileName->text());
+
+    return profile;
 }

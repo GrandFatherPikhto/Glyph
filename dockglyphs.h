@@ -21,6 +21,7 @@ class ProfileManager;
 class CharmapManager;
 class GlyphManager;
 class GlyphModel;
+class FontManager;
 
 class DockGlyphs : public QDockWidget
 {
@@ -39,6 +40,7 @@ private:
     void setupValues();
     void setupSignals();
     void refreshGlyphsTable ();
+    void refreshProfilesCombo ();
 
     void saveDockGlyphsSettings();
     void restoreDockGlyphsSettings();
@@ -51,8 +53,10 @@ private:
     ProfileManager *m_profileManager;
     GlyphManager *m_glyphManager;
     CharmapManager *m_charmapManager;
+    FontManager *m_fontManager;
 
     GlyphModel *m_glyphsModel;
+    QSqlQueryModel *m_profilesModel;
 
     ProfileContext m_profile;
     GlyphContext m_glyph;

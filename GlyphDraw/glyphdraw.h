@@ -47,6 +47,7 @@ private:
     void drawLeftLine(QPainter &painter);
     void drawTemplate(QPainter &painter);
     void drawPreview(QPainter &painter);
+    void drawDraw(QPainter &panter);
 
     // bool renderTemplate(const GlyphContext &glyph);
     // bool renderPreview(const GlyphContext &glyph);
@@ -69,6 +70,8 @@ private:
     ProfileContext m_profile;
 
     GlyphDrawContext *m_drawContext;
+
+    QStringList m_values;
 };
 
 #endif // GLYPHDRAW_H

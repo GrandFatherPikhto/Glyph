@@ -19,7 +19,7 @@ public:
     inline const GridContext & grid() const { return m_grid; }
     inline void setGrid(const GridContext &value) { m_grid = value; }
 
-    bool appendOrReplaceGridItem(GridContext &grid);
+    bool appendGridItem(GridContext &grid);
     bool removeGridItem(int id);
     bool removeGridItem(const GridContext &grid);
     bool findGridItem(GridContext &grid);
@@ -33,8 +33,8 @@ signals:
 private:
     void setupSignals ();
     bool createTable ();
-    void bindGridContext(QSqlQuery query, const GridContext &grid);
-    bool loadGridContext(QSqlQuery query, GridContext &grid);
+    void bindGridContext(QSqlQuery &query, const GridContext &grid);
+    bool loadGridContext(QSqlQuery &query, GridContext &grid);
 
     void saveGridManagerSettings ();
     void restoreGridManagerSettings ();

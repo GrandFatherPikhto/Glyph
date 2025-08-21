@@ -106,6 +106,10 @@ void DockCharmap::setupSignals()
         refreshCharmapTable();
     });
 
+    connect(m_profileManager, &ProfileManager::profileChanged, this, [=](const ProfileContext &context){
+        refreshCharmapTable();
+    });
+
 
     QObject::connect(ui->pushButtonClearFilters, &QPushButton::clicked, this, [=](){
         ui->listViewDecompositions->selectionModel()->clearSelection();

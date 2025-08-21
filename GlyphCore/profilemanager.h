@@ -22,7 +22,7 @@ public:
     ProfileManager(AppContext *appContext);
     ~ProfileManager();
 
-    bool insertOrReplaceProfile(const ProfileContext &profile);
+    bool appendProfile(ProfileContext &profile);
     bool clearTable();
     const QString & tableName() const;
 
@@ -35,7 +35,7 @@ public:
     // GlyphContext defaultGlyphContext(const QChar &ch);
     // bool defaultGlyphContext(GlyphContext &context);
     void defaultProfile(ProfileContext &context);
-    bool assignQueryWithProfile(QSqlQuery query, ProfileContext &profile);
+    bool assignQueryWithProfile(QSqlQuery &query, ProfileContext &profile);
 
 signals:
     void profilesChanged();

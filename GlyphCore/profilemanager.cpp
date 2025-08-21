@@ -18,7 +18,10 @@ ProfileManager::ProfileManager(AppContext *appContext)
     , m_tableName("profiles")
 {
     // QObject::connect(m_appContext, &AppContext::valuesInited, this, &ProfileManager::setupValues);
+    restoreSettings();
     setupValues ();
+    setupSignals();
+    createTable();
 }
 
 ProfileManager::~ProfileManager()
@@ -28,18 +31,16 @@ ProfileManager::~ProfileManager()
 
 void ProfileManager::setupValues()
 {
-    Q_ASSERT(m_appContext->fontManager() != nullptr);
-    m_fontManager = m_appContext->fontManager();
-    restoreSettings();
-    setupSignals();
-    createTable();
 }
 
 void ProfileManager::setupSignals ()
 {
     QObject::connect(this, &ProfileManager::changeProfile, this, [=](const ProfileContext &profile){
-        m_profile = profile;
-        emit profileChanged(m_profile);
+        if (profile.isValid() && m_profile != profile)
+        {
+            m_profile = profile;
+            emit profileChanged(m_profile);
+        }
     });
 }
 bool ProfileManager::createTable()
@@ -75,11 +76,16 @@ bool ProfileManager::createTable()
     return true;
 }
 
-bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
+bool ProfileManager::appendProfile(ProfileContext &profile)
 {
     if (!profile.isValid())
     {
         return false;
+    }
+
+    if (findProfile(profile))
+    {
+        return true;
     }
     
     QSqlDatabase db = QSqlDatabase::database("main");
@@ -89,10 +95,9 @@ bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
         return false;
     }
 
-    QSqlQuery query(db);
-    // qDebug() << __FILE__ << __LINE__ << profile;
-
     db.transaction();
+    QSqlQuery query(db);
+
     // Явно указываем имена столбцов и параметры
     query.prepare(QString("INSERT OR REPLACE INTO %1 "
                           "(name, font_id, grid_id, glyph_size, font_size) "
@@ -105,7 +110,7 @@ bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
     query.bindValue(":font_size", profile.fontSize());
 
     if (!query.exec()) {
-        qWarning() << __FILE__ << __LINE__ << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
+        qWarning() << __FILE__ << __LINE__ << "Failed to insert profile" << profile <<  query.lastError().text() << query.lastQuery();
         db.rollback();
 
         return false;
@@ -113,16 +118,17 @@ bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
 
 
     if (!db.commit()) {
-        qWarning() << __FILE__ << __LINE__ << "Commit failed:" << db.lastError().text();
+        qWarning() << __FILE__ << __LINE__ << "Commit failed:" << db.lastError();
         return false;
     }
+
+    profile.setId(query.lastInsertId().toInt());
 
     emit profilesChanged ();
     emit profileAppended (profile);
 
     return true;
 }
-
 
 
 bool ProfileManager::clearTable()
@@ -167,7 +173,7 @@ bool ProfileManager::findProfile(ProfileContext &profile)
     QSqlQuery query(db);
 
     QString strSql = QString(
-        "SELECT id, name, font_id, grid_id, glyph_size, font_size FROM %1 WHERE name = :name AND font_id = :font_id").arg(m_tableName);
+        "SELECT id, name, font_id, grid_id, glyph_size, font_size FROM %1 WHERE name = :name AND font_id = :font_id AND glyph_size = :glyph_size").arg(m_tableName);
 
     if(!query.prepare(strSql))
     {
@@ -177,6 +183,7 @@ bool ProfileManager::findProfile(ProfileContext &profile)
 
     query.bindValue(":name", profile.name());
     query.bindValue(":font_id", profile.fontId());
+    query.bindValue(":glyph_size", profile.glyphSize());
 
     if (!query.exec())
     {
@@ -192,7 +199,7 @@ bool ProfileManager::findProfile(ProfileContext &profile)
         return false;
     }
 
-    return assignQueryWithProfile(std::move(query), profile);
+    return assignQueryWithProfile(query, profile);
 }
 
 
@@ -222,10 +229,10 @@ bool ProfileManager::getProfileById(int id, ProfileContext &profile)
         return false;
     }
 
-    return assignQueryWithProfile(std::move(query), profile);
+    return assignQueryWithProfile(query, profile);
 }
 
-bool ProfileManager::assignQueryWithProfile(QSqlQuery query, ProfileContext &profile)
+bool ProfileManager::assignQueryWithProfile(QSqlQuery &query, ProfileContext &profile)
 {
     // Заполняем структуру данными из запроса
     try {
@@ -254,24 +261,19 @@ void ProfileManager::defaultProfile(ProfileContext &profile)
     {
         m_profile.setGlyphSize(m_appSettings->value("defaultFontSize").toInt());
     }
-
-    if(findProfile(profile))
-    {
-    } else
-    {
-        profile.setId(-1);
-    }
 }
 
 ProfileContext ProfileManager::glyphProfile(const GlyphContext &glyph)
 {
+    ProfileContext profile;
+
     if (glyph.profile() < 0)
     {
-        return m_profile;
+        return profile;
     }
     
-    ProfileContext profile;
     getProfileById(glyph.profile(), profile);
+    
     return profile;
 }
 
@@ -287,41 +289,11 @@ void ProfileManager::restoreSettings()
 {
     QSettings settings(this);
     settings.beginGroup("ProfileManager");
-    // m_profile = settings.value("profile", ProfileContext()).value<ProfileContext>();    
+    m_profile = settings.value("profile", ProfileContext()).value<ProfileContext>();
     settings.endGroup();
 
     m_profile.setId(-1);
     defaultProfile(m_profile);
-    // qDebug() << __FILE__ << __LINE__ << m_profile;
-
-    defaultProfile(m_profile);
+    m_profile.setGlyphSize(m_appSettings->value("defaultGlyphSize").toInt());
+    qDebug() << __FILE__ << __LINE__ << m_profile;
 }
-
-#if 0
-GlyphContext ProfileManager::defaultGlyphContext(const QChar &ch)
-{
-    if(ch == QChar())
-        return GlyphContext();
-
-    GlyphContext context;
-    context.setCharacter(ch);
-    context.setProfileId(m_profile.id());
-    context.setSize(m_profile.glyphSize());
-
-    return context;
-}
-
-bool ProfileManager::defaultGlyphContext(GlyphContext &context)
-{
-    if(context.character() == QChar())
-        return false;
-
-    if (context.profile() < 0)
-        context.setProfileId(m_profile.id());
-
-    if (context.size() < 0)
-        context.setSize(m_profile.glyphSize());
-
-    return true;
-}
-#endif

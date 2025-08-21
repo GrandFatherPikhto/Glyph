@@ -5,8 +5,8 @@
 #include <QSqlTableModel>
 #include <QSqlQueryModel>
 
-#include "fontcontext.h"
 #include "gridcontext.h"
+#include "profilecontext.h"
 
 class AppContext;
 class AppSettings;
@@ -28,10 +28,13 @@ public:
     ~DockProfiles();
 
 private:
-    void updateProfilesCombo();
+    void updateProfilesTable();
     void setupValues ();
     void setupSignals ();
     void loadProfileContext ();
+    void loadGridContext ();
+    GridContext readGridContext();
+    ProfileContext readProfileContext ();
     
     Ui::DockProfiles *ui;
 

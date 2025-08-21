@@ -67,10 +67,15 @@ bool GridManager::createTable()
     return true;
 }
 
-bool GridManager::appendOrReplaceGridItem(GridContext &grid)
+bool GridManager::appendGridItem(GridContext &grid)
 {
     if (!grid.isValid())
         return false;
+
+    if (findGridItem(grid))
+    {
+        return true;
+    }
 
     QSqlDatabase db = QSqlDatabase::database("main");
     if (!db.isOpen())
@@ -79,12 +84,12 @@ bool GridManager::appendOrReplaceGridItem(GridContext &grid)
         return false;
     }
 
-    QSqlQuery query(db);
-
     db.transaction();
 
+    QSqlQuery query(db);
+
     if (!query.prepare(QString(
-        "INSERT OR REPLACE INTO %1 "
+        "INSERT INTO %1 "
         "(width, height, left, top, right, bottom) "
         "VALUES (:width, :height, :left, :top, :right, :bottom)"
     ).arg(m_tableName)))
@@ -94,7 +99,7 @@ bool GridManager::appendOrReplaceGridItem(GridContext &grid)
         return false;
     }
     
-    bindGridContext(std::move(query), grid);
+    bindGridContext(query, grid);
 
     if (!query.exec()) {
         qWarning() << __FILE__ << __LINE__ << "Failed to insert grid item" <<  query.lastError().text() << query.lastQuery();
@@ -107,11 +112,14 @@ bool GridManager::appendOrReplaceGridItem(GridContext &grid)
         qWarning() << __FILE__ << __LINE__ << "Commit failed:" << db.lastError().text();
         return false;
     }
-    
+
+    // qDebug() << __FILE__ << __LINE__ << query.lastInsertId();
+    grid.setId(query.lastInsertId().toInt());
+
     return true;
 }
 
-void GridManager::bindGridContext(QSqlQuery query, const GridContext &grid)
+void GridManager::bindGridContext(QSqlQuery &query, const GridContext &grid)
 {
     query.bindValue(":width", grid.width());
     query.bindValue(":height", grid.height());
@@ -121,7 +129,7 @@ void GridManager::bindGridContext(QSqlQuery query, const GridContext &grid)
     query.bindValue(":bottom", grid.bottom());
 }
 
-bool GridManager::loadGridContext(QSqlQuery query, GridContext &grid)
+bool GridManager::loadGridContext(QSqlQuery &query, GridContext &grid)
 {
     try {
         grid.setId(query.value("id").toInt());
@@ -245,11 +253,12 @@ bool GridManager::findGridItem(GridContext &grid)
 
     if (!query.next())
     {
-        qWarning() << __FILE__ << __LINE__ << "Can't find grid SQL" << query.lastQuery() << " width width:" << grid.width() << ", height:" << grid.height() << ", Error:" << query.lastError();
+        // qWarning() << __FILE__ << __LINE__ << "Can't find grid SQL" << query.lastQuery() << " width width:" << grid.width() << ", height:" << grid.height() << ", Error:" << query.lastError();
+        grid.setId(-1);
         return false;
     }
 
-    return loadGridContext(std::move(query), grid);
+    return loadGridContext(query, grid);
 }
 
 bool GridManager::findGridItem(int id, GridContext &grid)
@@ -286,7 +295,7 @@ bool GridManager::findGridItem(int id, GridContext &grid)
         return false;
     }
 
-    return loadGridContext(std::move(query), grid);
+    return loadGridContext(query, grid);
 }
 
 void GridManager::defaultGridItem(GridContext &grid)

@@ -82,7 +82,7 @@ void GlyphDrawContext::setRegion(const QRegion &region)
 bool GlyphDrawContext::renderTemplate()
 {
     GlyphContext glyph = m_glyphManager->glyph();
-    qDebug() << __FILE__ << __LINE__ << glyph;
+    // qDebug() << __FILE__ << __LINE__ << glyph;
 
     if (!glyph.isValid())
         return false;
@@ -112,7 +112,7 @@ bool GlyphDrawContext::renderTemplate()
     int bottom = grid.height() - m_template->top();
     m_glyphRect = QRect(bitmapTopLeft() + QPoint(m_template->left() * cellSize(), bottom * cellSize()), glyphSize);
 
-    qDebug() << __FILE__ << __LINE__ << m_template;
+    // qDebug() << __FILE__ << __LINE__ << m_template;
 
     return true;
 }

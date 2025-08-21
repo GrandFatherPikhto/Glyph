@@ -175,7 +175,7 @@ bool FontManager::fontContextById(int id, FontContext &context)
 
     if(!query.prepare(sql))
     {
-        qWarning() << __FILE__ << __LINE__ << "Error prepare" << query.lastQuery() << "Error:" << query.lastError();
+        qWarning() << __FILE__ << __LINE__ << "Error prepare" << query.lastQuery() << ", With Id: " << id << ", Error:" << query.lastError();
         return false;
     }
 
@@ -183,13 +183,14 @@ bool FontManager::fontContextById(int id, FontContext &context)
 
     if (!query.exec())
     {
-        qWarning() << __FILE__ << __LINE__ << "Error exec query" << query.lastQuery() << "Error:" << query.lastError();
+        qWarning() << __FILE__ << __LINE__ << "Error exec query" << query.lastQuery() << ", With Id: " << id << ", Error:" << query.lastError();
         return false;
     }
 
     if (!query.next())
     {
-        qWarning() << __FILE__ << __LINE__ << "Not find records" << query.lastQuery() << "Error: " << query.lastError();
+        qWarning() << __FILE__ << __LINE__ << "Not find records" << query.lastQuery() << ", With Id:" << id << ", Error: " << query.lastError();
+        return false;
     }
 
     try {

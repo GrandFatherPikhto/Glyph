@@ -34,7 +34,6 @@ void GlyphManager::setupSignals()
 {
     QObject::connect(this, &GlyphManager::changeGlyph, this, [=](const GlyphContext &glyph){
         m_glyph = glyph;
-        // m_profileManager->defaultGlyphContext(m_glyph);
         defaultGlyph(m_glyph);
         findGlyph(m_glyph);
         emit glyphChanged(m_glyph);
