@@ -34,7 +34,8 @@ void GlyphManager::setupSignals()
 {
     QObject::connect(this, &GlyphManager::changeGlyph, this, [=](const GlyphContext &glyph){
         m_glyph = glyph;
-        m_profileManager->defaultGlyphContext(m_glyph);
+        // m_profileManager->defaultGlyphContext(m_glyph);
+        defaultGlyph(m_glyph);
         findGlyph(m_glyph);
         emit glyphChanged(m_glyph);
     });
@@ -159,23 +160,39 @@ bool GlyphManager::findGlyph(int id, GlyphContext &context)
 
 bool GlyphManager::removeGlyph(GlyphContext &context)
 {
-    if (context.id() < 0)
-    {
-        m_profileManager->defaultGlyphContext(context);
+    QSqlDatabase db = QSqlDatabase::database("main");
 
-        if(findGlyph(context))
-        {
-            removeGlyphById(context.id());
-            return true;
-        }
-    } else
-    {
-        qDebug() << __FILE__ << __LINE__ << context;
-        removeGlyphById(context.id());
-        return true;
+    if (!db.isOpen()) {
+        qWarning() << __FILE__ << __LINE__ << "Database is not open!";
+        return false;
     }
 
-    return false;
+    QSqlQuery query(db);
+
+    QString sql = QString("DELETE FROM %1 WHERE unicode = :unicode AND profile_id = :profile_id").arg(m_tableName);
+
+    if(!query.prepare(sql))
+    {
+        qWarning() << __FILE__ << __LINE__ << "Error prepare SQL" << query.lastQuery() << "with Error:" << query.lastError();
+        return false;
+    }
+
+    query.bindValue(":unicode", context.character().unicode());
+    query.bindValue(":profile_id", context.profile());
+
+    if(!query.exec())
+    {
+        qWarning() << __FILE__ << __LINE__ << "Error prepare SQL" << query.lastQuery() << "with Error:" << query.lastError();
+        return false;
+    }
+
+    context.setId();
+    context.setProfileId();
+
+    emit glyphsTableChanged(m_profileManager->profile());
+    emit glyphRemoved(context);
+
+    return true;
 }
 
 bool GlyphManager::removeGlyphById(int id)
@@ -225,8 +242,8 @@ bool GlyphManager::appendGlyphIfNotExists(GlyphContext &context)
     if (context.profile() < 0)
         return false;
 
-    m_profileManager->defaultGlyphContext(context);
-
+    if (!context.isValid())
+        return false;
 
     if(findGlyph(context))
     {
@@ -323,6 +340,14 @@ bool GlyphManager::queryGlyphsByProfile(QSqlQuery &query, const ProfileContext &
     return true;
 }
 
+void GlyphManager::defaultGlyph(GlyphContext &glyph)
+{
+    if (glyph.size() <= 0)
+    {
+        glyph.setSize(m_appSettings->value("defaultGlyphSize").toInt());
+    }
+}
+
 void GlyphManager::saveSettings()
 {
     QSettings settings(this);
@@ -335,6 +360,7 @@ void GlyphManager::restoreSettings()
 {
     QSettings settings(this);
     settings.beginGroup("GlyphManager");
-    // m_glyph = settings.value("glyph", GlyphContext()).value<GlyphContext>();
+    m_glyph = settings.value("glyph", GlyphContext()).value<GlyphContext>();
     settings.endGroup();
+    defaultGlyph(m_glyph);
 }

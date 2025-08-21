@@ -135,23 +135,3 @@ QChar CharmapModel::character(int row)
 
     return QChar();
 }
-
-GlyphContext CharmapModel::glyphContext(int row)
-{
-    GlyphContext context;
-
-    QChar ch = character(row);
-
-    if(ch == QChar())
-        return context;
-
-    context.setCharacter(ch);
-    m_profileManager->defaultGlyphContext(context);
-
-    if (m_glyphManager->findGlyph(context))
-    {
-        return context;
-    }
-
-    return context;
-}

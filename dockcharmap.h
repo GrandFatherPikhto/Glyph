@@ -63,6 +63,8 @@ private:
     void glyphDoubleClicked(const QModelIndex &index);
     void setResetGlyph(int row);
 
+    GlyphContext defaultGlyphContext(const QChar &ch);
+
     void saveDockCharmapState ();
     void restoreDockCharmapState ();
 

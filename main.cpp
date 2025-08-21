@@ -9,7 +9,7 @@
 #include <QMargins>
 
 #include "profilecontext.h"
-#include "gridpaddings.h"
+#include "gridcontext.h"
 #include "glyphcontext.h"
 #include "fontcontext.h"
 #include "imagecontext.h"
@@ -39,8 +39,8 @@ QMargins variantMapToMargins(const QVariant &value) {
 
 void registerMetaTypes ()
 {
-    qRegisterMetaType<GridPaddings>("GridPaddings");
-    QMetaType::registerConverter<GridPaddings, QVariant>();
+    qRegisterMetaType<GridContext>("GridContext");
+    QMetaType::registerConverter<GridContext, QVariant>();
 
     qRegisterMetaType<ProfileContext>("ProfileContext");
     QMetaType::registerConverter<ProfileContext, QVariant>();

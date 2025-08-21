@@ -28,6 +28,7 @@ public:
     bool removeGlyph(GlyphContext &context);
     bool removeGlyphById(int id);
     bool queryGlyphsByProfile(QSqlQuery &query, const ProfileContext &profile);
+    void defaultGlyph(GlyphContext &context);
 
 
 signals:

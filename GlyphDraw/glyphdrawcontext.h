@@ -14,12 +14,7 @@
 #include "glyphcontext.h"
 #include "imagecontext.h"
 #include "drawcontext.h"
-
-// #include "profilemanager.h"
-// #include "glyphdrawcontext.h"
-// #include "glyphmanager.h"
-// #include "fontmanager.h"
-// #include "imagemanager.h"
+#include "gridcontext.h"
 
 class AppContext;
 class ProfileManager;
@@ -27,6 +22,7 @@ class AppSettings;
 class GlyphManager;
 class ImageManager;
 class FontManager;
+class GridManager;
 
 class GlyphDrawContext : public QObject
 {
@@ -40,8 +36,6 @@ public:
     const QRect & drawRect() const { return m_drawRect; }
 
     ProfileContext glyphProfile();
-    int dimX ();
-    int dimY ();
     QList<QLine> gridHorizontalLines();
     QList<QLine> gridVerticalLines();
     int cellSize ();
@@ -73,6 +67,7 @@ private:
 
     void setProfile(const ProfileContext &context);
     void setGlyph(const GlyphContext &context);
+    void setGrid(const GridContext &context);
     void setMargins(const QMargins &margins);
 
     bool renderTemplate();
@@ -87,6 +82,7 @@ private:
     AppSettings *m_appSettings;
     ImageManager *m_imageManager;
     FontManager *m_fontManager;
+    GridManager *m_gridManager;
 
     QRect m_drawRect;
     QRect m_glyphRect;

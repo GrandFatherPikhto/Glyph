@@ -80,6 +80,37 @@ void DockGlyphs::setupSignals()
         glyph.setSize(value);
         emit m_glyphManager->changeGlyph(glyph);
     });
+
+    connect(ui->pushButtonLeft, &QPushButton::clicked, this, [=](){
+        GlyphContext glyph = m_glyphManager->glyph();
+        glyph.moveLeft();
+        emit m_glyphManager->changeGlyph(glyph);
+    });
+
+    connect(ui->pushButtonUp, &QPushButton::clicked, this, [=](){
+        GlyphContext glyph = m_glyphManager->glyph();
+        glyph.moveUp();
+        emit m_glyphManager->changeGlyph(glyph);
+    });
+
+    connect(ui->pushButtonRight, &QPushButton::clicked, this, [=](){
+        GlyphContext glyph = m_glyphManager->glyph();
+        glyph.moveRight();
+        emit m_glyphManager->changeGlyph(glyph);
+    });
+
+    connect(ui->pushButtonDown, &QPushButton::clicked, this, [=](){
+        GlyphContext glyph = m_glyphManager->glyph();
+        glyph.moveDown();
+        emit m_glyphManager->changeGlyph(glyph);
+    });
+
+    connect(ui->pushButtonReset, &QPushButton::clicked, this, [=](){
+        GlyphContext glyph = m_glyphManager->glyph();
+        glyph.resetOffset();
+        emit m_glyphManager->changeGlyph(glyph);
+    });
+
 }
 
 void DockGlyphs::setProfile()

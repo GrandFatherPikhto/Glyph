@@ -35,7 +35,6 @@ public:
     int unicode(int row);
     int checked(int row);
     QChar character(int row);
-    GlyphContext glyphContext(int row);
 
 private:
     QStringList m_headers;

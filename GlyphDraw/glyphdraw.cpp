@@ -10,6 +10,7 @@
 #include "profilemanager.h"
 #include "imagemanager.h"
 #include "fontmanager.h"
+#include "gridmanager.h"
 
 #include "glyphcontext.h"
 
@@ -39,6 +40,7 @@ void GlyphDraw::setAppContext(AppContext *appContext)
     m_profileManager = m_appContext->profileManager();
     m_imageManager = m_appContext->imageManager();
     m_fontManager = m_appContext->fontManager();
+    m_gridManager = m_appContext->gridManager();
 
     m_drawContext = new GlyphDrawContext(m_appContext, this);
 
@@ -50,8 +52,9 @@ void GlyphDraw::setAppContext(AppContext *appContext)
 
 void GlyphDraw::setupSignals()
 {
-    QObject::connect(m_glyphManager, &GlyphManager::glyphChanged, this, &GlyphDraw::setGlyph);
-    QObject::connect(m_profileManager, &ProfileManager::profileChanged, this, &GlyphDraw::setProfile);
+    connect(m_glyphManager, &GlyphManager::glyphChanged, this, &GlyphDraw::setGlyph);
+    connect(m_profileManager, &ProfileManager::profileChanged, this, &GlyphDraw::setProfile);
+    connect(m_gridManager, &GridManager::gridItemChanged, this, &GlyphDraw::setGrid);
 }
 
 void GlyphDraw::paintEvent(QPaintEvent *event)
@@ -79,6 +82,11 @@ void GlyphDraw::setProfile(const ProfileContext &context)
 {
     m_profile = context;
     update();
+}
+
+void GlyphDraw::setGrid(const GridContext &grid)
+{
+    update ();
 }
 
 void GlyphDraw::drawGrid(QPainter &painter)
@@ -157,6 +165,7 @@ void GlyphDraw::resizeEvent(QResizeEvent *event)
 void GlyphDraw::mousePressEvent(QMouseEvent *event)
 {
     int col, row;
-    m_drawContext->clickBitmap(event->pos(), col, row);
+    // m_drawContext->clickBitmap(event->pos(), col, row);
+    m_drawContext->clickGrid(event->pos(), col, row);
     qDebug() << __FILE__ << __LINE__ << col << row;
 }

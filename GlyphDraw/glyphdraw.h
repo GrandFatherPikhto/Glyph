@@ -14,10 +14,11 @@ class ProfileManager;
 class DrawContext;
 class ImageManager;
 class FontManager;
+class GridManager;
 
 #include "glyphcontext.h"
 #include "profilecontext.h"
-#include "imagecontext.h"
+#include "gridcontext.h"
 
 #include "GlyphDraw_global.h"
 
@@ -52,6 +53,7 @@ private:
 
     void setProfile(const ProfileContext &context);
     void setGlyph(const GlyphContext &context);
+    void setGrid(const GridContext &context);
 
     void setupSignals ();
 
@@ -61,6 +63,7 @@ private:
     ProfileManager *m_profileManager;
     ImageManager *m_imageManager;
     FontManager *m_fontManager;
+    GridManager *m_gridManager;
 
     GlyphContext m_glyph;
     ProfileContext m_profile;

@@ -29,64 +29,58 @@ find_package(Freetype REQUIRED)
 find_package(Boost CONFIG REQUIRED COMPONENTS filesystem system)
 
 add_library(GlyphCore SHARED
-  GlyphCore_global.h
+    GlyphCore_global.h
 
-  appcontext.h 
-  appcontext.cpp
+    appcontext.h 
+    appcontext.cpp
 
-  appsettings.h
-  appsettings.cpp
+    appsettings.h
+    appsettings.cpp
 
-  condition.h  
-  sqlfilter.h
-  sqlfilter.cpp
+    condition.h  
+    sqlfilter.h
+    sqlfilter.cpp
 
-  charmapkey.h
-  charmapmanager.h
-  charmapmanager.cpp
+    charmapkey.h
+    charmapmanager.h
+    charmapmanager.cpp
 
-  fontmanager.h
-  fontmanager.cpp
+    fontmanager.h
+    fontmanager.cpp
 
-  unicodemetadata.h 
-  unicodemetadata.cpp
+    unicodemetadata.h 
+    unicodemetadata.cpp
 
-  profilemanager.h 
-  profilemanager.cpp
+    profilemanager.h 
+    profilemanager.cpp
 
-  glyphmanager.h
-  glyphmanager.cpp
+    glyphmanager.h
+    glyphmanager.cpp
 
-#   iglyphrenderer.h
+    gridmanager.h
+    gridmanager.cpp
 
-#   glyphrenderer.h
-#   glyphrenderer.cpp
+    dbmanager.h
+    dbmanager.cpp
 
-#   drawglyphrenderer.h
-#   drawglyphrenderer.cpp
+    fontutils.h
+    fontutils.cpp
 
-#   freetypeglyphrenderer.h
-#   freetypeglyphrenderer.cpp
+    fontloader.h
+    fontloader.cpp
 
-  dbmanager.h
-  dbmanager.cpp
+    imagemanager.h
+    imagemanager.cpp
 
-  fontutils.h
-  fontutils.cpp
+    iglyphrenderer.h
 
-  fontloader.h
-  fontloader.cpp
+    ftrenderer.h
+    ftrenderer.cpp
 
-  imagemanager.h
-  imagemanager.cpp
-
-  iglyphrenderer.h
-  
-  ftrenderer.h
-  ftrenderer.cpp
-
-  ${TS_FILES}
-  iglyphrendererfactory.h iglyphrendererfactory.cpp
+    iglyphrendererfactory.h 
+    iglyphrendererfactory.cpp    
+    
+    ${TS_FILES}
 )
 
 target_link_libraries(GlyphCore PRIVATE

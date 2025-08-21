@@ -5,15 +5,15 @@
 #include <QSqlTableModel>
 #include <QSqlQueryModel>
 
-#include "profilecontext.h"
 #include "fontcontext.h"
-#include "profilecontext.h"
+#include "gridcontext.h"
 
 class AppContext;
 class AppSettings;
 class ProfileManager;
 class GlyphManager;
 class FontManager;
+class GridManager;
 
 namespace Ui {
 class DockProfiles;
@@ -34,15 +34,15 @@ private:
     void loadProfileContext ();
     
     Ui::DockProfiles *ui;
+
     AppContext *m_appContext;
     AppSettings *m_appSettings;
     ProfileManager *m_profileManager;
     GlyphManager *m_glyphManager;
     FontManager *m_fontManager;
-    QSqlQueryModel *m_profilesModel;
+    GridManager *m_gridManager;
 
-    // ProfileContext m_profile;
-    FontContext m_font;
+    QSqlQueryModel *m_profilesModel;
 };
 
 #endif // DOCKPROFILES_H

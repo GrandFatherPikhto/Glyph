@@ -152,8 +152,9 @@ void DockCharmap::setupSignals()
             const QModelIndex &selectedIdx = selected.indexes().at(0);
             if (selectedIdx.isValid())
             {
-                GlyphContext context = m_charmapModel->glyphContext(selectedIdx.row());
-                emit m_glyphManager->changeGlyph(context);
+                QChar ch = m_charmapModel->character(selectedIdx.row());
+                GlyphContext glyph = defaultGlyphContext(ch);
+                emit m_glyphManager->changeGlyph(glyph);
             }
         }
     });
@@ -289,23 +290,36 @@ void DockCharmap::glyphDoubleClicked(const QModelIndex &index)
 
 void DockCharmap::setResetGlyph(int row)
 {
-    GlyphContext context = m_charmapModel->glyphContext(row);
-    if(context.isValid())
+    QChar ch = m_charmapModel->character(row);
+    GlyphContext glyph = defaultGlyphContext(ch);
+    ProfileContext profile = m_profileManager->profile();
+
+    glyph.setProfileId(profile.id());
+
+    if(glyph.isValid())
     {
-        if (context.id() < 0)
+        if (glyph.id() < 0)
         {
-            if (m_glyphManager->appendGlyphIfNotExists(context))
+            if (m_glyphManager->appendGlyphIfNotExists(glyph))
             {
                 refreshCharmapTable();
             }
         } else
         {
-            if (m_glyphManager->removeGlyphById(context.id()))
+            if (m_glyphManager->removeGlyphById(glyph.id()))
             {
                 refreshCharmapTable();
             }
         }
     }
+}
+
+GlyphContext DockCharmap::defaultGlyphContext(const QChar &ch)
+{
+    GlyphContext glyph;
+    glyph.setCharacter(ch);
+    m_glyphManager->defaultGlyph(glyph);
+    return glyph;
 }
 
 void DockCharmap::closeEvent(QCloseEvent *event)

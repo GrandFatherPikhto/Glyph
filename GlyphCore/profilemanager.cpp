@@ -42,36 +42,6 @@ void ProfileManager::setupSignals ()
         emit profileChanged(m_profile);
     });
 }
-
-
-GlyphContext ProfileManager::defaultGlyphContext(const QChar &ch)
-{
-    if(ch == QChar())
-        return GlyphContext();
-
-    GlyphContext context;
-    context.setCharacter(ch);
-    context.setProfileId(m_profile.id());
-    context.setSize(m_profile.glyphSize());
-
-    return context;
-}
-
-bool ProfileManager::defaultGlyphContext(GlyphContext &context)
-{
-    if(context.character() == QChar())
-        return false;
-
-    if (context.profile() < 0)
-        context.setProfileId(m_profile.id());
-
-    if (context.size() < 0)
-        context.setSize(m_profile.glyphSize());
-
-    return true;
-}
-
-
 bool ProfileManager::createTable()
 {
     QSqlDatabase db = QSqlDatabase::database("main");
@@ -87,17 +57,12 @@ bool ProfileManager::createTable()
         "CREATE TABLE IF NOT EXISTS %1 ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "font_id INTEGER, "
-        "name TEXT NOT NULL, "
+        "grid_id INTEGER, "
+        "name VARCHAR(32) NOT NULL, "
         "glyph_size INTEGER, "
         "font_size INTEGER, "
-        "grid_width INTEGER, "
-        "grid_height INTEGER, "
-        "grid_left INTEGER, "
-        "grid_top INTEGER, "
-        "grid_right INTEGER, "
-        "grid_bottom INTEGER, "
         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
-        "UNIQUE(name, font_id, glyph_size) ON CONFLICT REPLACE"
+        "UNIQUE(name, font_id, grid_id, glyph_size) ON CONFLICT REPLACE"
     ")").arg(m_tableName);
     
     if (!query.exec(createTableQuery)) {
@@ -125,24 +90,19 @@ bool ProfileManager::insertOrReplaceProfile(const ProfileContext &profile)
     }
 
     QSqlQuery query(db);
-    qDebug() << __FILE__ << __LINE__ << profile;
+    // qDebug() << __FILE__ << __LINE__ << profile;
 
     db.transaction();
     // Явно указываем имена столбцов и параметры
     query.prepare(QString("INSERT OR REPLACE INTO %1 "
-                          "(name, font_id, glyph_size, font_size, grid_width, grid_height, grid_left, grid_top, grid_right, grid_bottom) "
-                          "VALUES (:name, :font_id, :glyph_size, :font_size, :grid_width, :grid_height, :grid_left, :grid_top, :grid_right, :grid_bottom);").arg(m_tableName));
+                          "(name, font_id, grid_id, glyph_size, font_size) "
+                          "VALUES (:name, :font_id, :grid_id, :glyph_size, :font_size);").arg(m_tableName));
 
     query.bindValue(":name", profile.name());
     query.bindValue(":font_id", profile.fontId());
+    query.bindValue(":grid_id", profile.gridId());
     query.bindValue(":glyph_size", profile.glyphSize());
     query.bindValue(":font_size", profile.fontSize());
-    query.bindValue(":grid_width", profile.gridWidth());
-    query.bindValue(":height", profile.gridHeight());
-    query.bindValue(":grid_left", profile.gridLeft());
-    query.bindValue(":grid_top", profile.gridTop());
-    query.bindValue(":grid_right", profile.gridRight());
-    query.bindValue(":grid_bottom", profile.gridBottom());
 
     if (!query.exec()) {
         qWarning() << __FILE__ << __LINE__ << "Failed to insert script" <<  query.lastError().text() << query.lastQuery();
@@ -207,7 +167,7 @@ bool ProfileManager::findProfile(ProfileContext &profile)
     QSqlQuery query(db);
 
     QString strSql = QString(
-        "SELECT id, name, font_id, glyph_size, font_size, font_id, grid_width, grid_height, grid_left, grid_top, grid_right, grid_bottom FROM %1 WHERE name = :name AND font_id = :font_id").arg(m_tableName);
+        "SELECT id, name, font_id, grid_id, glyph_size, font_size FROM %1 WHERE name = :name AND font_id = :font_id").arg(m_tableName);
 
     if(!query.prepare(strSql))
     {
@@ -232,7 +192,7 @@ bool ProfileManager::findProfile(ProfileContext &profile)
         return false;
     }
 
-    return assignQueryWithProfile(profile, std::move(query));
+    return assignQueryWithProfile(std::move(query), profile);
 }
 
 
@@ -246,7 +206,7 @@ bool ProfileManager::getProfileById(int id, ProfileContext &profile)
     }
 
     QSqlQuery query(db);
-    query.prepare("SELECT id, name, font_id, glyph_size, font_size, font_id, grid_width, grid_height, grid_left, grid_top, grid_right, grid_bottom FROM profiles WHERE id = :id");
+    query.prepare("SELECT id, name, font_id, grid_id, font_size, glyph_size, created_at FROM profiles WHERE id = :id");
     query.bindValue(":id", id);
 
     if(!query.exec())
@@ -262,26 +222,20 @@ bool ProfileManager::getProfileById(int id, ProfileContext &profile)
         return false;
     }
 
-    return assignQueryWithProfile(profile, std::move(query));
+    return assignQueryWithProfile(std::move(query), profile);
 }
 
-bool ProfileManager::assignQueryWithProfile(ProfileContext &profile, QSqlQuery query)
+bool ProfileManager::assignQueryWithProfile(QSqlQuery query, ProfileContext &profile)
 {
     // Заполняем структуру данными из запроса
     try {
         profile.setId(query.value("id").toInt());
+        profile.setFontId(query.value("font_id").toInt());
+        profile.setGridId(query.value("grid_id").toInt());
         profile.setName(query.value("name").toString());
         profile.setGlyphSize(query.value("glyph_size").toInt());
         profile.setFontSize(query.value("font_size").toInt());
-        profile.setFontId(query.value("font_id").toInt());
-        profile.setGridWidth(query.value("grid_width").toInt());
-        profile.setGridHeight(query.value("grid_height").toInt());
-        profile.setGridLeft(query.value("grid_left").toInt());
-        profile.setGridTop(query.value("grid_top").toInt());
-        profile.setGridRight(query.value("grid_right").toInt());
-        profile.setGridBottom(query.value("grid_bottom").toInt());
-    }
-    catch (const std::exception &e) {
+    } catch (const std::exception &e) {
         qCritical() << "Error parsing profile data:" << e.what();
         return false;
     }
@@ -289,66 +243,24 @@ bool ProfileManager::assignQueryWithProfile(ProfileContext &profile, QSqlQuery q
     return true;
 }
 
-bool ProfileManager::defaultProfile(ProfileContext &profile)
+void ProfileManager::defaultProfile(ProfileContext &profile)
 {
-    bool res = false;
-    if (profile.fontId() < 0)
-    {
-        profile.setFontId(m_fontManager->fontContext().id());
-        res = true;
-    }
-
     if (m_profile.glyphSize() < 0)
     {
         m_profile.setGlyphSize(m_appSettings->value("defaultGlyphSize").toInt());
-        res = true;
     }
 
-    if (m_profile.gridWidth() < 0)
+    if (m_profile.fontSize() < 0)
     {
-        m_profile.setGridWidth(m_appSettings->value("defaultGridWidth").toInt());
-        res = true;
-    }
-
-    if (m_profile.gridHeight() < 0)
-    {
-        m_profile.setGridHeight(m_appSettings->value("defaultGridHeight").toInt());
-        res = true;
-    }
-
-    if (m_profile.gridLeft() < 0)
-    {
-        m_profile.setGridLeft(m_appSettings->value("defaultGridLeft").toInt());
-        res = true;
-    }
-
-    if (m_profile.gridTop() < 0)
-    {
-        m_profile.setGridTop(m_appSettings->value("defaultGridTop").toInt());
-        res = true;
-    }
-
-    if (m_profile.gridRight() < 0)
-    {
-        m_profile.setGridRight(m_appSettings->value("defaultGridRight").toInt());
-        res = true;
-    }
-
-    if (m_profile.gridBottom() < 0)
-    {
-        m_profile.setGridBottom(m_appSettings->value("defaultGridBottom").toInt());
-        res = true;
+        m_profile.setGlyphSize(m_appSettings->value("defaultFontSize").toInt());
     }
 
     if(findProfile(profile))
     {
-        res = true;
     } else
     {
         profile.setId(-1);
     }
-
-    return res;
 }
 
 ProfileContext ProfileManager::glyphProfile(const GlyphContext &glyph)
@@ -379,17 +291,37 @@ void ProfileManager::restoreSettings()
     settings.endGroup();
 
     m_profile.setId(-1);
-    m_profile.setGlyphSize(m_appSettings->value("defaultGlyphSize").toInt());
-    m_profile.setFontSize(m_appSettings->value("defaultFontSize").toInt());
-    m_profile.setGridWidth(m_appSettings->value("defaultGridWidth").toInt());
-    m_profile.setGridHeight(m_appSettings->value("defaultGridHeight").toInt());
-    m_profile.setGridLeft(m_appSettings->value("defaultGridLeft").toInt());
-    m_profile.setGridTop(m_appSettings->value("defaultGridTop").toInt());
-    m_profile.setGridRight(m_appSettings->value("defaultGridRight").toInt());
-    m_profile.setGridBottom(m_appSettings->value("defaultGridBottom").toInt());
-
+    defaultProfile(m_profile);
     // qDebug() << __FILE__ << __LINE__ << m_profile;
 
     defaultProfile(m_profile);
 }
 
+#if 0
+GlyphContext ProfileManager::defaultGlyphContext(const QChar &ch)
+{
+    if(ch == QChar())
+        return GlyphContext();
+
+    GlyphContext context;
+    context.setCharacter(ch);
+    context.setProfileId(m_profile.id());
+    context.setSize(m_profile.glyphSize());
+
+    return context;
+}
+
+bool ProfileManager::defaultGlyphContext(GlyphContext &context)
+{
+    if(context.character() == QChar())
+        return false;
+
+    if (context.profile() < 0)
+        context.setProfileId(m_profile.id());
+
+    if (context.size() < 0)
+        context.setSize(m_profile.glyphSize());
+
+    return true;
+}
+#endif

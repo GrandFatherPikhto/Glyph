@@ -19,6 +19,7 @@ class ProfileManager;
 class GlyphManager;
 class ImageManager;
 class DbManager;
+class GridManager;
 
 class GLYPHCORE_EXPORT AppContext : public QObject
 {
@@ -35,6 +36,7 @@ public:
     GlyphManager * glyphManager();
     ImageManager * imageManager();
     DbManager * dbManager();
+    GridManager *gridManager();
 
     const QString & appUserDir() const { return m_appUserDir; }
 
@@ -52,6 +54,7 @@ private:
     GlyphManager *m_glyphManager;
     ImageManager *m_imageManager;
     DbManager *m_dbManager;
+    GridManager *m_gridManager;
 
     QString m_appUserDir;
 };

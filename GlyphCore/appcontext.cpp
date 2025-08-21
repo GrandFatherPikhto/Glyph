@@ -7,6 +7,7 @@
 #include "glyphmanager.h"
 #include "imagemanager.h"
 #include "dbmanager.h"
+#include "gridmanager.h"
 
 AppContext::AppContext(QObject *parent)
     : QObject{parent}
@@ -18,6 +19,7 @@ AppContext::AppContext(QObject *parent)
     , m_glyphManager(nullptr)
     , m_imageManager(nullptr)
     , m_dbManager(nullptr)
+    , m_gridManager(nullptr)
 {
     initAppUserDir();
     setupVariables();
@@ -112,6 +114,16 @@ DbManager * AppContext::dbManager()
     }
 
     return m_dbManager;
+}
+
+GridManager * AppContext::gridManager()
+{
+    if(m_gridManager == nullptr)
+    {
+        m_gridManager = new GridManager(this);
+    }
+
+    return m_gridManager;
 }
 
 void AppContext::initAppUserDir()

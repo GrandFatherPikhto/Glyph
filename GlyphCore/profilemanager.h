@@ -31,11 +31,11 @@ public:
     bool getProfileById(int id, ProfileContext &profile);
     bool findProfile(ProfileContext &profile);
 
-    GlyphContext defaultGlyphContext(const QChar &ch);
     ProfileContext glyphProfile(const GlyphContext &glyph);
-    bool defaultGlyphContext(GlyphContext &context);
-    bool defaultProfile(ProfileContext &context);
-    bool assignQueryWithProfile(ProfileContext &profile, QSqlQuery query);
+    // GlyphContext defaultGlyphContext(const QChar &ch);
+    // bool defaultGlyphContext(GlyphContext &context);
+    void defaultProfile(ProfileContext &context);
+    bool assignQueryWithProfile(QSqlQuery query, ProfileContext &profile);
 
 signals:
     void profilesChanged();

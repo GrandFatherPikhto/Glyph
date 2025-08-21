@@ -90,6 +90,11 @@ public:
     void setSize(int value) { m_glyphSize = value; }
     void setOffsetLeft(int value) { m_offsetLeft = value; }
     void setBaseline(int value) { m_baseline = value; }
+    void resetOffset() { m_baseline = 0; m_offsetLeft = 0; }
+    void moveLeft() { m_offsetLeft --; }
+    void moveRight() { m_offsetLeft ++; }
+    void moveUp() { m_baseline ++; }
+    void moveDown() { m_baseline --; }
 
     operator QVariant() const {
         if(QMetaType::fromName("GlyphContext").isValid()) {

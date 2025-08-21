@@ -13,6 +13,7 @@
 #include "charmapmanager.h"
 #include "profilemanager.h"
 #include "fontmanager.h"
+#include "gridmanager.h"
 
 DockProfiles::DockProfiles(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
@@ -22,6 +23,7 @@ DockProfiles::DockProfiles(AppContext *appContext, QWidget *parent)
     , m_fontManager(appContext->fontManager())
     , m_profileManager(appContext->profileManager())
     , m_glyphManager(appContext->glyphManager())
+    , m_gridManager(appContext->gridManager())
     , m_profilesModel(nullptr)
 {
     ui->setupUi(this);
@@ -36,24 +38,8 @@ DockProfiles::~DockProfiles()
 
 void DockProfiles::setupSignals()
 {
-    
-
     QObject::connect(m_profileManager, &ProfileManager::profileChanged, this, [=](const ProfileContext &value) {
         loadProfileContext();
-    });
-
-    QObject::connect(ui->spinBoxWidth, &QSpinBox::valueChanged, this, [=](int value) {
-        ProfileContext profile = m_profileManager->profile();
-        profile.setGridWidth(value);
-        m_appSettings->setValue("defaultGridWidth", value);
-        emit m_profileManager->changeProfile(profile);
-    });
-
-    QObject::connect(ui->spinBoxHeight, &QSpinBox::valueChanged, this, [=](int value) {
-        ProfileContext profile = m_profileManager->profile();
-        profile.setGridHeight(value);
-        m_appSettings->setValue("defaultGridHeight", value);
-        emit m_profileManager->changeProfile(profile);
     });
 
     QObject::connect(ui->lineEditProfileName, &QLineEdit::editingFinished, this, [=]() {
@@ -62,32 +48,46 @@ void DockProfiles::setupSignals()
         emit m_profileManager->changeProfile(profile);
     });
 
+    QObject::connect(ui->spinBoxWidth, &QSpinBox::valueChanged, this, [=](int value) {
+        GridContext grid = m_gridManager->grid();
+        grid.setWidth(value);
+        m_appSettings->setValue("defaultGridWidth", value);
+        emit m_gridManager->changeGridItem(grid);
+    });
+
+    QObject::connect(ui->spinBoxHeight, &QSpinBox::valueChanged, this, [=](int value) {
+        GridContext grid = m_gridManager->grid();
+        grid.setHeight(value);
+        m_appSettings->setValue("defaultGridHeight", value);
+        emit m_gridManager->changeGridItem(grid);
+    });
+
     QObject::connect(ui->spinBoxPaddingLeft, &QSpinBox::valueChanged, this, [=](int value) {
-        ProfileContext profile = m_profileManager->profile();
-        profile.setGridLeft(value);
+        GridContext grid = m_gridManager->grid();
+        grid.setLeft(value);
         m_appSettings->setValue("defaultGridLeft", value);
-        emit m_profileManager->changeProfile(profile);
+        emit m_gridManager->changeGridItem(grid);
     });
 
     QObject::connect(ui->spinBoxPaddingTop, &QSpinBox::valueChanged, this, [=](int value) {
-        ProfileContext profile = m_profileManager->profile();
-        profile.setGridTop(value);
+        GridContext grid = m_gridManager->grid();
+        grid.setTop(value);
         m_appSettings->setValue("defaultGridTop", value);
-        emit m_profileManager->changeProfile(profile);
+        emit m_gridManager->changeGridItem(grid);
     });
 
     QObject::connect(ui->spinBoxPaddingRight, &QSpinBox::valueChanged, this, [=](int value) {
-        ProfileContext profile = m_profileManager->profile();
-        profile.setGridRight(value);
+        GridContext grid = m_gridManager->grid();
+        grid.setRight(value);
         m_appSettings->setValue("defaultGridRight", value);
-        emit m_profileManager->changeProfile(profile);
+        emit m_gridManager->changeGridItem(grid);
     });
 
     QObject::connect(ui->spinBoxPaddingBottom, &QSpinBox::valueChanged, this, [=](int value){
-        ProfileContext profile = m_profileManager->profile();
-        profile.setGridBottom(value);
+        GridContext grid = m_gridManager->grid();
+        grid.setBottom(value);
         m_appSettings->setValue("defaultGridBottom", value);
-        emit m_profileManager->changeProfile(profile);
+        emit m_gridManager->changeGridItem(grid);
     });
 
     QObject::connect(ui->spinBoxGlyphSize, &QSpinBox::valueChanged, this, [=](int value){
@@ -161,38 +161,39 @@ void DockProfiles::updateProfilesCombo()
 void DockProfiles::loadProfileContext()
 {
     ProfileContext profile = m_profileManager->profile();
+    GridContext grid = m_gridManager->grid();
+    FontContext font = m_fontManager->fontContext();
 
-    m_fontManager->fontContextById(profile.fontId(), m_font);
-    // ui->labelFont->setText(QString("Font: %1/%2").arg(m_font.name(), m_font.family()));
-    // ui->spinBoxBitmapDimension->setValue(m_profile.bitmapDimension());
-    if (profile.gridLeft() != ui->spinBoxPaddingLeft->value())
+    m_fontManager->fontContextById(profile.fontId(), font);
+
+    if (grid.width() != ui->spinBoxWidth->value())
     {
-        ui->spinBoxPaddingLeft->setValue(profile.gridLeft());
+        ui->spinBoxWidth->setValue(grid.width());
     }
 
-    if (profile.gridWidth() != ui->spinBoxWidth->value())
+    if (grid.height() != ui->spinBoxHeight->value())
     {
-        ui->spinBoxWidth->setValue(profile.gridWidth());
+        ui->spinBoxHeight->setValue(grid.height());
     }
 
-    if (profile.gridTop() != ui->spinBoxPaddingTop->value())
+    if (grid.left() != ui->spinBoxPaddingLeft->value())
     {
-        ui->spinBoxPaddingTop->setValue(profile.gridTop());
+        ui->spinBoxPaddingLeft->setValue(grid.left());
     }
 
-    if (profile.gridRight() != ui->spinBoxPaddingRight->value())
+    if (grid.top() != ui->spinBoxPaddingTop->value())
     {
-        ui->spinBoxPaddingRight->setValue(profile.gridRight());
+        ui->spinBoxPaddingTop->setValue(grid.top());
     }
 
-    if (profile.gridHeight() != ui->spinBoxHeight->value())
+    if (grid.right() != ui->spinBoxPaddingRight->value())
     {
-        ui->spinBoxHeight->setValue(profile.gridHeight());
+        ui->spinBoxPaddingRight->setValue(grid.right());
     }
 
-    if (profile.gridBottom() != ui->spinBoxPaddingBottom->value())
+    if (grid.bottom() != ui->spinBoxPaddingBottom->value())
     {
-        ui->spinBoxPaddingBottom->setValue(profile.gridBottom());
+        ui->spinBoxPaddingBottom->setValue(grid.bottom());
     }
 
     if (profile.glyphSize() != ui->spinBoxGlyphSize->value())
