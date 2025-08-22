@@ -1,4 +1,5 @@
 #include <QSettings>
+#include <QTimer>
 
 #include "dockfonts.h"
 #include "ui_dockfonts.h"
@@ -12,12 +13,15 @@ DockFonts::DockFonts(AppContext *appContext, QWidget *parent)
     , ui(new Ui::DockFonts)
     , m_appContext(appContext)
     , m_fontManager(appContext->fontManager())
-    , m_fontModel(new FontModel(appContext, this))
+    , m_fontModel(new QSqlQueryModel(this))
 {
     ui->setupUi(this);
+    refreshFontsTable();
+    ui->tableViewFonts->setModel(m_fontModel);
+    ui->tableViewFonts->hideColumn(0);
+
     setupValues();
     setupSignals();
-    refreshFontsTable();
 }
 
 DockFonts::~DockFonts()
@@ -27,19 +31,34 @@ DockFonts::~DockFonts()
 
 void DockFonts::setupValues()
 {
-    ui->tableViewFonts->setModel(m_fontModel);
-    ui->tableViewFonts->hideColumn(0);
 }
 
 void DockFonts::setupSignals()
 {
+    connect(m_fontManager, &FontManager::loadingFinished, this, [=](int total){
+        qDebug() << __FILE__ << __LINE__ << "Fonts loaded" << total;
+        QTimer::singleShot(2000, this, &DockFonts::refreshFontsTable);
+    });
+
     connect(ui->tableViewFonts->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=](const QItemSelection &selected, const QItemSelection &deselected){
         // qDebug() << __FILE__ << __LINE__ << selected << deselected;
     });
 
+    connect(ui->lineEditName, &QLineEdit::textChanged, this, [=](const QString &value) {
+        refreshFontsTable();
+    });
+
+    connect(ui->lineEditFamily, &QLineEdit::textChanged, this, [=](const QString &value) {
+        refreshFontsTable();
+    });
+
+    connect(ui->lineEditStyle, &QLineEdit::textChanged, this, [=](const QString &value) {
+        refreshFontsTable();
+    });
+
     connect(ui->tableViewFonts->selectionModel(), &QItemSelectionModel::currentChanged, this, [=](const QModelIndex &current, const QModelIndex &previous){
 
-        int fontId = m_fontModel->idByRow(current.row());
+        int fontId = getFontId(current.row());
         if (fontId >= 0)
         {
             FontContext font;
@@ -53,6 +72,17 @@ void DockFonts::setupSignals()
             }
         }
     });
+}
+
+int DockFonts::getFontId(int row)
+{
+    const QModelIndex &idx = m_fontModel->index(row, 0);
+    if (idx.isValid())
+    {
+        return m_fontModel->data(idx, Qt::DisplayRole).toInt();
+    }
+
+    return -1;
 }
 
 void DockFonts::saveDockFontsSettings()
@@ -78,27 +108,44 @@ void DockFonts::restoreDockFontsSettings()
 void DockFonts::refreshFontsTable()
 {
     QSqlDatabase db = QSqlDatabase::database("main");
+    if (!db.isOpen()) return;
 
-    if (!db.isOpen())
-    {
-        qDebug() << __FILE__ << __LINE__ << "Database is not opened";
+    // Строим запрос динамически
+    QString sql = "SELECT id, name, family, style, system, path FROM fonts WHERE 1=1";
+
+    if (!ui->lineEditName->text().isEmpty()) {
+        sql += " AND name LIKE :name";
     }
+    if (!ui->lineEditFamily->text().isEmpty()) {
+        sql += " AND family LIKE :family";
+    }
+    if (!ui->lineEditStyle->text().isEmpty()) {
+        sql += " AND style LIKE :style";
+    }
+
+    sql += " ORDER BY name ASC";
 
     QSqlQuery query(db);
+    query.prepare(sql);
 
-    if(!query.prepare("SELECT id, family, style, system, name, path FROM fonts ORDER BY family ASC"))
-    {
-        qWarning() << __FILE__ << __LINE__ << "Error prepare" << query.lastError();
+    if (!ui->lineEditName->text().isEmpty()) {
+        query.bindValue(":name", "%" + ui->lineEditName->text() + "%");
+    }
+    if (!ui->lineEditFamily->text().isEmpty()) {
+        query.bindValue(":family", "%" + ui->lineEditFamily->text() + "%");
+    }
+    if (!ui->lineEditStyle->text().isEmpty()) {
+        query.bindValue(":style", "%" + ui->lineEditStyle->text() + "%");
     }
 
-    if (!query.exec())
-    {
-        qWarning()  << __FILE__ << __LINE__ << "Error exec query" << query.lastError();
+    if (!query.exec()) {
+        qWarning() << "Query failed:" << query.lastError();
+        return;
     }
 
     m_fontModel->setQuery(std::move(query));
-    emit m_fontModel->layoutChanged();
 }
+
 
 void DockFonts::showEvent(QShowEvent *event)
 {

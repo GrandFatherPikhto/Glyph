@@ -21,16 +21,28 @@
        <enum>Qt::Orientation::Vertical</enum>
       </property>
       <widget class="QToolBox" name="toolBoxFilters">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="pageFamily">
         <property name="geometry">
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>83</width>
-          <height>40</height>
+          <width>250</width>
+          <height>183</height>
          </rect>
         </property>
         <attribute name="label">
@@ -47,8 +59,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>83</width>
-          <height>40</height>
+          <width>250</width>
+          <height>183</height>
          </rect>
         </property>
         <attribute name="label">
@@ -60,31 +72,13 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="page">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>83</width>
-          <height>40</height>
-         </rect>
-        </property>
-        <attribute name="label">
-         <string>System</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <widget class="QComboBox" name="comboBoxSystem"/>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="pageStyle">
         <property name="geometry">
          <rect>
           <x>0</x>
           <y>0</y>
           <width>250</width>
-          <height>153</height>
+          <height>183</height>
          </rect>
         </property>
         <attribute name="label">

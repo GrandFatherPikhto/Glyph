@@ -10,7 +10,7 @@ QString winDefaultFontPath()
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_Fonts, 0, NULL, &pszPath);
 
     if (SUCCEEDED(hr)) {
-        std::wcout << L"Default Font Directory: " << pszPath << std::endl;
+        // std::wcout << L"Default Font Directory: " << pszPath << std::endl;
         CoTaskMemFree(pszPath); // Free the allocated memory
         return QString(pszPath);
     } else {
@@ -106,40 +106,6 @@ bool getRegisterKeyValue(const HKEY &hKey, DWORD index, QString &name, QString &
     return true;
 }
 
-bool appendOrUpdateFontContext(QSqlDatabase db, const QString & tableName, FontContext &context)
-{
-    QSqlQuery query(db);
-
-    if(!query.prepare(QString(
-                           "INSERT INTO %1 (name, path, family, style, system) "
-                           "VALUES (:name, :path, :family, :style, :system) "
-                           "ON CONFLICT(name, path) DO UPDATE SET "
-                           "family = excluded.family, style = excluded.style, system = excluded.system "
-                           "RETURNING id"
-                           ).arg(tableName)))
-    {
-        qWarning() << __FILE__ << __LINE__ << "Can't prepare " << query.lastQuery() << query.lastError();
-        return false;
-    }
-
-    query.bindValue(":name", context.name());
-    query.bindValue(":path", context.path());
-    query.bindValue(":family", context.family());
-    query.bindValue(":style", context.style());
-    query.bindValue(":system", context.system());
-
-    if (!query.exec())
-    {
-        qWarning() << __FILE__ << __LINE__ << "Can't append font" << context << query.lastError();
-        return false;
-    }
-
-
-    context.setId(query.lastInsertId().toInt());
-
-    return true;
-}
-
 bool isFontSupportedByFreeType(FontContext &context)
 {
     FT_Library library;
@@ -154,7 +120,7 @@ bool isFontSupportedByFreeType(FontContext &context)
         0,
         &face);
 
-    qDebug() << __FILE__ << __LINE__ << filePath << face->num_glyphs << face->num_charmaps << face->num_fixed_sizes;
+    // qDebug() << __FILE__ << __LINE__ << filePath << face->num_glyphs << face->num_charmaps << face->num_fixed_sizes;
 
     /**
      * TODO: Пока что не поддерживаются шрифты с фиксированным размером

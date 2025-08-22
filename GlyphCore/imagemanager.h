@@ -37,7 +37,7 @@ private:
     void setupSignals ();
     bool createTable ();
     
-    bool loadFromQuery(QSqlQuery query, QSharedPointer<DrawContext> &draw);
+    bool loadFromQuery(QSqlQuery &query, QSharedPointer<DrawContext> &draw);
 
     AppContext *m_appContext;
     AppSettings *m_appSettings;

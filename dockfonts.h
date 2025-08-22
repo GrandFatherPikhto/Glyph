@@ -5,6 +5,7 @@
 #include <QShowEvent>
 #include <QHideEvent>
 #include <QCloseEvent>
+#include <QSqlQueryModel>
 
 class AppContext;
 class FontModel;
@@ -31,13 +32,14 @@ private:
     void setupValues();
     void setupSignals();
     void refreshFontsTable();
+    int  getFontId(int row);
     void saveDockFontsSettings();
     void restoreDockFontsSettings();
 
     Ui::DockFonts *ui;
     AppContext *m_appContext;
     FontManager *m_fontManager;
-    FontModel *m_fontModel;
+    QSqlQueryModel *m_fontModel;
 };
 
 #endif // DOCKFONTS_H

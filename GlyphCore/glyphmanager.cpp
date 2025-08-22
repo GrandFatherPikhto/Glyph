@@ -72,7 +72,7 @@ bool GlyphManager::createTable()
     }
     
     // Создаем индекс для ускорения поиска по категории (опционально)
-    if (!query.exec(QString("CREATE INDEX IF NOT EXISTS idx_category ON %1(category)").arg(m_tableName))) {
+    if (!query.exec(QString("CREATE INDEX IF NOT EXISTS idx_unicode ON %1(unicode)").arg(m_tableName))) {
         qWarning() << __FILE__ << __LINE__ << QString("Failed to create index %1: %2").arg(m_tableName, query.lastError().text());
     }
     

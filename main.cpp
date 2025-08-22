@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 
-#include <QtCore>
+// #include <QtCore>
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
@@ -37,6 +37,15 @@ QMargins variantMapToMargins(const QVariant &value) {
         );
 }
 
+void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    if (msg.contains("Broken filename passed to function")) {
+        // Здесь можно поставить точку останова
+        qDebug() << "Broken filename warning caught!";
+        qDebug() << "Context:" << context.file << "line" << context.line;
+    }
+    // Стандартная обработка
+}
+
 void registerMetaTypes ()
 {
     qRegisterMetaType<GridContext>("GridContext");
@@ -62,6 +71,8 @@ void registerMetaTypes ()
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    // qInstallMessageHandler(myMessageHandler);
 
     QCoreApplication::setOrganizationName("DAE");
     QCoreApplication::setApplicationName("Glyph");

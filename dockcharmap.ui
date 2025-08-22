@@ -29,7 +29,7 @@
       </property>
       <widget class="QToolBox" name="toolBoxFilters">
        <property name="currentIndex">
-        <number>3</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="pageCategories">
         <property name="geometry">
@@ -44,6 +44,9 @@
          <string>Categories</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QLineEdit" name="lineEditCategoriesFilter"/>
+         </item>
          <item>
           <widget class="QListView" name="listViewCategories">
            <property name="selectionMode">
@@ -70,6 +73,9 @@
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
+          <widget class="QLineEdit" name="lineEditScriptsFilter"/>
+         </item>
+         <item>
           <widget class="QListView" name="listViewScripts">
            <property name="selectionMode">
             <enum>QAbstractItemView::SelectionMode::MultiSelection</enum>
@@ -91,6 +97,9 @@
          <string>Decompositions</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QLineEdit" name="lineEditDecompositionsFilter"/>
+         </item>
          <item>
           <widget class="QListView" name="listViewDecompositions">
            <property name="selectionMode">

@@ -3,19 +3,21 @@
 #include <QSqlQuery>
 #include <QFont>
 
-#include "profilemanager.h"
 #include "appcontext.h"
+#include "profilemanager.h"
+#include "fontmanager.h"
+#include "gridmanager.h"
 #include "appsettings.h"
+
 #include "profilecontext.h"
 #include "glyphcontext.h"
-#include "fontmanager.h"
 
 ProfileManager::ProfileManager(AppContext *appContext)
     : QObject{appContext}
     , m_appContext(appContext)
-    , m_fontManager(appContext->fontManager())
     , m_appSettings(appContext->appSettings())
-    , m_tableName("profiles")
+    , m_fontManager(appContext->fontManager())
+    , m_gridManager(appContext->gridManager())
 {
     // QObject::connect(m_appContext, &AppContext::valuesInited, this, &ProfileManager::setupValues);
     restoreSettings();
@@ -263,6 +265,19 @@ void ProfileManager::defaultProfile(ProfileContext &profile)
     }
 }
 
+ProfileContext ProfileManager::defaultProfile()
+{
+    // qDebug() << __FILE__ << __LINE__ << m_appSettings->value("defaultProfileName").toString();
+    return ProfileContext (
+        -1
+        , m_fontManager->fontContext().id()
+        , m_gridManager->grid().id()
+        , m_appSettings->value("defaultProfileName").toString()
+        , m_appSettings->value("defaultGlyphSize").toInt()
+        , m_appSettings->value("defaultFontSize").toInt()
+    );
+}
+
 ProfileContext ProfileManager::glyphProfile(const GlyphContext &glyph)
 {
     ProfileContext profile;
@@ -295,5 +310,5 @@ void ProfileManager::restoreSettings()
     m_profile.setId(-1);
     defaultProfile(m_profile);
     m_profile.setGlyphSize(m_appSettings->value("defaultGlyphSize").toInt());
-    qDebug() << __FILE__ << __LINE__ << m_profile;
+    // qDebug() << __FILE__ << __LINE__ << m_profile;
 }

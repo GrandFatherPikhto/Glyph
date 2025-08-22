@@ -27,6 +27,8 @@ class SqlFilter;
 class GlyphManager;
 class ProfileManager;
 class FontManager;
+class ImageManager;
+class GridManager;
 
 namespace Ui {
 class DockCharmap;
@@ -75,6 +77,8 @@ private:
     ProfileManager *m_profileManager;
     FontManager *m_fontManager;
     CharmapManager *m_charmapManager;
+    ImageManager *m_imageManager;
+    GridManager *m_gridManager;
 
     SqlFilter *m_filter;
 

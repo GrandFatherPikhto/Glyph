@@ -1,4 +1,5 @@
 #include <QSettings>
+#include <QVariant>
 #include <QStandardPaths>
 #include <QDir>
 
@@ -41,6 +42,7 @@ void AppSettings::initSettings ()
 	m_values.insert("glyphRectLayer", false);
 	m_values.insert("baselineLayer", false);
     m_values.insert("leftlineLayer", false);
+    m_values.insert("defaultProfileName", "-- Select Profile --");
     m_values.insert("defaultGlyphSize", 12);
     m_values.insert("defaultFontSize", 12);
     m_values.insert("defaultGridWidth", 12);
@@ -85,6 +87,30 @@ const QString & AppSettings::initAppDataCatalog()
 
     return m_appDataPath;
 }
+
+bool AppSettings::setValue(const QString &name, const QVariant &value)
+{
+    const auto &keys = m_values.keys();
+    bool contains = keys.contains(name);
+    m_values.insert(name, value);
+    emit valueChanged(name, value);
+    return contains;
+}
+
+QVariant AppSettings::value(const QString &name)
+{
+    auto it = m_values.find(name);
+    if (it == m_values.end())
+    {
+        qDebug() << __FILE__ << __LINE__ << "Can't find value" << name;
+        return QVariant();
+    }
+
+    // qDebug() << __FILE__ << __LINE__ << it.key() << it.value();
+
+    return it.value();
+}
+
 
 const QString & AppSettings::appDataPath() const
 {

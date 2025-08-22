@@ -8,6 +8,7 @@
 #include "appsettings.h"
 #include "glyphmanager.h"
 #include "glyphmodel.h"
+#include "profilesmodel.h"
 
 DockGlyphs::DockGlyphs(AppContext *appContext, QWidget *parent)
     : QDockWidget(parent)
@@ -34,13 +35,12 @@ void DockGlyphs::setupValues()
 {
     m_glyphsModel = new GlyphModel(m_appContext, this);
     refreshGlyphsTable ();
-    m_profile = m_profileManager->profile();
-
     ui->tableViewGlyphs->setModel(m_glyphsModel);
 
+    m_profile = m_profileManager->profile();
     ui->spinBoxGlyphSize->setValue(m_glyphManager->glyph().size());
 
-    m_profilesModel = new QSqlQueryModel(this);
+    m_profilesModel = new ProfilesModel(m_appContext, this);
     refreshProfilesCombo();
     ui->comboBoxProfile->setModel(m_profilesModel);
     ui->comboBoxProfile->setModelColumn(1);
@@ -66,7 +66,7 @@ void DockGlyphs::refreshProfilesCombo ()
     {
         if (query.exec())
         {
-            qDebug() << __FILE__ << __LINE__ << query.lastQuery();
+            // qDebug() << __FILE__ << __LINE__ << query.lastQuery();
             m_profilesModel->setQuery(std::move(query));
         }
     } else
@@ -82,7 +82,7 @@ void DockGlyphs::setupSignals()
         refreshGlyphsTable();
     });
 
-    connect(m_profileManager, &ProfileManager::profilesChanged, this, [=]{
+    connect(m_profileManager, &ProfileManager::profilesChanged, this, [=]() {
         refreshProfilesCombo();
     });
 
@@ -146,8 +146,8 @@ void DockGlyphs::setupSignals()
     connect(ui->comboBoxProfile, &QComboBox::currentIndexChanged, this, [=](int row){
         QModelIndex idIndex = m_profilesModel->index(row, 0);
         int profileId = m_profilesModel->data(idIndex).toInt();
-        // qDebug() << __FILE__ << __LINE__ << row << profileId;
         ProfileContext profile;
+        // qDebug() << __FILE__ << __LINE__ << profileId;
         if (m_profileManager->getProfileById(profileId, profile))
         {
             emit m_profileManager->changeProfile(profile);

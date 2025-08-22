@@ -42,6 +42,7 @@ public:
     ~FontManager();
 
     void startAsyncFontLoading();
+    void resetLoadingThread();
 
     const FontContext & fontContext() const { return m_fontContext; }
     bool fontContextById(int id, FontContext &context);
@@ -54,6 +55,8 @@ public:
         }
     }
 
+    void loadFonts(const QStringList &fontDirs);
+
     const QString & tableName() { return m_tableName; }
 
 signals:
@@ -61,13 +64,13 @@ signals:
     void updateFontDatabase();
     void clearFontDatabase();
 
-    void startLoading (const QStringList &fontDirs);
+    void startLoading(const QStringList &dirs);
+
+    void loadingStart (int total);
     void loadingProgress(int current, int total);
     void loadingFinished(int count);
+    void loadFontContext(const FontContext &context);
     void loadingError(const QString &message);
-    void addedFontContext(const FontContext &context);
-
-    void addFontContext(const FontContext &context);
 
     void changeFontContext (const FontContext &context);
     void fontContextChanged(const FontContext &context);
@@ -76,6 +79,14 @@ private:
     void setupValues ();
     void setupSignals ();
     bool createTable();
+
+    int totalCounter(const QStringList &list);
+    int processFontDir(const QString &path);
+
+    void resetLists();
+    bool writeData();
+    bool appendOrUpdateFontContext(const QString & tableName, FontContext &context);
+    bool isFontSupportedByFreeType(FontContext &context);
 
     bool setDefaultFontPath();
     void saveFontManagerSettings();
@@ -93,6 +104,21 @@ private:
     FontLoader *m_fontLoader;
 
     FontContext m_fontContext;
+
+    QString m_dbFile;
+    QString m_dbConnectionName;
+
+    int m_counter;
+    int m_total;
+
+    QMap<QString, QString> m_sysfonts;
+    QStringList m_filters;
+
+    QVariantList m_names;
+    QVariantList m_families;
+    QVariantList m_styles;
+    QVariantList m_paths;
+    QVariantList m_systems;
 };
 
 #endif // FONTMANAGER_H

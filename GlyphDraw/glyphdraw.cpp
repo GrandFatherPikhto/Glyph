@@ -69,20 +69,34 @@ void GlyphDraw::paintEvent(QPaintEvent *event)
     m_drawContext->setRegion(event->region());
 
     QPainter painter(this);
+    QVariant value;
 
-    if (m_appSettings->value("gridLayer").toBool())
+    value = m_appSettings->value("gridLayer");
+    if (value.isValid() && value.toBool())
         drawGrid(painter);
-    if (m_appSettings->value("bitmapRectLayer").toBool())
+
+    value = m_appSettings->value("bitmapRectLayer");
+    if (value.isValid() && value.toBool())
         drawBitmapRect(painter);
-    if (m_appSettings->value("baselineLayer").toBool())
+
+    value = m_appSettings->value("baselineLayer");
+    if (value.isValid() && value.toBool())
         drawBaseLine(painter);
-    if (m_appSettings->value("leftlineLayer").toBool())
+
+    value = m_appSettings->value("leftlineLayer");
+    if (value.isValid() && value.toBool())
         drawLeftLine(painter);
-    if (m_appSettings->value("drawLayer").toBool())
+
+    value = m_appSettings->value("drawLayer");
+    if (value.isValid() && value.toBool())
         drawDraw(painter);
-    if (m_appSettings->value("templateLayer").toBool())
+
+    value = m_appSettings->value("templateLayer");
+    if (value.isValid() && value.toBool())
         drawTemplate(painter);
-    if (m_appSettings->value("previewLayer").toBool())
+
+    value = m_appSettings->value("previewLayer");
+    if (value.isValid() && value.toBool())
         drawPreview(painter);
 
     painter.end();

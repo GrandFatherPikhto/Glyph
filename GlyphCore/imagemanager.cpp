@@ -155,16 +155,40 @@ bool ImageManager::findDrawImage(int glyphId, QSharedPointer<DrawContext> &draw)
 
     if (!query.exec()) {
         qWarning() << __FILE__ << __LINE__
-                   << "Failed to load image:" << query.lastError().text();
+                   << "Failed to load image:" << query.lastQuery()
+                   << ", Error:" << query.lastError();
         return false;
     }
 
     if (!query.next()) {
-        qDebug() << "No image found for glyph_id:" << glyphId;
+        // qDebug() << __FILE__ << __LINE__ << "No image found for glyph_id:" << glyphId;
         return false;
     }
 
-    return loadFromQuery(std::move(query), draw);
+    return loadFromQuery(query, draw);
+}
+
+bool ImageManager::loadFromQuery(QSqlQuery &query, QSharedPointer<DrawContext> &draw)
+{
+    try {
+        draw->setId(query.value("id").toInt());
+        draw->setGlyphId(query.value("glyph_id").toInt());
+        int width = (query.value("width").toInt());
+        int height = (query.value("height").toInt());
+        draw->setSize(QSize(width, height));
+        QByteArray imageData = query.value("image").toByteArray();
+        QSharedPointer<QImage> image = QSharedPointer<QImage>::create(draw->size(), QImage::Format_ARGB32);
+        if (!image->loadFromData(imageData)) {
+            qWarning() << __FILE__ << __LINE__ << "Failed to load image from blob data";
+            // return false;
+        }
+        // qDebug() << __FILE__ << __LINE__ << *(image.data());
+    } catch (const std::exception &e) {
+        qCritical() << "Error parsing profile data:" << e.what();
+        return false;
+    }
+
+    return true;
 }
 
 bool ImageManager::loadOrCreateDrawImage(int glyphId, QSharedPointer<DrawContext> &draw)
@@ -176,34 +200,4 @@ bool ImageManager::loadOrCreateDrawImage(int glyphId, QSharedPointer<DrawContext
 
     draw->setGlyphId(glyphId);
     return saveDrawImage(draw);
-}
-
-bool ImageManager::loadFromQuery(QSqlQuery query, QSharedPointer<DrawContext> &draw)
-{
-    QByteArray imageData = query.value("image").toByteArray();
-    QSharedPointer<QImage> image = QSharedPointer<QImage>::create();
-    if (!image->loadFromData(imageData)) {
-        qWarning() << __FILE__ << __LINE__ << "Failed to load image from blob data";
-        return false;
-    }
-
-    try {
-        draw->setId(query.value("id").toInt());
-        draw->setGlyphId(query.value("glyph_id").toInt());
-        int width = (query.value("width").toInt());
-        int height = (query.value("height").toInt());
-        draw->setSize(QSize(width, height));
-        QByteArray imageData = query.value("image").toByteArray();
-        QSharedPointer<QImage> image = QSharedPointer<QImage>::create();
-        if (!image->loadFromData(imageData)) {
-            qWarning() << __FILE__ << __LINE__ << "Failed to load image from blob data";
-            // return false;
-        }
-        qDebug() << __FILE__ << __LINE__ << *(image.data());
-    } catch (const std::exception &e) {
-        qCritical() << "Error parsing profile data:" << e.what();
-        return false;
-    }
-
-    return true;
 }

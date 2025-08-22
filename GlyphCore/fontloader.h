@@ -6,6 +6,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QMap>
+#include <QDir>
 #include <QString>
 
 #include <windows.h>
@@ -36,13 +37,23 @@ public slots:
     void loadFonts(const QStringList &fontDirs);
 
 signals:
+    void startLoading (const QStringList &list);
+    void start(int total);
     void progress(int current, int total);
     void finished(int count);
     void error(const QString &message);
-    void addedFontContext(const FontContext &context);
+    void append(const FontContext &context);
 
 private:
+    int totalCounter(const QStringList &list);
+    void resetLists();
+    bool writeData(QSqlDatabase db);
+    bool appendOrUpdateFontContext(QSqlDatabase db, const QString & tableName, FontContext &context);
+    bool isFontSupportedByFreeType(FontContext &context);
+    
+    void setFilter(QDir &dir);
     int processFontDir(QSqlDatabase db, const QString &path);
+
 
     FontManager *m_fontManager;
 
@@ -50,7 +61,17 @@ private:
     QString m_dbFile;
     QString m_dbConnectionName;
 
+    int m_counter;
+    int m_total;
+
     QMap<QString, QString> m_sysfonts;
+    QStringList m_filters;
+
+    QVariantList m_names;
+    QVariantList m_families;
+    QVariantList m_styles;
+    QVariantList m_paths;
+    QVariantList m_systems;
 };
 
 #endif // FONTLOADER_H

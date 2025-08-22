@@ -27,23 +27,8 @@ public:
 
     const QString & appDataPath () const;
 
-    inline bool setValue(const QString &name, const QVariant &value)
-    {
-        const auto &keys = m_values.keys();
-        bool contains = keys.contains(name);
-        m_values.insert(name, value);
-        emit valueChanged(name, value);
-        return contains;
-    }
-
-    inline QVariant value(const QString &name)
-    {
-        auto it = m_values.find(name);
-        if (it == m_values.end())
-            return QVariant();
-        
-        return it.value();
-    }
+    bool setValue(const QString &name, const QVariant &value);
+    QVariant value(const QString &name);
 
 signals:
     void valueChanged(const QString &name, const QVariant &value);

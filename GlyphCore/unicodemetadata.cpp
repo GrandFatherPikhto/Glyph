@@ -197,7 +197,7 @@ bool UnicodeMetadata::initTable(const QString &tableName)
     }
     
     // Создаем индекс для ускорения поиска по категории (опционально)
-    if (!query.exec(QString("CREATE INDEX IF NOT EXISTS idx_category ON %1(category)").arg(tableName))) {
+    if (!query.exec(QString("CREATE INDEX IF NOT EXISTS idx_name ON %1(name)").arg(tableName))) {
         qWarning()  << __FILE__ << __LINE__ << QString("Failed to create index %1: %2").arg(tableName, query.lastError().text());
         // Не считаем это критической ошибкой
     }

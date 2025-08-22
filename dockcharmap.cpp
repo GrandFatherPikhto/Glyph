@@ -10,7 +10,9 @@
 #include "profilecontext.h"
 #include "glyphcontext.h"
 #include "glyphmanager.h"
+#include "gridmanager.h"
 #include "fontmanager.h"
+#include "imagemanager.h"
 #include "sqlfilter.h"
 #include "charmapmanager.h"
 #include "profilemanager.h"
@@ -24,6 +26,8 @@ DockCharmap::DockCharmap(AppContext *appContext, QWidget *parent)
     , m_fontManager(appContext->fontManager())
     , m_glyphManager(appContext->glyphManager())
     , m_profileManager(appContext->profileManager())
+    , m_imageManager(appContext->imageManager())
+    , m_gridManager(appContext->gridManager())
     , m_charmapModel(nullptr)
     , m_categoryModel(nullptr)
     , m_scriptModel(nullptr)
@@ -162,6 +166,18 @@ void DockCharmap::setupSignals()
             }
         }
     });
+
+    connect(ui->lineEditCategoriesFilter, &QLineEdit::textChanged, this, [=](const QString &value) {
+        refreshCategoriesList();
+    });
+
+    connect(ui->lineEditScriptsFilter, &QLineEdit::textChanged, this, [=](const QString &value) {
+        refreshScriptsList();
+    });
+
+    connect(ui->lineEditDecompositionsFilter, &QLineEdit::textChanged, this, [=](const QString &value) {
+        refreshDecompositionsList();
+    });
 }
 
 void DockCharmap::setupValues ()
@@ -250,17 +266,38 @@ void DockCharmap::initDecompositionsList ()
 
 void DockCharmap::refreshCategoriesList ()
 {
-    QString queryStr = "SELECT id, name FROM category_data";
-    m_categoryModel->setQuery(queryStr, QSqlDatabase::database("main"));
+    QStringList sql;
+
+    sql << "SELECT id, name FROM category_data";
+
+    if (!ui->lineEditCategoriesFilter->text().isEmpty())
+    {
+        sql << QString("WHERE name LIKE '%1%'").arg(ui->lineEditCategoriesFilter->text());
+    }
+
+    sql << QString("ORDER BY name");
+
+    QString strSql = sql.join(" ");
+
+    m_categoryModel->setQuery(strSql, QSqlDatabase::database("main"));
     if (m_categoryModel->lastError().isValid()) {
         qWarning() << __FILE__ << __LINE__ << "Error set model query" << m_charmapModel->lastError().text();
     }
+
+    ui->listViewCategories->setModelColumn(1);
 }
 
 void DockCharmap::refreshScriptsList ()
 {
-    QString queryStr = "SELECT id, name FROM script_data";
-    m_scriptModel->setQuery(queryStr, QSqlDatabase::database("main"));;
+    QStringList sql;
+    sql << "SELECT id, name FROM script_data";
+    if (!ui->lineEditScriptsFilter->text().isEmpty())
+    {
+        sql << QString("WHERE name LIKE '%1%'").arg(ui->lineEditScriptsFilter->text());
+    }
+    sql << QString("ORDER BY name");
+    QString strSql = sql.join(" ");
+    m_scriptModel->setQuery(strSql, QSqlDatabase::database("main"));;
     if (m_scriptModel->lastError().isValid()) {
         qWarning() << __FILE__ << __LINE__ << "Error set model query" << m_charmapModel->lastError().text();
     }
@@ -269,8 +306,15 @@ void DockCharmap::refreshScriptsList ()
 
 void DockCharmap::refreshDecompositionsList ()
 {
-    QString queryStr = "SELECT id, name FROM decomposition_data";
-    m_decompostionModel->setQuery(queryStr, QSqlDatabase::database("main"));;
+    QStringList sql;
+    sql << "SELECT id, name FROM decomposition_data";
+    if (!ui->lineEditDecompositionsFilter->text().isEmpty())
+    {
+        sql << QString("WHERE name LIKE '%1%'").arg(ui->lineEditDecompositionsFilter->text());
+    }
+    sql << QString("ORDER BY name");
+    QString strSql = sql.join(" ");
+    m_decompostionModel->setQuery(strSql, QSqlDatabase::database("main"));;
     if (m_decompostionModel->lastError().isValid()) {
         qWarning() << __FILE__ << __LINE__ << "Error set model query" << m_charmapModel->lastError().text();
     }
@@ -306,6 +350,17 @@ void DockCharmap::setResetGlyph(int row)
         {
             if (m_glyphManager->appendGlyphIfNotExists(glyph))
             {
+                qDebug() << __FILE__ << __LINE__ << glyph;
+                ProfileContext profile = m_profileManager->profile();
+                if (profile.id() >= 0 && profile.gridId() >= 0)
+                {
+                    GridContext grid;
+                    if (m_gridManager->findGridItem(profile.gridId(), grid))
+                    {
+                        QSharedPointer<DrawContext> draw = QSharedPointer<DrawContext>::create(-1, glyph.id(), QSize(grid.dimX(), grid.dimY()));
+                        m_imageManager->loadOrCreateDrawImage(glyph.id(), draw);
+                    }
+                }
                 refreshCharmapTable();
             }
         } else

@@ -291,7 +291,7 @@ bool GridManager::findGridItem(int id, GridContext &grid)
 
     if (!query.next())
     {
-        qWarning() << __FILE__ << __LINE__ << "Can't find grid SQL" << query.lastQuery() << " width Id:" << id << query.lastError();
+        // qWarning() << __FILE__ << __LINE__ << "Can't find grid SQL" << query.lastQuery() << " width Id:" << id << query.lastError();
         return false;
     }
 

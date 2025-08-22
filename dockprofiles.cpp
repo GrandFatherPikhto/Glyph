@@ -186,7 +186,7 @@ void DockProfiles::loadProfileContext()
     ProfileContext profile = m_profileManager->profile();
     FontContext font = m_fontManager->fontContext();
 
-    qDebug() << __FILE__ << __LINE__ << profile;
+    // qDebug() << __FILE__ << __LINE__ << profile;
 
     m_fontManager->fontContextById(profile.fontId(), font);
 

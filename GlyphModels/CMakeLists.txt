@@ -43,6 +43,7 @@ add_library(GlyphModels SHARED
   unicodemetadataselectionmodel.h
 
   ${TS_FILES}
+  profilesmodel.h profilesmodel.cpp
 )
 
 target_link_libraries(GlyphModels PRIVATE

@@ -14,6 +14,7 @@ class AppContext;
 class GlyphContext;
 class AppSettings;
 class FontManager;
+class GridManager;
 
 class GLYPHCORE_EXPORT ProfileManager : public QObject
 {
@@ -35,6 +36,7 @@ public:
     // GlyphContext defaultGlyphContext(const QChar &ch);
     // bool defaultGlyphContext(GlyphContext &context);
     void defaultProfile(ProfileContext &context);
+    ProfileContext defaultProfile();
     bool assignQueryWithProfile(QSqlQuery &query, ProfileContext &profile);
 
 signals:
@@ -47,15 +49,16 @@ private:
     void setupValues ();
     void setupSignals ();
     bool createTable();
-
+    
     void saveSettings();
     void restoreSettings();
 
     AppContext *m_appContext;
     FontManager *m_fontManager;
     AppSettings *m_appSettings;
+    GridManager *m_gridManager;
 
-    QString m_tableName;
+    const QString m_tableName = "profiles";
 
     ProfileContext m_profile;
 };

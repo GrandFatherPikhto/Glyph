@@ -19,8 +19,8 @@ GlyphDrawContext::GlyphDrawContext(AppContext *appContext, QObject *parent)
     , m_gridManager(appContext->gridManager())
 {
     setupSignals();
-    setProfile(m_profileManager->profile());
-    setGlyph(m_glyphManager->glyph());
+    // setProfile(m_profileManager->profile());
+    // setGlyph(m_glyphManager->glyph());
     QMargins margins = m_appSettings->value("glyphWidgetMargins").value<QMargins>();
     setMargins(margins);
 }
